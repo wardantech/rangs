@@ -1,0 +1,23 @@
+@media only screen and (max-width: 776px)
+{.import_file{margin-top: 10px; display: flex;}.input_file{width: 150px;}.create{position: relative !important;width: 100%;
+    margin-left: 15px;top:0px !important;}
+.card-header-right{
+    position: relative !important;
+}
+.card-header-right button{
+    margin-top: 7px;;
+}
+.card-header-left a{
+    margin: 2px;
+    width: 151px;
+}
+.card-header-left button{
+    margin: 2px;
+    width: 151px;
+}
+.attendance{
+    top:0px !important;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+}
