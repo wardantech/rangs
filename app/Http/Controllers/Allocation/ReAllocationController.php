@@ -132,7 +132,11 @@ class ReAllocationController extends Controller
                             $data = [];
                             $part_name = '';
                             foreach($allocationDetails as $detail){
-                                    $data[] =$detail->part_code.'-'. $detail->part_name.' = '.$detail->requisition_quantity .'-'.$detail->issued_quantity.' = '.$detail->requisition_quantity - $detail->issued_quantity.' Pcs ';
+                                $requisition_quantity=intval($detail->requisition_quantity);
+                                $issued_quantity=intval($detail->issued_quantity);
+                                $res=$requisition_quantity-$issued_quantity;
+                                    $data[] =$detail->part_code.'-'. $detail->part_name.' = '.$requisition_quantity .'-'.$issued_quantity.' = '.$res.' Pcs ';
+                                    // $data[] =$detail->part_code.'-'. $detail->part_name.' = '.$detail->requisition_quantity .'-'.$detail->issued_quantity.' = '.$detail->requisition_quantity - $detail->issued_quantity.' Pcs ';
                             }
                             foreach ($data as $key => $result) {
                                 $total = count($data);
