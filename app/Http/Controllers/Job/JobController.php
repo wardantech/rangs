@@ -542,10 +542,8 @@ class JobController extends Controller
             'employee_id' => 'required',
         ]);
 
-        DB::beginTransaction();
-
         try{
-
+            DB::beginTransaction();
             $job_number = $this->generateUniqueJobSl();
             $ticket = Ticket::findOrFail($request->ticket_id);
             $employee=Employee::where('id',$request->employee_id)->first();
@@ -819,6 +817,7 @@ class JobController extends Controller
 
     public function acceptJob($id){
         try {
+            DB::beginTransaction();
             $job=Job::find($id);
             $job->update([
                 'status' => 1
@@ -828,14 +827,17 @@ class JobController extends Controller
                 'status'=> 3,
                 'is_accepted' => 1,
             ]);
+            DB::commit();
             return redirect()->back()->with('success','Job Accepted Successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         } 
     }
     public function startJob($id){
         try {
+            DB::beginTransaction();
             $current = Carbon::now('Asia/Dhaka');
             $job=Job::find($id);
             $ticket = Ticket::where('id',$job->ticket_id);
@@ -876,9 +878,10 @@ class JobController extends Controller
                 $message='Job is started successfully';
             }
 
-
+            DB::commit();
             return redirect()->back()->with('success',$message);
         } catch (\Exception $e) {
+            DB::rollBack();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -888,8 +891,8 @@ class JobController extends Controller
         $this->validate($request, [
             'job_close_remark' => 'required',
         ]);
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $current = Carbon::now('Asia/Dhaka');
             $job=Job::find($id);
 
@@ -920,6 +923,7 @@ class JobController extends Controller
             'job_pending_remark' => 'required',
         ]);
         try {
+            DB::beginTransaction();
             $job=Job::find($id);
             $job->update([
                 'is_pending' => 1,
@@ -938,8 +942,10 @@ class JobController extends Controller
                 'status' => 6,
                 'is_pending' => 1,
             ]);
+            DB::commit();
         return redirect()->back()->with('success','Pending Note Added Successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -950,6 +956,7 @@ class JobController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
             $job=Job::find($request->job_id);
             $job->status = 2;
             $job->save();
@@ -965,8 +972,10 @@ class JobController extends Controller
             $jobNote->job_id       = $request->job_id;
             $jobNote->decline_note = $request->reject_note;
             $jobNote->save();
+            DB::commit();
             return redirect()->back()->with('error','Job Rejected');
         } catch (\Exception $e) {
+            DB::rollBack();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }

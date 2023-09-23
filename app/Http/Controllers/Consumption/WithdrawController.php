@@ -19,6 +19,8 @@ use DB;
 use Auth;
 use App\Models\JobModel\Job;
 use App\Models\Inventory\InventoryStock;
+use App\Models\Job\JobSubmission;
+use App\Models\Job\JobSubmissionDetails;
 
 class WithdrawController extends Controller
 {
@@ -138,7 +140,9 @@ class WithdrawController extends Controller
             'withdraw_qnty.*'=>'required|numeric',
         ]);
         try {
+            DB::beginTransaction();
             $job = Job::findOrFail($request->job_id);
+
             $job->withdraw_request = $job->withdraw_request == 0 ? 1 : 0;
             $job->update();
 
@@ -146,6 +150,7 @@ class WithdrawController extends Controller
                 'job_id'=>$request->job_id,
                 'created_by'=>Auth::user()->id,
             ]);
+
             foreach ($request->withdraw_qnty as $key => $value) {
                 if ($request->withdraw_qnty[$key] != null && $request->withdraw_qnty[$key] > 0) {
                     PartWithdrawDetails::create([
@@ -160,9 +165,11 @@ class WithdrawController extends Controller
                 }
 
             };
+            DB::commit();
             return redirect()->route('technician.withdraw-request.index')
             ->with('success', 'Withdraw request sent successfully');
         } catch (\Exception $e) {
+            DB::rollback();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -226,16 +233,18 @@ class WithdrawController extends Controller
                 $partWithdraw->status = 1;
                 $partWithdraw->update();
             }
-
+            $jobSubmission = JobSubmission::where('job_id',$partWithdraw->job_id)->first();
             foreach ($partWithdraw->withdrawdetails as $key => $value) {
                 $consumption=InventoryStock::where('is_consumed',1)->where('job_id', $value->job_id)->where('part_id', $value->part_id)->first();
                 $consumption->update([
                     'withdraw_qnty'=>$value->required_qnty,
                     'stock_out'=>0
                 ]);
+                $jobSubmissionDetails = JobSubmissionDetails::where('job_submission_id',$jobSubmission->id)->where('part_id', $value->part_id)->delete();
             };
             $job->withdraw_request = $job->withdraw_request == 1 ? 2 : 1;
             $job->update();
+            $jobSubmission->delete();
             if ($job->withdraw_request==2) {
                 return response()->json([
                     'data' => $job,

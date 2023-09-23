@@ -224,6 +224,8 @@
                 processing: true,
                 responsive: false,
                 serverSide: true,
+                // scrollX: true,
+                // scrollCollapse: true,
                 language: {
                     processing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-500" style="font-size:60px;margin-top:50px;"></i>'
                 },
