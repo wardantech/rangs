@@ -98,6 +98,10 @@ use App\Http\Controllers\Allocation\TechnicianAllocationReceivedController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/image', function () { 
+    $img = Image::make('public/attachments/11.jpg')->resize(300, 200);
+    return $img->response('jpg');
+ });
 Route::get('/', function () { return view('auth.login'); });
 
 Route::resource('customer-advanced-payment', 'Job\CustomerAdvancedPaymentController');

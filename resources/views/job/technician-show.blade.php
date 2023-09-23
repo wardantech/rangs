@@ -519,7 +519,7 @@
                                     @foreach (json_decode($item->name) as $attachment)
                                     <div class="col-sm-3">
                                         <label for="date">{{'Attachment No: '.$loop->iteration}}</label>
-                                        <img id="" class="rounded mx-auto d-block mt-3 mb-3" src="{{ asset('attachments/'.$attachment) }}" alt="Company Logo" height="150px" width="150px"> <br>
+                                        <img id="" class="rounded mx-auto d-block mt-3 mb-3" src="{{ asset('attachments/'.$attachment) }}" alt="Attachment" height="150px" width="150px"> <br>
                                         <a  href="{{ route('technician.photo.download', $attachment) }}">
                                             <i class="fa fa-download" aria-hidden="true" title="Download"></i>
                                         </a>

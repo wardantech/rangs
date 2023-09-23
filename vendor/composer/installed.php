@@ -1,11 +1,11 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'f8b5a3dbe344e65cad22867ca3e6fb5e0c32c20e',
+        'reference' => '3d1849c5fea04dc0d16fb36c09ed5469c29dd5b1',
         'name' => 'laravel/radmin-laravel-starter-kit',
         'dev' => true,
     ),
@@ -397,6 +397,15 @@
                 0 => 'v8.74.0',
             ),
         ),
+        'intervention/image' => array(
+            'pretty_version' => '2.7.2',
+            'version' => '2.7.2.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../intervention/image',
+            'aliases' => array(),
+            'reference' => '04be355f8d6734c826045d02a1079ad658322dad',
+            'dev_requirement' => false,
+        ),
         'kodova/hamcrest-php' => array(
             'dev_requirement' => true,
             'replaced' => array(
@@ -422,12 +431,12 @@
             'dev_requirement' => false,
         ),
         'laravel/radmin-laravel-starter-kit' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'f8b5a3dbe344e65cad22867ca3e6fb5e0c32c20e',
+            'reference' => '3d1849c5fea04dc0d16fb36c09ed5469c29dd5b1',
             'dev_requirement' => false,
         ),
         'laravel/serializable-closure' => array(
