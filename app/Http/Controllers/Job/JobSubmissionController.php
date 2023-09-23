@@ -218,8 +218,10 @@ class JobSubmissionController extends Controller
             'submission_date' => 'required',
             'service_amount' => 'required',
         ]);
-        DB::beginTransaction();
+
         try {
+            DB::beginTransaction();
+
             $employee=Employee::where('user_id',Auth::user()->id)->first();
             $job=Job::where('id',$request->job_id)->first();
             $job->update([
@@ -328,8 +330,9 @@ class JobSubmissionController extends Controller
             'submission_date' => 'required',
             'service_amount' => 'required',
         ]);
-        DB::beginTransaction();
+
         try {
+            DB::beginTransaction();
             $job = Job::where('id',$request->job_id)->first();
             $jobSubmission = JobSubmission::findOrFail($id);
 
