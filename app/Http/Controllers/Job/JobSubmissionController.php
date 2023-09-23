@@ -20,6 +20,9 @@ use App\Models\Inventory\InventoryStock;
 use App\Models\Job\JobSubmissionDetails;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Job\CustomerAdvancedPayment;
+// use Intervention\Image\Facades\Image;
+use Illuminate\Support\Str;
+use Image;
 
 class JobSubmissionController extends Controller
 {
@@ -399,10 +402,13 @@ class JobSubmissionController extends Controller
         try{
          if($request->hasfile('filename'))
             {
-                foreach($request->file('filename') as $image)
+                
+                foreach($request->file('filename') as $key=>$image)
                 {
-                    $name=$image->getClientOriginalName();
-                    $image->move(public_path().'/attachments/', $name);  
+                    $newimage = Image::make($image);
+                    $name=date('m-d-Y_H-i-s').'-'.$image->getClientOriginalName();
+                    $destinationPath = public_path('attachments/');
+                    $newimage->save($destinationPath.$name,60);
                     $data[] = $name;    
                 }
             }
