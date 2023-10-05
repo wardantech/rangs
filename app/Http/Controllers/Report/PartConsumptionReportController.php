@@ -16,8 +16,8 @@ class PartConsumptionReportController extends Controller
         try {
             $currentDate = Carbon::now('Asia/Dhaka');
             $formattedCurrentDate=$currentDate->toDateString();
+            $formattedCurrentYear=$currentDate->year;
             $formattedCurrentMonth=$currentDate->month;
-            
             $outlets=DB::table('outlets')->where('deleted_at', '=', null)->orderBy('name', 'ASC')->get();
             $jobs=DB::table('inventory_stocks')
                 ->join('parts','parts.id','=','inventory_stocks.part_id')
@@ -33,8 +33,10 @@ class PartConsumptionReportController extends Controller
                 'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
                 ->where('inventory_stocks.stock_out', '>', 0)
                 ->where('inventory_stocks.is_consumed', 1)
+                ->whereYear('tickets.delivery_date_by_team_leader','=', $formattedCurrentYear)
                 ->whereMonth('tickets.delivery_date_by_team_leader','=', $formattedCurrentMonth)
                 ->where('tickets.deleted_at', null)
+                ->groupBy('inventory_stocks.id')
                 ->get();
                 if(request()->ajax()){
 
@@ -100,61 +102,31 @@ class PartConsumptionReportController extends Controller
             $endDate=Carbon::parse($request->end_date)->format('Y-m-d');
             $outlets=DB::table('outlets')->where('deleted_at', '=', null)->orderBy('name', 'ASC')->get();
             $soutlet= null;
+            $query=DB::table('inventory_stocks')
+            ->join('parts','parts.id','=','inventory_stocks.part_id')
+            ->join('price_management','price_management.part_id','=','parts.id')
+            ->join('jobs','jobs.id','=','inventory_stocks.job_id')
+            ->join('tickets','tickets.id','=','jobs.ticket_id')
+            ->join('job_priorities','job_priorities.id','=','tickets.job_priority_id')
+            ->join('purchases','tickets.purchase_id','=','purchases.id')
+            ->join('brand_models','purchases.brand_model_id','=','brand_models.id')
+            ->join('outlets','outlets.id','=','tickets.outlet_id')
+            ->select('brand_models.model_name as model_name','purchases.product_serial as product_serial','job_priorities.job_priority as type_name','parts.name as part_name','parts.code as part_code','price_management.cost_price_usd as cpu','price_management.cost_price_bdt as cpb','price_management.selling_price_bdt as spb',
+            'jobs.created_at as job_assign_date','jobs.job_end_time as repairDate','jobs.job_number as jobcode','jobs.id as jobid','outlets.name as branch','inventory_stocks.stock_out as qnty','jobs.job_number as jobNumber',
+            'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
+            ->where('inventory_stocks.stock_out', '>', 0)
+            ->where('inventory_stocks.is_consumed', 1);
 
-            if (!empty($request->outlet) && !empty($request->start_date) && !empty($request->end_date)) {
-                $jobs=DB::table('inventory_stocks')
-                ->join('parts','parts.id','=','inventory_stocks.part_id')
-                ->join('price_management','price_management.part_id','=','parts.id')
-                ->join('jobs','jobs.id','=','inventory_stocks.job_id')
-                ->join('tickets','tickets.id','=','jobs.ticket_id')
-                ->join('job_priorities','job_priorities.id','=','tickets.job_priority_id')
-                ->join('purchases','tickets.purchase_id','=','purchases.id')
-                ->join('brand_models','purchases.brand_model_id','=','brand_models.id')
-                ->join('outlets','outlets.id','=','tickets.outlet_id')
-                ->select('brand_models.model_name as model_name','purchases.product_serial as product_serial','job_priorities.job_priority as type_name','parts.name as part_name','parts.code as part_code','price_management.cost_price_usd as cpu','price_management.cost_price_bdt as cpb','price_management.selling_price_bdt as spb',
-                'jobs.created_at as job_assign_date','jobs.job_end_time as repairDate','jobs.job_number as jobcode','jobs.id as jobid','outlets.name as branch','inventory_stocks.stock_out as qnty','jobs.job_number as jobNumber',
-                'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
-                ->where('inventory_stocks.stock_out', '>', 0)
-                ->where('inventory_stocks.is_consumed', 1)
-                ->where('tickets.outlet_id','=',$request->outlet)
-                ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
-                ->get(); 
-            }else if(!empty($request->start_date) && !empty($request->end_date))
+            if ($request->outlet) 
             {
-                $jobs=DB::table('inventory_stocks')
-                ->join('parts','parts.id','=','inventory_stocks.part_id')
-                ->join('price_management','price_management.part_id','=','parts.id')
-                ->join('jobs','jobs.id','=','inventory_stocks.job_id')
-                ->join('tickets','tickets.id','=','jobs.ticket_id')
-                ->join('job_priorities','job_priorities.id','=','tickets.job_priority_id')
-                ->join('purchases','tickets.purchase_id','=','purchases.id')
-                ->join('brand_models','purchases.brand_model_id','=','brand_models.id')
-                ->join('outlets','outlets.id','=','tickets.outlet_id')
-                ->select('brand_models.model_name as model_name','purchases.product_serial as product_serial','job_priorities.job_priority as type_name','parts.name as part_name','parts.code as part_code','price_management.cost_price_usd as cpu','price_management.cost_price_bdt as cpb','price_management.selling_price_bdt as spb',
-                'jobs.created_at as job_assign_date','jobs.job_end_time as repairDate','jobs.job_number as jobcode','jobs.id as jobid','outlets.name as branch','inventory_stocks.stock_out as qnty','jobs.job_number as jobNumber',
-                'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
-                ->where('inventory_stocks.stock_out', '>', 0)
-                ->where('inventory_stocks.is_consumed', 1)
-                ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
-                ->get();
- 
-            }else if(!empty($request->outlet))
+                $query->where('tickets.outlet_id','=',$request->outlet);
+                $jobs=$query->groupBy('inventory_stocks.id')->get( );
+            }
+
+            if($request->start_date && $request->end_date)
             {
-                $soutlet=DB::table('outlets')->where('id','=',$request->outlet)->where('deleted_at', '=', null)->first();
-                $jobs=DB::table('inventory_stocks')
-                ->join('parts','parts.id','=','inventory_stocks.part_id')
-                ->join('price_management','price_management.part_id','=','parts.id')
-                ->join('jobs','jobs.id','=','inventory_stocks.job_id')
-                ->join('tickets','tickets.id','=','jobs.ticket_id')
-                ->join('job_priorities','job_priorities.id','=','tickets.job_priority_id')
-                ->join('purchases','tickets.purchase_id','=','purchases.id')
-                ->join('brand_models','purchases.brand_model_id','=','brand_models.id')
-                ->join('outlets','outlets.id','=','tickets.outlet_id')
-                ->select('brand_models.model_name as model_name','purchases.product_serial as product_serial','job_priorities.job_priority as type_name','parts.name as part_name','parts.code as part_code','price_management.cost_price_usd as cpu','price_management.cost_price_bdt as cpb','price_management.selling_price_bdt as spb','jobs.job_number as jobcode','jobs.id as jobid','outlets.name as branch','inventory_stocks.stock_out as qnty','jobs.job_number as jobNumber','tickets.id as ticket_id',)
-                ->where('inventory_stocks.stock_out', '>', 0)
-                ->where('inventory_stocks.is_consumed', 1)
-                ->where('tickets.outlet_id','=',$request->outlet)
-                ->get();  
+                $query->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate]);
+                $jobs=$query->groupBy('inventory_stocks.id')->get( );
             }
 
                 if(request()->ajax()){
