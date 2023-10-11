@@ -186,7 +186,7 @@
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     {data:'part_name', name: 'part_name', orderable: true, searchable: true},
                     {data:'part_code', name: 'part_code', orderable: true, searchable: true},
-                    {data:'jobcode', name: 'jobcode', orderable: true, searchable: true},
+                    {data:'job_sl', name: 'job_sl', orderable: true, searchable: true},
 
                     {data:'ticket_date', name: 'ticket_date', orderable: true, searchable: true},
                     {data:'job_assign_date', name: 'job_assign_date', orderable: true, searchable: true},

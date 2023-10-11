@@ -33,6 +33,7 @@ class PartConsumptionReportController extends Controller
                 'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
                 ->where('inventory_stocks.stock_out', '>', 0)
                 ->where('inventory_stocks.is_consumed', 1)
+                ->where('inventory_stocks.job_id', '!=', null)
                 ->whereYear('tickets.delivery_date_by_team_leader','=', $formattedCurrentYear)
                 ->whereMonth('tickets.delivery_date_by_team_leader','=', $formattedCurrentMonth)
                 ->where('tickets.deleted_at', null)
@@ -115,18 +116,17 @@ class PartConsumptionReportController extends Controller
             'jobs.created_at as job_assign_date','jobs.job_end_time as repairDate','jobs.job_number as jobcode','jobs.id as jobid','outlets.name as branch','inventory_stocks.stock_out as qnty','jobs.job_number as jobNumber',
             'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
             ->where('inventory_stocks.stock_out', '>', 0)
-            ->where('inventory_stocks.is_consumed', 1);
+            ->where('inventory_stocks.is_consumed', 1)
+            ->where('inventory_stocks.job_id', '!=', null);
 
             if ($request->outlet) 
             {
-                $query->where('tickets.outlet_id','=',$request->outlet);
-                $jobs=$query->groupBy('inventory_stocks.id')->get( );
+                $jobs=$query->where('tickets.outlet_id','=',$request->outlet)->groupBy('inventory_stocks.id')->orderBy('jobs.id');;
             }
 
             if($request->start_date && $request->end_date)
             {
-                $query->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate]);
-                $jobs=$query->groupBy('inventory_stocks.id')->get( );
+                $jobs=$query->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])->groupBy('inventory_stocks.id')->orderBy('jobs.id');
             }
 
                 if(request()->ajax()){
@@ -180,7 +180,7 @@ class PartConsumptionReportController extends Controller
                             ->addIndexColumn()
                             ->make(true);
                 }
-                return view ('reports.consumption.consumption-report-filter', compact('outlets','soutlet'));
+                return view('reports.consumption.consumption-report-filter', compact('outlets','soutlet'));
         }catch(\Exception $e){
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
