@@ -307,6 +307,17 @@
             @include('include.message')
             <!-- end message area-->
             <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="inputpc" class="">Start Date :</label>
+                        <input type="date" class="form-control" name="start_date" value="">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="inputpc" class="">End Date :</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="">
+                    </div>
+                </div>
+                <hr>
                 <div class="card p-3">
                     <div class="card-header">
                         @if ($id == 0)
@@ -343,9 +354,10 @@
                         <div class="card-header">
                            <a href="{{ route('status.excel',$id) }}" class="btn btn-success text-center" target="_blank" > Download - Excel</a>
                         </div>
+
                     </div>
                     <div class="card-body">
-                        <table id="datatable" class="table table-responsive">
+                        <table id="datatable" class="table">
                             <thead>
                                 <tr>
                                     <th>{{ __('NO')}}</th>
@@ -386,7 +398,7 @@
     @endpush
 
     <script>
-        $(document).ready( function () {
+        $(function () {
             var statusId = $('#status_id').val();
             var url = '{{ route("tickets.status",":id") }}';
             var routes = '{{ route("ticket-destroy",":id") }}';
@@ -405,6 +417,7 @@
                 processing: true,
                 responsive: false,
                 serverSide: true,
+                scrollX: true,
                 language: {
                     processing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-500" style="font-size:60px;margin-top:50px;"></i>'
                 },
@@ -415,7 +428,11 @@
                 // dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",
                 ajax: {
                     url: url.replace(':id', statusId),
-                    type: "get"
+                    type: "get",
+                    data: function (d) {
+                        d.start_date = $('input[name="start_date"]').val(),
+                        d.end_date = $('input[name="end_date"]').val()
+                    },
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -501,6 +518,9 @@
                                 columns: ':gt(0)'
                             },
                         ],
+            });
+            $('#end_date').change(function(){
+                dTable.draw();
             });
         });
             

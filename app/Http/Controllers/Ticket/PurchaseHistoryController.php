@@ -47,32 +47,12 @@ class PurchaseHistoryController extends Controller
 
     }
 
-    public function ticketIndex()
+    public function ticketIndex(Request $request)
     {
         try{
-            $auth = Auth::user();
             $employee=Employee::where('user_id',Auth::user()->id)->first();
-            $serviceTypes = ServiceType::where('status', 1)->get();
+            $auth = Auth::user();
             $user_role = $auth->roles->first();
-
-            $data=DB::table('tickets')
-            ->join('outlets','tickets.outlet_id','=','outlets.id')
-            ->join('purchases','tickets.purchase_id','=','purchases.id')
-            ->join('categories','tickets.product_category_id','=','categories.id')
-            ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
-            ->join('customers','purchases.customer_id', '=', 'customers.id')
-            ->join('districts','tickets.district_id', '=','districts.id' )
-            ->join('thanas','thanas.id', '=', 'tickets.thana_id')
-            ->join('users', 'tickets.created_by', '=', 'users.id')
-            ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
-            'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
-            'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
-            'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
-            'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
-            'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
-            'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid')
-            ->where('tickets.status',0)
-            ->where('tickets.deleted_at',null);
 
             if ($user_role->name == 'Team Leader') {
                 $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
@@ -83,68 +63,109 @@ class PurchaseHistoryController extends Controller
                 $thana_id  = json_decode($teamleader->group->region->thana_id , true);
                 $product_category_id = json_decode($teamleader->group->category_id, true);
 
-                $data->whereIn('tickets.district_id', $district_id)
-                        ->whereIn('tickets.thana_id', $thana_id )
-                        ->whereIn('tickets.product_category_id',$product_category_id);
-
                 $totals = $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id);
 
             } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
-                $data;
                 $totals = $this->totalTicketStatus();
             } else {
-                $data->where('tickets.outlet_id', $employee->outlet_id);
                 $totals = $this->totalOutletTicketStatus($employee->outlet_id);
             }
+            // $totals = ($user_role->name == 'Team Leader') ? $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id) :
+            // (($user_role->name == 'Admin' || in_array($user_role->name, ['Super Admin', 'Call Center Admin'])) ? $this->totalTicketStatus() : $this->totalOutletTicketStatus($employee->outlet_id));
+            
+            if (request()->ajax()) {  
+                $serviceTypes = ServiceType::where('status', 1)->get();  
+                $data=DB::table('tickets')
+                ->join('outlets','tickets.outlet_id','=','outlets.id')
+                ->join('purchases','tickets.purchase_id','=','purchases.id')
+                ->join('categories','tickets.product_category_id','=','categories.id')
+                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->join('districts','tickets.district_id', '=','districts.id' )
+                ->join('thanas','thanas.id', '=', 'tickets.thana_id')
+                ->join('users', 'tickets.created_by', '=', 'users.id')
+                ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+                'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
+                'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
+                'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
+                'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
+                'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
+                'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid')
+                ->where('tickets.status',0)
+                ->where('tickets.deleted_at',null);
+    
+                if ($user_role->name == 'Team Leader') {
+                    $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
 
-            // $tickets=$data->orderBy('tickets.id', 'desc');
-            $tickets=$data->latest()->get();
+                    $district_id = json_decode($teamleader->group->region->district_id, true);
+                    $thana_id  = json_decode($teamleader->group->region->thana_id , true);
+                    $product_category_id = json_decode($teamleader->group->category_id, true);
+    
+                    $data->whereIn('tickets.district_id', $district_id)
+                            ->whereIn('tickets.thana_id', $thana_id )
+                            ->whereIn('tickets.product_category_id',$product_category_id);
+    
+                } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
+                    $data;
+                } else {
+                    $data->where('tickets.outlet_id', $employee->outlet_id);
+                }
 
-            if (request()->ajax()) {
+                if(!empty($request->start_date && $request->end_date))
+                {
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+
+                    $tickets=$data->whereBetween('tickets.created_at',[$startDate, $endDate])->latest()->get();
+                } 
+                else{
+                    $tickets=$data->latest()->get();
+                }
+
                 return DataTables::of($tickets)
 
-                    ->addColumn('ticket_sl', function ($tickets) {
-                        $tsl='TSL-'.$tickets->ticket_id;
+                    ->addColumn('ticket_sl', function ($ticket) {
+                        $tsl='TSL-'.$ticket->ticket_id;
                         return $tsl;
                     })
-                    ->addColumn('invoice_number', function ($tickets) {
-                        $invoice_number=$tickets->invoice_number;
+                    ->addColumn('invoice_number', function ($ticket) {
+                        $invoice_number=$ticket->invoice_number;
                         return $invoice_number;
                     })
-                    ->addColumn('customer_name', function ($tickets) {
-                        $customer_name=$tickets->customer_name ?? Null;
+                    ->addColumn('customer_name', function ($ticket) {
+                        $customer_name=$ticket->customer_name ?? Null;
                         return $customer_name;
                     })
 
-                    ->addColumn('customer_phone', function ($tickets) {
-                        $customer_phone=$tickets->customer_mobile ?? Null;
+                    ->addColumn('customer_phone', function ($ticket) {
+                        $customer_phone=$ticket->customer_mobile ?? Null;
                         return $customer_phone;
                     })
 
-                    ->addColumn('district_thana', function ($tickets) {
-                        $district=$tickets->district ?? Null;
-                        $thana=$tickets->thana ?? Null;
+                    ->addColumn('district_thana', function ($ticket) {
+                        $district=$ticket->district ?? Null;
+                        $thana=$ticket->thana ?? Null;
                         $data=$district.','.$thana;
                         return $data;
                     })
                     
-                    ->addColumn('product_category', function ($tickets) {
-                        $product_category=$tickets->product_category ?? Null;
+                    ->addColumn('product_category', function ($ticket) {
+                        $product_category=$ticket->product_category ?? Null;
                         return $product_category;
                     })
                     
-                    ->addColumn('product_name', function ($tickets) {
-                        $product_name=$tickets->product_name ?? Null;
+                    ->addColumn('product_name', function ($ticket) {
+                        $product_name=$ticket->product_name ?? Null;
                         return $product_name;
                     })
                     
-                    ->addColumn('product_sl', function ($tickets) {
-                        $product_sl=$tickets->product_serial ?? Null;
+                    ->addColumn('product_sl', function ($ticket) {
+                        $product_sl=$ticket->product_serial ?? Null;
                         return $product_sl;
                     })
                     
-                    ->addColumn('service_type', function($tickets) use($serviceTypes){
-                         $selectedServiceTypeIds=json_decode($tickets->service_type_id);
+                    ->addColumn('service_type', function($ticket) use($serviceTypes){
+                         $selectedServiceTypeIds=json_decode($ticket->service_type_id);
                          $data='';
                          foreach ($serviceTypes as $key => $serviceType) {
                             if (in_array($serviceType->id, $selectedServiceTypeIds)) {
@@ -154,103 +175,103 @@ class PurchaseHistoryController extends Controller
                          return $data;
                     })
                     
-                    ->addColumn('branch', function($tickets){
+                    ->addColumn('branch', function($ticket){
 
-                            return $tickets->outlet_name;
+                            return $ticket->outlet_name;
                     })
-                    ->addColumn('point_of_purchase', function($tickets){
-                        $point_of_purchase=Outlet::where('id', '=', $tickets->outletid)->first();
+                    ->addColumn('point_of_purchase', function($ticket){
+                        $point_of_purchase=Outlet::where('id', '=', $ticket->outletid)->first();
                             return $point_of_purchase->name ?? null;
                     })
-                    ->addColumn('created_by', function ($tickets) {
-                        $created_by=$tickets->created_by; 
+                    ->addColumn('created_by', function ($ticket) {
+                        $created_by=$ticket->created_by; 
                         return $created_by;
                     })
-                    ->addColumn('created_at', function($tickets){
-                            $created_at=Carbon::parse($tickets->created_at)->format('m/d/Y');
+                    ->addColumn('created_at', function($ticket){
+                            $created_at=Carbon::parse($ticket->created_at)->format('m/d/Y');
                             
                             return $created_at;
                     })
-                    ->addColumn('status', function ($tickets) {
+                    ->addColumn('status', function ($ticket) {
 
-                        if ($tickets->status == 9 && $tickets->is_reopened == 1){
+                        if ($ticket->status == 9 && $ticket->is_reopened == 1){
                             return '<span class="badge bg-red">Ticket Re-Opened</span>';
                         }
                         
-                        elseif( $tickets->status == 0 ){
+                        elseif( $ticket->status == 0 ){
                             return '<span class="badge bg-yellow">Created</span>';
                         }
 
                         
-                        elseif($tickets->status == 6 && $tickets->is_pending==1 )
+                        elseif($ticket->status == 6 && $ticket->is_pending==1 )
                         {
                             return '<span class="badge bg-orange">Pending</span>';
                         }
 
-                        elseif($tickets->status == 5 && $tickets->is_paused == 1 )
+                        elseif($ticket->status == 5 && $ticket->is_paused == 1 )
                         {
                             return '<span class="badge bg-red">Paused</span>';
                         }
 
-                        elseif($tickets->status == 7  && $tickets->is_closed_by_teamleader == 1)
+                        elseif($ticket->status == 7  && $ticket->is_closed_by_teamleader == 1)
                         {
                             return '<span class="badge bg-green">Forwarded to CC</span>';
                         }
-                        elseif($tickets->status == 10 && $tickets->is_delivered_by_call_center == 1 )
+                        elseif($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 )
                         {
                             return '<span class="badge bg-green">Delivered by CC</span>';
                         }
-                        elseif($tickets->status == 8 && $tickets->is_delivered_by_teamleader == 1 )
+                        elseif($ticket->status == 8 && $ticket->is_delivered_by_teamleader == 1 )
                         {
                             return '<span class="badge bg-green">Delivered by TL</span>';
                         }
 
-                        elseif($tickets->status == 12  && $tickets->is_delivered_by_call_center == 1 && $tickets->is_closed == 1)
+                        elseif($ticket->status == 12  && $ticket->is_delivered_by_call_center == 1 && $ticket->is_closed == 1)
                         {
                             return '<span class="badge badge-danger">Tticket is Closed</span>';
                         }
-                        elseif($tickets->status == 12 && $tickets->is_delivered_by_call_center == 0 && $tickets->is_closed == 1)
+                        elseif($ticket->status == 12 && $ticket->is_delivered_by_call_center == 0 && $ticket->is_closed == 1)
                         {
                             return '<span class="badge badge-danger">Ticket is Undelivered Closed</span>';
                         }
-                        elseif($tickets->status == 11 && $tickets->is_ended == 1)
+                        elseif($ticket->status == 11 && $ticket->is_ended == 1)
                         {
                             return '<span class="badge badge-success">Job Completed</span>';
                         }
 
-                        elseif($tickets->status == 4 && $tickets->is_started == 1)
+                        elseif($ticket->status == 4 && $ticket->is_started == 1)
                         {
                             return '<span class="badge badge-info">Job Started</span>';
                         }
-                        elseif($tickets->status == 3 && $tickets->is_accepted == 1)
+                        elseif($ticket->status == 3 && $ticket->is_accepted == 1)
                         {
                             return '<span class="badge badge-primary">Job Accepted</span>';
                         }
-                        elseif($tickets->status == 1 && $tickets->is_assigned == 1)
+                        elseif($ticket->status == 1 && $ticket->is_assigned == 1)
                         {
                             return '<span class="badge bg-blue">Assigned</span>';
                         }
-                        elseif ($tickets->status == 2 && $tickets->is_rejected == 1)
+                        elseif ($ticket->status == 2 && $ticket->is_rejected == 1)
                         {
                             return '<span class="badge bg-red">Rejected</span>';
                         }
                         
                     })
                     
-                    ->addColumn('delivery_date_by_call_center', function($tickets){
+                    ->addColumn('delivery_date_by_call_center', function($ticket){
                         $delivery_date_by_call_center=null;
-                        if ($tickets->delivery_date_by_call_center != null) {
-                            $delivery_date_by_call_center=Carbon::parse($tickets->delivery_date_by_call_center)->format('m/d/Y');
+                        if ($ticket->delivery_date_by_call_center != null) {
+                            $delivery_date_by_call_center=Carbon::parse($ticket->delivery_date_by_call_center)->format('m/d/Y');
                         }
                         return $delivery_date_by_call_center;
                     })
 
-                    ->addColumn('action', function ($tickets) {
-                        if ($tickets->status == 1 && $tickets->is_ended == 1 && $tickets->is_closed == 1 ) {
+                    ->addColumn('action', function ($ticket) {
+                        if ($ticket->status == 1 && $ticket->is_ended == 1 && $ticket->is_closed == 1 ) {
                             if (Auth::user()->can('show')) {
                                 return '<div class="table-actions text-center" style="display: flex;>
                                     <i class="ik ik-edit f-16 mr-15 text-yellow" title="You can not edit"></i>
-                                    <a href=" '.route('show-ticket-details', $tickets->ticket_id). ' ">
+                                    <a href=" '.route('show-ticket-details', $ticket->ticket_id). ' ">
                                         <i class="ik ik-eye f-16 mr-15 text-info"></i>
                                     </a>
                                     <i class="ik ik-trash-2 f-16 text-yellow" title="You can not delete"></i>
@@ -260,30 +281,30 @@ class PurchaseHistoryController extends Controller
                             if (Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
                                 return '<div class="table-actions text-center" style="display: flex;">
                                 
-                                                <a href=" ' .route('edit-ticket-details', $tickets->ticket_id) . ' " title="Edit">
+                                                <a href=" ' .route('edit-ticket-details', $ticket->ticket_id) . ' " title="Edit">
                                                 <i class="ik ik-edit-2 f-16 mr-15 text-green"></i>
                                                 </a>
                                                 
-                                                <a href=" '.route('show-ticket-details', $tickets->ticket_id). ' " title="View">
+                                                <a href=" '.route('show-ticket-details', $ticket->ticket_id). ' " title="View">
                                                 <i class="ik ik-eye f-16 mr-15 text-info"></i>
                                                 </a>
                                                 
-                                                <a type="submit" onclick="showDeleteConfirm(' . $tickets->ticket_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                                                <a type="submit" onclick="showDeleteConfirm(' . $ticket->ticket_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
                                         </div>';
                             } elseif (Auth::user()->can('edit') && Auth::user()->can('show')) {
                                 return '<div class="table-actions" style="display: flex;">
-                                                <a href=" ' . route('edit-ticket-details', $tickets->ticket_id) . ' " title="Edit"><i class="ik ik-edit-2 f-16 mr-15 text-green"></i></a>
-                                                <a href=" '.route('show-ticket-details', $tickets->ticket_id). ' ">
+                                                <a href=" ' . route('edit-ticket-details', $ticket->ticket_id) . ' " title="Edit"><i class="ik ik-edit-2 f-16 mr-15 text-green"></i></a>
+                                                <a href=" '.route('show-ticket-details', $ticket->ticket_id). ' ">
                                                     <i class="ik ik-eye f-16 mr-15 text-info"></i>
                                                 </a>
                                                 </div>';
                             } elseif (Auth::user()->can('delete')) {
                                 return '<div class="table-actions">
-                                                <a type="submit" onclick="showDeleteConfirm(' . $tickets->ticket_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                                                <a type="submit" onclick="showDeleteConfirm(' . $ticket->ticket_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
                                         </div>';
                             } elseif (Auth::user()->can('show')) {
                                 return '<div class="table-actions">
-                                                <a href=" '.route('show-ticket-details', $tickets->ticket_id). ' ">
+                                                <a href=" '.route('show-ticket-details', $ticket->ticket_id). ' ">
                                                     <i class="ik ik-eye f-16 mr-15 text-info"></i>
                                                 </a>
                                         </div>';
@@ -295,7 +316,7 @@ class PurchaseHistoryController extends Controller
                     ->rawColumns(['ticket_sl', 'customer_name', 'customer_phone', 'district_thana', 'product_category', 'product_sl','created_by', 'status', 'action'])
                     ->make(true);
             }
-            return view('ticket.purchaseHistory.ticket_index', compact('tickets', 'totals', 'serviceTypes'));
+            return view('ticket.purchaseHistory.ticket_index', compact('totals'));
         }catch(\Exception $e){
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -495,6 +516,7 @@ class PurchaseHistoryController extends Controller
         ]);
 
         try{
+            DB::beginTransaction();
             $ticket = Ticket::find($id);
 
             if($request->carrier_own) {
@@ -531,6 +553,7 @@ class PurchaseHistoryController extends Controller
                 'accessories_list_id' => json_encode($request->accessories_list_id),
                 'updated_by' => Auth::id(),
             ]);
+            DB::commit();
             return redirect()->route('ticket-index')->with('success', 'Ticket updated successfully');
         }catch(\Exception $e){
             DB::rollback();
@@ -591,15 +614,17 @@ class PurchaseHistoryController extends Controller
         try{
             $currentDate = Carbon::now('Asia/Dhaka');
             $formattedCurrentDate=$currentDate->toDateString();
-
+            DB::beginTransaction();
             $ticket = Ticket::find($id);
             $ticket->update([
                 'status' => 8,
                 'is_delivered_by_teamleader' => 1,
                 'delivery_date_by_team_leader' => $formattedCurrentDate
             ]);
+            DB::commit();
             return redirect()->back()->with('success', __('Product Delivered Successfully.'));
         }catch(\Exception $e){
+            DB::rollback();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -614,7 +639,7 @@ class PurchaseHistoryController extends Controller
         try{
             $currentDate = Carbon::now('Asia/Dhaka');
             $formattedCurrentDate=$currentDate->toDateString();
-
+            DB::beginTransaction();
             $ticket = Ticket::find($request->ticket_id);
             if ($ticket != null) {
                 $ticket->update([
@@ -622,7 +647,7 @@ class PurchaseHistoryController extends Controller
                     'is_delivered_by_call_center' => 1,
                     'delivery_date_by_call_center' => $formattedCurrentDate
                 ]);
-                            //Sms notification 
+            DB::commit();                //Sms notification 
                 if ($request->send_sms == 1) {
                     if ($ticket->purchase->customer->mobile !=null) {
                         $tsl_no ='TSL'.'-'.$ticket->id;
@@ -637,6 +662,7 @@ class PurchaseHistoryController extends Controller
             return redirect()->back()->with('error', __('Something went wrong'));
             
         }catch(\Exception $e){
+            DB::rollback();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -645,13 +671,16 @@ class PurchaseHistoryController extends Controller
     public function closeByTeamleader($id)
     {
         try{
+            DB::beginTransaction();
             $ticket = Ticket::find($id);
             $ticket->update([
                 'status'=>7,
                 'is_closed_by_teamleader'=>1
             ]);
+            DB::commit();
             return redirect()->back()->with('success', __('Ticket CLosed Successfully.'));
         }catch(\Exception $e){
+            DB::rollback();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -659,6 +688,7 @@ class PurchaseHistoryController extends Controller
     // Ticket Re-Open
     public function reOpen(Request $request){
         try {
+            DB::beginTransaction();
             $ticket=Ticket::find($request->ticket_id);
             $ticket->update([
                 'status' => 9,
@@ -677,8 +707,10 @@ class PurchaseHistoryController extends Controller
                 'is_reopened'=> 1,
                 'reopen_note'=> $request->note,
             ]);
+            DB::commit();
             return redirect()->back()->with('success', __('Ticket Re-Opened Successfully.'));
         } catch (\Exception $e) {
+            DB::rollback();
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
@@ -723,30 +755,12 @@ class PurchaseHistoryController extends Controller
         return $sum;
     }
 
-    public function status($id)
+    public function status(Request $request, $id)
     {
-        $auth = Auth::user();
-        $user_role = $auth->roles->first();
-        $serviceTypes = ServiceType::where('status', 1)->get();
-        $employee=Employee::where('user_id',Auth::user()->id)->first();
         try {
-            $data=DB::table('tickets')
-            ->join('outlets','tickets.outlet_id','=','outlets.id')
-            ->join('purchases','tickets.purchase_id','=','purchases.id')
-            ->join('categories','tickets.product_category_id','=','categories.id')
-            ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
-            ->join('customers','purchases.customer_id', '=', 'customers.id')
-            ->join('districts','tickets.district_id', '=','districts.id' )
-            ->join('thanas','thanas.id', '=', 'tickets.thana_id')
-            ->join('users', 'tickets.created_by', '=', 'users.id')
-            ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
-            'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
-            'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
-            'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
-            'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
-            'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
-            'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid')
-            ->where('tickets.deleted_at',null);
+            $auth = Auth::user();
+            $user_role = $auth->roles->first();
+            $employee=Employee::where('user_id',Auth::user()->id)->first();
 
             if ($user_role->name == 'Team Leader') {
                 $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
@@ -756,89 +770,127 @@ class PurchaseHistoryController extends Controller
                 $district_id = json_decode($teamleader->group->region->district_id, true);
                 $thana_id  = json_decode($teamleader->group->region->thana_id , true);
                 $product_category_id = json_decode($teamleader->group->category_id, true);
-
-                $data->whereIn('tickets.district_id', $district_id)
-                        ->whereIn('tickets.thana_id', $thana_id )
-                        ->whereIn('tickets.product_category_id',$product_category_id);
-
+                
                 $totals = $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id);
 
-            } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
-                $data;
+            }elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
+
                 $totals = $this->totalTicketStatus();
             } else {
-                $data->where('tickets.outlet_id', $employee->outlet_id);
+
                 $totals = $this->totalOutletTicketStatus($employee->outlet_id);
 
             }
-
-            switch($id) {
-                case 0:
-                    $data->where('tickets.status', 0);
-                    break;
-                    
-                    case 1:
-                        $data->where('tickets.status', 1)
-                        ->where('tickets.is_assigned',1);
-                        break;
-                        
-                    case 2:
-                        $data->where('tickets.status', 2)
-                        ->where('tickets.is_rejected',1);
-                        break;
-                    case 3:
-                        $data->where('tickets.status', 3)
-                        ->where('tickets.is_accepted',1);
-                        break;
-                    case 4:
-                        $data->where('tickets.status', 4)
-                        ->where('tickets.is_started',1);
-                        break;    
-                    case 5:
-                        $data->where('tickets.status', 5)
-                        ->where('tickets.is_paused',1);
-                        break;  
-                    
-                    case 6:
-                        $data->where('tickets.status', 6)
-                        ->where('tickets.is_pending',1);
-                        break; 
-                    case 7:
-                        $data->where('tickets.status', 8)
-                        ->where('tickets.is_delivered_by_teamleader',1);
-                            break;
-                    case 8:
-                        $data->where('tickets.status', 9)
-                        ->where('tickets.is_reopened',1);
-                            break;
-                    case 9:
-                        $data->where('tickets.status', 10)
-                        ->where('tickets.is_delivered_by_call_center',1);
-                            break;
-                    case 10:
-                        $data->where('tickets.status', 11)
-                        ->where('tickets.is_ended',1);
-                            break;
-                    case 11:
-                        $data->where('tickets.status', 12)
-                        ->where('tickets.is_delivered_by_call_center',1)
-                        ->where('tickets.is_closed',1);
-                            break;
-                    case 12:
-                        $data;
-                            break;
-                    case 13:
-                        $data->where('tickets.status', 12)
-                        ->where('tickets.is_delivered_by_call_center',0)
-                        ->where('tickets.is_closed',1);
-                            break;
-                default:
-                    return redirect()->route('ticket-index');
-            }
-            // $tickets=$data->orderBy('tickets.id', 'desc');
-            $tickets=$data->latest()->get();
+            // $totals = ($user_role->name == 'Team Leader') ? $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id) :
+            // (($user_role->name == 'Admin' || in_array($user_role->name, ['Super Admin', 'Call Center Admin'])) ? $this->totalTicketStatus() : $this->totalOutletTicketStatus($employee->outlet_id));
 
             if (request()->ajax()) {
+                $serviceTypes = ServiceType::where('status', 1)->get();
+                $data=DB::table('tickets')
+                ->join('outlets','tickets.outlet_id','=','outlets.id')
+                ->join('purchases','tickets.purchase_id','=','purchases.id')
+                ->join('categories','tickets.product_category_id','=','categories.id')
+                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->join('districts','tickets.district_id', '=','districts.id' )
+                ->join('thanas','thanas.id', '=', 'tickets.thana_id')
+                ->join('users', 'tickets.created_by', '=', 'users.id')
+                ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+                'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
+                'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
+                'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
+                'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
+                'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
+                'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid')
+                ->where('tickets.deleted_at',null);
+    
+                if ($user_role->name == 'Team Leader') {
+                    $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
+
+                    $district_id = json_decode($teamleader->group->region->district_id, true);
+                    $thana_id  = json_decode($teamleader->group->region->thana_id , true);
+                    $product_category_id = json_decode($teamleader->group->category_id, true);
+    
+                    $data->whereIn('tickets.district_id', $district_id)
+                            ->whereIn('tickets.thana_id', $thana_id )
+                            ->whereIn('tickets.product_category_id',$product_category_id);
+    
+                } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
+                    $data;
+                } else {
+                    $data->where('tickets.outlet_id', $employee->outlet_id);   
+                }
+                switch($id) {
+                    case 0:
+                        $data->where('tickets.status', 0);
+                        break;
+                        
+                        case 1:
+                            $data->where('tickets.status', 1)
+                            ->where('tickets.is_assigned',1);
+                            break;
+                        case 2:
+                            $data->where('tickets.status', 2)
+                            ->where('tickets.is_rejected',1);
+                            break;
+                        case 3:
+                            $data->where('tickets.status', 3)
+                            ->where('tickets.is_accepted',1);
+                            break;
+                        case 4:
+                            $data->where('tickets.status', 4)
+                            ->where('tickets.is_started',1);
+                            break;    
+                        case 5:
+                            $data->where('tickets.status', 5)
+                            ->where('tickets.is_paused',1);
+                            break;  
+                        
+                        case 6:
+                            $data->where('tickets.status', 6)
+                            ->where('tickets.is_pending',1);
+                            break; 
+                        case 7:
+                            $data->where('tickets.status', 8)
+                            ->where('tickets.is_delivered_by_teamleader',1);
+                                break;
+                        case 8:
+                            $data->where('tickets.status', 9)
+                            ->where('tickets.is_reopened',1);
+                                break;
+                        case 9:
+                            $data->where('tickets.status', 10)
+                            ->where('tickets.is_delivered_by_call_center',1);
+                                break;
+                        case 10:
+                            $data->where('tickets.status', 11)
+                            ->where('tickets.is_ended',1);
+                                break;
+                        case 11:
+                            $data->where('tickets.status', 12)
+                            ->where('tickets.is_delivered_by_call_center',1)
+                            ->where('tickets.is_closed',1);
+                                break;
+                        case 12:
+                            $data;
+                                break;
+                        case 13:
+                            $data->where('tickets.status', 12)
+                            ->where('tickets.is_delivered_by_call_center',0)
+                            ->where('tickets.is_closed',1);
+                                break;
+                    default:
+                        return false;
+                }
+                if(!empty($request->start_date && $request->end_date))
+                {
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+                    $tickets=$data->whereBetween('tickets.created_at',[$startDate, $endDate])->latest()->get();
+                } 
+                else{
+                    $tickets=$data->latest()->get();
+                }
                 return DataTables::of($tickets)
 
                     ->addColumn('ticket_sl', function ($tickets) {
@@ -1033,7 +1085,7 @@ class PurchaseHistoryController extends Controller
                     ->rawColumns(['ticket_sl', 'customer_name', 'customer_phone', 'district_thana', 'product_category', 'product_sl', 'status','created_by', 'action'])
                     ->make(true);
             }
-            return view('ticket.purchaseHistory.ticket_status', compact('tickets', 'totals', 'id'));
+            return view('ticket.purchaseHistory.ticket_status', compact('totals', 'id'));
         }catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
