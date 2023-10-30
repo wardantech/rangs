@@ -322,7 +322,7 @@
                             <a href="{{route('customer-purchase-history')}}" class=" menu-item {{ \Request::is('tickets/customer-purchase-history') || \Request::is('tickets/ticket-purchase-show/*') ? 'active' : ''  }}">Purchase History</a>
                             @endcan
                             @can('access_to_ticket_list')
-                                <a href="{{url('tickets/ticket-index')}}" class=" menu-item {{ \Request::is('tickets/ticket/show/*') || \Request::is('tickets/ticket-index') || \Request::is('tickets/ticket-create/*') || \Request::is('tickets/ticket/edit/*') ? 'active' : ''  }}">Ticket List</a>
+                                <a href="{{url('tickets/ticket-index')}}" class=" menu-item {{ \Request::is('tickets/ticket/show/*') || \Request::is('tickets/ticket-index') || \Request::is('tickets/status/*') || \Request::is('tickets/ticket-create/*') || \Request::is('tickets/ticket/edit/*') ? 'active' : ''  }}">Ticket List</a>
                             @endcan
 
                             @can('access_to_ticket_job_list')

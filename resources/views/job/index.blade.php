@@ -154,9 +154,17 @@
             <!-- end message area-->
             <div class="col-md-12">
                 <div class="card p-3">
-                        <div class="row">
-
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="inputpc" class="">Start Date :</label>
+                            <input type="date" class="form-control" name="start_date" value="">
                         </div>
+                        <div class="col-md-6">
+                            <label for="inputpc" class="">End Date :</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="">
+                        </div>
+                    </div>
+                    <hr>
 
                     <div class="card-body">
                         <div class="table-responsive"><strong> {{__('label.JOB_LIST')}}</strong>
@@ -208,7 +216,7 @@
     @endpush
 
 <script type="text/javascript">
-           $(document).ready( function () {
+           $(function () {
             var searchable = [];
             var selectable = [];
 
@@ -236,7 +244,11 @@
                 // dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",
                 ajax: {
                     url: "{{url('job/job')}}",
-                    type: "get"
+                    type: "get",
+                    data: function (d) {
+                        d.start_date = $('input[name="start_date"]').val(),
+                        d.end_date = $('input[name="end_date"]').val()
+                    },
                 },
                 columns: [
                     {data:'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -330,6 +342,9 @@
                                 columns: ':gt(0)'
                             },
                         ],
+            });
+            $('#end_date').change(function(){
+                dTable.draw();
             });
         });
                     // delete Confirm

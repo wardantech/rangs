@@ -404,7 +404,12 @@
                                     <td>
                                         <table>
 
-                                            @foreach($customerFeedbacks as $customerFeedback)
+                                            @foreach($customerFeedbacks as $index => $customerFeedback)
+                                            <tr>
+                                                @if ($index == 0 )
+                                                <strong>Remark: </strong><p> {{ $customerFeedback->remark }}</p>
+                                                @endif
+                                            </tr>
                                             <tr>
                                                 <td>{{$customerFeedback->question}}:
                                                     @if($customerFeedback->question_feedback==0)
@@ -415,7 +420,7 @@
                                                         <strong>Good</strong>
                                                     @elseif($customerFeedback->question_feedback==3)
                                                         <strong>Great</strong>
-                                                    @endif
+                                                    @endif                                                  
                                                 </td>
                                             </tr>
                                             @endforeach
