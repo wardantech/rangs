@@ -61,7 +61,7 @@ class RevenueController extends Controller
 
                     ->addColumn('action', function ($revenues) use ($userRole) {
                         $canEdit = Auth::user()->can('edit');
-                        $canShow = Auth::user()->can('show');
+                        $canDelete = Auth::user()->can('delete');
 
                         $actions = [];
 

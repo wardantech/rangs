@@ -76,7 +76,7 @@ class ExpenseController extends Controller
 
                     ->addColumn('action', function ($expenses) use ($userRole) {
                         $canEdit = Auth::user()->can('edit');
-                        $canShow = Auth::user()->can('show');
+                        $canDelete = Auth::user()->can('delete');
 
                         $actions = [];
 
