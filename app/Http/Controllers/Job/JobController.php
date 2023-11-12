@@ -92,7 +92,7 @@ class JobController extends Controller
                 if(!empty($request->start_date && $request->end_date))
                 {
                     $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
                     $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
                 } 
                 else{
@@ -340,7 +340,7 @@ class JobController extends Controller
                 if(!empty($request->start_date && $request->end_date))
                 {
                     $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
                     $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
                 } 
                 else{
@@ -1150,7 +1150,7 @@ class JobController extends Controller
                 if(!empty($request->start_date && $request->end_date))
                 {
                     $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
                     $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
                 } 
                 else{

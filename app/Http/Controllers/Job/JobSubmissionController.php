@@ -23,9 +23,17 @@ use App\Models\Job\CustomerAdvancedPayment;
 // use Intervention\Image\Facades\Image;
 use Illuminate\Support\Str;
 use Image;
+use App\Services\ImageUploadService;
 
 class JobSubmissionController extends Controller
 {
+    protected $imageUploadService;
+
+    public function __construct(ImageUploadService $imageUploadService)
+    {
+        $this->imageUploadService = $imageUploadService;
+    }
+
     public function index()
     {
         try{
@@ -394,29 +402,45 @@ class JobSubmissionController extends Controller
     public function submissionImageStore(Request $request)
     {
 
+        // try{
+        //  if($request->hasfile('filename'))
+        //     {
+                
+        //         foreach($request->file('filename') as $key=>$image)
+        //         {
+        //             $newimage = Image::make($image);
+        //             $name=date('m-d-Y_H-i-s').'-'.$image->getClientOriginalName();
+        //             $destinationPath = public_path('attachments/');
+        //             $newimage->save($destinationPath.$name,60);
+        //             $data[] = $name;    
+        //         }
+        //     }
+        //     $JobAttachment= new JobAttachment();
+        //     $JobAttachment->name=json_encode($data);
+        //     $JobAttachment->job_id=$request->job_id;
+        //     $JobAttachment->save();
+        //     return redirect()->route('technician.jobs.show', $request->job_id)->with('success', __('Attachment uploaded successfully.'));
+        // } catch (\Exception $e) {
+        //     $bug = $e->getMessage();
+        //     return redirect()->back()->with('error', $bug);
+        // }
         $this->validate($request, [
             'filename' => 'required',
             'filename.*' => 'mimes:jpeg,jpg,png|required|max:10000' // max 10000kb
-
         ]);
-        try{
-         if($request->hasfile('filename'))
-            {
-                
-                foreach($request->file('filename') as $key=>$image)
-                {
-                    $newimage = Image::make($image);
-                    $name=date('m-d-Y_H-i-s').'-'.$image->getClientOriginalName();
-                    $destinationPath = public_path('attachments/');
-                    $newimage->save($destinationPath.$name,60);
-                    $data[] = $name;    
-                }
+
+        try {
+            if ($request->hasfile('filename')) {
+                $destinationPath = public_path('attachments/');
+                $uploadedFiles = $this->imageUploadService->uploadImages($request->file('filename'), $destinationPath);
+                $attachments = new JobAttachment();
+                $attachments->name = json_encode($uploadedFiles);
+                $attachments->job_id = $request->job_id;
+                $attachments->save();
+
+                return redirect()->route('technician.jobs.show', $request->job_id)->with('success', __('Attachment uploaded successfully.'));
             }
-            $JobAttachment= new JobAttachment();
-            $JobAttachment->name=json_encode($data);
-            $JobAttachment->job_id=$request->job_id;
-            $JobAttachment->save();
-            return redirect()->route('technician.jobs.show', $request->job_id)->with('success', __('Attachment uploaded successfully.'));
+
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

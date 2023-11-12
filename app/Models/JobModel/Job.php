@@ -16,6 +16,7 @@ use App\Models\Product\BrandModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Job\JobAttachment;
 
 class Job extends Model
 {
@@ -45,8 +46,13 @@ class Job extends Model
         return $this->hasOne(JobNote::class, 'job_id');
     }
     
-    public function pendingNotes(){
-    return $this->hasMany(JobPendingNote::class, 'job_id');
+    public function pendingNotes()
+    {
+        return $this->hasMany(JobPendingNote::class, 'job_id');
     }
 
+    public function ticketAttachments()
+    {
+        return $this->hasMany(JobAttachment::class, 'job_id');
+    }
 }

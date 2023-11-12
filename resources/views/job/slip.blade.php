@@ -28,8 +28,12 @@
         padding: 7px;
     }
     @media print{
-        table{
+    table{
         width: 100%;
+    }
+    .job-slip-header{
+        text-align: center;
+        padding-bottom:15px;
     }
     .custom-head{
         border:1px solid #000;
@@ -51,16 +55,14 @@
     <table style="border:0px !important">
         <tr>
             <th width="33%"><img src="{{asset('img/rangs_red.png')}}" alt="brand-logo" height="35px" width="120px"></th>
-            <th width="33%" style="text-align: center;padding-bottom:15px;">
+            <th width="33%" class="job-slip-header">
                 <h2 style="font-size: 28px;margin-bottom:5px;">Job Slip</h2>
-                <span style="padding: 5px; border:1px solid rgb(74, 74, 74)">Job No : {{ 'JSL-'.$job->id }}</span>
+                <span style="padding: 5px; border:1px solid rgb(74, 74, 74)">TSL-{{ $job->ticket->id }} & JSL-{{ $job->id }}</span>
             </th>
             <th width="33%">
-                <span style="font-size: 22px">Rangs Electronics Ltd.</span>
+                <span style="font-size: 18px">RANGS Electronics Ltd.</span>
                 <br>
                 <span> 117/1 Airport Road, Tejgaon, Dhaka </span>
-                <br>
-                <span>Hotline: +88 09612 244 244.</span>
             </th>
         </tr>
     </table>
@@ -81,7 +83,6 @@
                 <p>Brand: {{ $job->ticket->purchase->brand->name }}</p>
                 <p>Model: {{ $job->ticket->purchase->modelname->model_name }}</p>
                 <p>Serial No: {{ $job->ticket->purchase->product_serial }}</p>
-                <p>Point Of Purchase: {{ $job->ticket->purchase->outlet->name }}</p>
             </td>
             <td colspan="2">
                 <p>Receive at: {{ $job->ticket->outlet->name }}</p>
@@ -96,50 +97,43 @@
             <th colspan="2">
                 Customer Complaints / Symptom(s)
             </th>
-            <th>Job Type</th>
+            <th>Purchase Date</th>
             <th>Physical Condition</th>
             <th>Accessories</th>
         </tr>
-        <tr style="height: 100px;">
+        <tr style="height: 60px !important;">
             @php
                $faults=json_decode($job->ticket->fault_description_id); 
-               $productConditionId = json_decode($job->ticket->product_condition_id);
+               $product_conditions_id=json_decode($job->ticket->product_condition_id); 
             @endphp
 
-            @if ($job->ticket->fault_description_note || $job->ticket->fault_description_id)
-                <td colspan="2">
-                    @isset ($job->ticket->fault_description_id)
-                        @foreach($allFaults as $fault)
-                            @if ($fault != null && $faults !=null)
-                                @if(in_array($fault->id, $faults))
-                                    <span class="badge badge-warning">{{$fault->name}}</span><br>
-                                @endif
-                            @endif
-                        @endforeach
-                    @endisset
-                    @isset ($job->ticket->fault_description_note)
-                    Note: {{ $job->ticket->fault_description_note }}
-                    @endisset
-                </td>
-            @else
-                <td colspan="2">Not Found</td>
-            @endif
+            @if ($job->ticket->fault_description_id)
             <td>
-                <?php $selectedServiceTypeIds= json_decode($job->ticket->service_type_id)?>
-                @foreach ($serviceTypes as $serviceType)
-                    @if ($serviceType != null && $selectedServiceTypeIds !=null)
-                        @if (in_array($serviceType->id, $selectedServiceTypeIds))
-                            {{$serviceType->service_type}}
+                @foreach($allFaults as $fault)
+                    @if ($fault != null && $faults !=null)
+                        @if(in_array($fault->id, $faults))
+                            <span class="badge badge-warning">{{$fault->name}}</span><br>
                         @endif
                     @endif
                 @endforeach
             </td>
+            @else
+            <td>Not Found</td>
+            @endif
+            @if ($job->ticket->fault_description_note)
+                <td>{{ $job->ticket->fault_description_note }}</td>
+            @else
+                <td>--</td>
+            @endif
+            <td>
+                {{ $job->ticket->purchase->purchase_date->format('m/d/Y') }}
+            </td>
             @isset ($job->ticket->product_condition_id)
             <td>
-                @foreach ($product_conditions as $product)
-                    @if ($product->id != null && $productConditionId != null)
-                        @if (in_array($product->id, $productConditionId))
-                            {{ $product->product_condition }},
+                @foreach($product_conditions as $product_condition)
+                    @if ($product_condition != null && $product_conditions_id != null)
+                        @if(in_array($product_condition->id, $product_conditions_id))
+                            <span class="badge badge-warning">{{$product_condition->product_condition}}</span><br>
                         @endif
                     @endif
                 @endforeach
@@ -164,11 +158,10 @@
     <table  border="1" class="charge-table">
         <tr>
             <td>Repaired By</td>
-            <td>Q.C By</td>
-            <td>Parts Name</td>
-            <td colspan="3">Part No</td>
+            <td>Part No</td>
+            <td>Description</td>
             <td>Qty</td>
-            <td style="width: 90px;">Price</td>
+            <td>Price (Including VAT)</td>
         </tr>
         <tr>
             <td>
@@ -178,34 +171,28 @@
             </td>
             <td></td>
             <td></td>
-            <td colspan="3"></td>
             <td></td>
             <td></td>
         </tr>
         <tr>
-            <td colspan="2" rowspan="4">
+            <td style="vertical-align: top; ">
                 Repair Description
             </td>
             <td>Returend Items</td>
-            <td rowspan="3">Customer Signature</td>
+            <td>Customer Signature</td>
             <td colspan="2">Total Cost of spares:</td>
-            <td colspan="3"></td>
         </tr>
         <tr>
             <td rowspan="3"></td>
-            {{-- <td></td> --}}
+            <td rowspan="3"></td>
+            <td rowspan="3">{{ $job->ticket->purchase->customer->name }}</td>
             <td colspan="2">Repair Charge</td>
-            <td colspan="3"></td>
         </tr>
         <tr>
-            {{-- <td rowspan="1"></td> --}}
             <td  colspan="2">Other Charge:</td>
-            <td colspan="3"></td>
         </tr>
         <tr>
-            <td>{{ $job->ticket->purchase->customer->name }}</td>
             <td  colspan="2">Total</td>
-            <td colspan="3"></td>
         </tr>
     </table>
 </body>

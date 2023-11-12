@@ -36,10 +36,20 @@ use App\Models\Ticket\ProductCondition;
 use App\Models\ProductPurchase\Purchase;
 use App\Http\Requests\storeTicketRequest;
 use App\Models\Customer\FeedbackQuestion;
+use App\Models\Job\JobAttachment;
+use App\Services\ImageUploadService;
 
 class PurchaseHistoryController extends Controller
 {
     use OTPTraits;
+
+    protected $imageUploadService;
+
+    public function __construct(ImageUploadService $imageUploadService)
+    {
+        $this->imageUploadService = $imageUploadService;
+    }
+
     public function index()
     {
         $purchaseHistoryArr = [];
@@ -114,7 +124,7 @@ class PurchaseHistoryController extends Controller
                 if(!empty($request->start_date && $request->end_date))
                 {
                     $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
 
                     $tickets=$data->whereBetween('tickets.created_at',[$startDate, $endDate])->latest()->get();
                 } 
@@ -381,7 +391,8 @@ class PurchaseHistoryController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'product_receive_mode_id' => 'required|numeric',
-            'expected_delivery_mode_id' => 'required|numeric'
+            'expected_delivery_mode_id' => 'required|numeric',
+            'image.*' => 'mimes:jpeg,jpg,png|required|max:10000' ,// max 10000kb
         ]);
 
         DB::beginTransaction();
@@ -422,7 +433,15 @@ class PurchaseHistoryController extends Controller
                 'accessories_list_id' => json_encode($request->accessories_list_id),
                 'created_by' => Auth::id(),
             ]);
-            
+
+            if ($request->hasfile('image')) {
+                $destinationPath = public_path('attachments/');
+                $uploadedFiles = $this->imageUploadService->uploadImages($request->file('image'), $destinationPath);
+                $attachments = new JobAttachment();
+                $attachments->name = json_encode($uploadedFiles);
+                $attachments->ticket_id = $tickt->id;
+                $attachments->save();
+            }
             
             DB::commit();
             Session::forget('tahanaId');
@@ -885,7 +904,7 @@ class PurchaseHistoryController extends Controller
                 if(!empty($request->start_date && $request->end_date))
                 {
                     $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate=Carbon::parse($request->get('end_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
                     $tickets=$data->whereBetween('tickets.created_at',[$startDate, $endDate])->latest()->get();
                 } 
                 else{

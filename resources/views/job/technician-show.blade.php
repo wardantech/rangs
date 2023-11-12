@@ -511,23 +511,43 @@
                                 </tbody>
                             </table>
                         @endisset
+                        {{-- Ticket's Attachment --}}
                         <hr class="mt-2 mb-3"/>
-                        @isset($JobAttachment)
-                            <div><h6><strong>Attachment Info:</strong></h6></div>
-                            <div class="row mb-2">
-                                @foreach ($JobAttachment as $item)
-                                    @foreach (json_decode($item->name) as $attachment)
-                                    <div class="col-sm-3">
-                                        <label for="date">{{'Attachment No: '.$loop->iteration}}</label>
-                                        <img id="" class="rounded mx-auto d-block mt-3 mb-3" src="{{ asset('attachments/'.$attachment) }}" alt="Attachment" height="150px" width="150px"> <br>
-                                        <a  href="{{ route('technician.photo.download', $attachment) }}">
-                                            <i class="fa fa-download" aria-hidden="true" title="Download"></i>
-                                        </a>
-                                    </div>
+                        <fieldset class="form-group border p-3" style="background: #f0f0f0">
+                            <legend class="w-auto">Ticket's Attachment Info</legend>
+                            @if($job->ticket->ticketAttachments)
+                                <div class="row mb-2">
+                                    @foreach ($job->ticket->ticketAttachments as $item)
+                                        @foreach (json_decode($item->name) as $attachment)
+                                        <div class="col-sm-2">
+                                            <a  href="{{ route('technician.photo.download', $attachment) }}" class="ml-10">
+                                                <img id="" class="rounded mx-auto d-block mt-3 mb-3" src="{{ asset('attachments/'.$attachment) }}" alt="Not Found" height="150px" width="150px" title="Download">
+                                            </a>
+                                        </div>
+                                        @endforeach
                                     @endforeach
-                                @endforeach
-                            </div>
-                        @endisset
+                                </div>
+                            @endif
+                        </fieldset>
+
+                        {{-- Job's Attachment --}}
+                        <hr class="mt-2 mb-3"/>
+                        <fieldset class="form-group border p-3" style="background: #f0f0f0">
+                            <legend class="w-auto">Job's Attachment Info</legend>
+                            @isset($JobAttachment)
+                                <div class="row mb-2">
+                                    @foreach ($JobAttachment as $item)
+                                        @foreach (json_decode($item->name) as $attachment)
+                                        <div class="col-sm-2">
+                                            <a  href="{{ route('technician.photo.download', $attachment) }}" class="ml-10">
+                                                <img id="" class="rounded mx-auto d-block mt-3 mb-3" src="{{ asset('attachments/'.$attachment) }}" alt="Not Found" height="150px" width="150px" title="Download">
+                                            </a>
+                                        </div>
+                                        @endforeach
+                                    @endforeach
+                                </div>
+                            @endisset
+                        </fieldset>
                     </div>
                 </div>
             </div>

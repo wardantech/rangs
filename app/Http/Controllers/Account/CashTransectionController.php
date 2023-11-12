@@ -21,86 +21,80 @@ class CashTransectionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $auth = Auth::user();
-            $userRole =  $auth->roles->first();
-            $mystore = "";
-            if ($userRole->name == "Super Admin" || $userRole->name == "Admin") {
-                $transections = CashTransection::with('outlet')->orderBy('date', 'desc')->get();
-            } else {
-                $employee = Employee::where('user_id', Auth::user()->id)->first();
-                $mystore = Outlet::where('id', $employee->outlet_id)->first();
-                $transections = CashTransection::with('outlet')
-                    ->where('outlet_id', $employee->outlet_id)
-                    ->orderBy('date', 'desc');
-            }
+            $user = auth()->user();
+            $userRole = $user->roles->first();
+            $mystore = ($userRole && in_array($userRole->name, ["Super Admin", "Admin"])) ? "" : optional($user->employee)->outlet;
 
-            if (request()->ajax()) {
-                return DataTables::of($transections)
-                    ->addColumn('outlet', function ($transections) {
-                        $data = isset($transections->outlet) ? $transections->outlet->name : null;
-                        return $data;
+            if ($request->ajax()) {
+                $data = CashTransection::with('outlet');
+
+                if (!in_array($userRole->name, ["Super Admin", "Admin"])) {
+                    $data->whereHas('outlet', function ($query) use ($mystore) {
+                        $query->where('id', optional($mystore)->id);
+                    });
+                }
+
+                if ($request->filled(['start_date', 'end_date'])) {
+                    $startDate = Carbon::parse($request->input('start_date'))->format('Y-m-d');
+                    $endDate = Carbon::parse($request->input('end_date'))->addDay()->format('Y-m-d');
+
+                    $data->whereBetween('created_at', [$startDate, $endDate]);
+                } else {
+
+                    $data->whereYear('created_at', Carbon::now()->year)
+                        ->whereMonth('created_at', Carbon::now()->month);
+                }
+                
+                $transactions = $data->orderBy('created_at', 'desc');
+
+                return DataTables::of($transactions)
+                    ->addColumn('outlet', function ($transaction) {
+                        return optional($transaction->outlet)->name;
                     })
+                    ->addColumn('purpose', function ($transaction) {
+                        return $transaction->getPurposeAttribute();
+                    })
+                    ->addColumn('dateFormat', function ($transaction) {
+                        return Carbon::parse($transaction->created_at)->format('m/d/Y');
+                    })
+                    ->addColumn('cashIn', function ($transaction) {
+                        return number_format($transaction->cash_in ?: $transaction->cash_out);
+                    })
+                    ->addColumn('action', function ($transaction) {
+                        $canEdit = Auth::user()->can('edit');
+                        $canDelete = Auth::user()->can('delete');
+                        $canShow = Auth::user()->can('show');
 
-                    ->addColumn('purpose', function ($transections) {
-                        if ($transections->deposit_id) {
-                            return 'Deposite';
-                        } elseif ($transections->expense_id) {
-                            return 'Expense';
-                        } elseif ($transections->revenue_id) {
-                            return 'Revenue';
-                        } else {
-                            return 'Cash Received';
+                        $actions = [];
+
+                        if ($canShow) {
+                            $actions[] = '<a href="' . route('cash-transections.show', $transaction->id) . '" title="Show"><i class="ik ik-eye f-16 mr-15 text-blue"></i></a>';
                         }
-                    })
 
-                    ->addColumn('dateFormat', function ($transections) {
-                        $data = Carbon::parse($transections->date)->format('m/d/Y');
-                        return $data;
-                    })
-
-                    ->addColumn('cashIn', function ($transections) {
-                        if ($transections->cash_in) {
-                            return number_format($transections->cash_in);
-                        } else {
-                            return number_format($transections->cash_out);
+                        if ($canEdit) {
+                            $actions[] = '<a href="' . route('cash-transections.edit', $transaction->id) . '" title="Edit"><i class="ik ik-edit-2 f-16 mr-15 text-green"></i></a>';
                         }
-                    })
 
-                    ->addColumn('action', function ($transections) {
-                        if (Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
-                            return '<div class="table-actions text-center">
-                                            <a href="' . route('cash-transections.show', $transections->id) . '" title="Show"><i class="ik ik-eye f-16 mr-15 text-blue"></i></a>
-                                            <a href="' . route('cash-transections.edit', $transections->id) . '" title="Edit"><i class="ik ik-edit-2 f-16 mr-15 text-green"></i></a>
-                                            <a type="submit" onclick="showDeleteConfirm(' . $transections->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                            </div>';
-                        } elseif (Auth::user()->can('edit')) {
-                            return '<div class="table-actions">
-                                            <a href="' . route('cash-transections.edit', $transections->id) . '" title="Edit"><i class="ik ik-edit-2 f-16 mr-15 text-green"></i></a>
-                                            </div>';
-                        } elseif (Auth::user()->can('show')) {
-                            return '<div class="table-actions">
-                                           <a href="' . route('cash-transections.show', $transections->id) . '" title="Show"><i class="ik ik-eye f-16 mr-15 text-blue"></i></a>
-                                            </div>';
-                        } elseif (Auth::user()->can('delete')) {
-                            return '<div class="table-actions">
-                                            <a type="submit" onclick="showDeleteConfirm(' . $transections->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                            </div>';
+                        if ($canDelete) {
+                            $actions[] = '<a type="submit" onclick="showDeleteConfirm(' . $transaction->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>';
                         }
+
+                        return '<div class="table-actions text-center">' . implode('', $actions) . '</div>';
                     })
                     ->addIndexColumn()
                     ->rawColumns(['outlet', 'dateFormat', 'cashIn', 'purpose', 'action'])
                     ->make(true);
             }
-            return view('account.cash_transections.index', compact('transections', 'mystore'));
+
+            return view('account.cash_transections.index', compact('mystore'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
     }
-
     /**
      * Show the form for creating a new resource.
      *
