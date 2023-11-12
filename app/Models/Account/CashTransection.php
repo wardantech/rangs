@@ -33,4 +33,17 @@ class CashTransection extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    
+    public function getPurposeAttribute()
+    {
+        if ($this->deposit_id) {
+            return 'Deposit';
+        } elseif ($this->expense_id) {
+            return 'Expense';
+        } elseif ($this->revenue_id) {
+            return 'Revenue';
+        } else {
+            return 'Cash Received';
+        }
+    }
 }

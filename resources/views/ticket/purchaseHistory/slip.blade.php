@@ -28,8 +28,12 @@
         padding: 7px;
     }
     @media print{
-        table{
+    table{
         width: 100%;
+    }
+    .job-slip-header{
+        text-align: center;
+        padding-bottom:15px;
     }
     .custom-head{
         border:1px solid #000;
@@ -51,7 +55,7 @@
     <table style="border:0px !important">
         <tr>
             <th width="33%"><img src="{{asset('img/rangs_red.png')}}" alt="brand-logo" height="35px" width="120px"></th>
-            <th width="33%" style="text-align: center;padding-bottom:15px;">
+            <th width="33%" class="job-slip-header">
                 <h2 style="font-size: 28px;margin-bottom:5px;">Job Slip</h2>
                 <span style="padding: 5px; border:1px solid rgb(74, 74, 74)">Job No : TSL-{{ $ticket->id }}</span>
             </th>
@@ -97,7 +101,7 @@
             <th>Physical Condition</th>
             <th>Accessories</th>
         </tr>
-        <tr>
+        <tr style="height: 60px !important;">
             @php
                $faults=json_decode($ticket->fault_description_id); 
                $product_conditions_id=json_decode($ticket->product_condition_id); 
@@ -154,12 +158,10 @@
     <table  border="1" class="charge-table">
         <tr>
             <td>Repaired By</td>
-            <td>Senior</td>
-            <td>Q.C By</td>
-            <td>Parts Name</td>
-            <td colspan="2">Part No</td>
+            <td>Part No</td>
+            <td>Description</td>
             <td>Qty</td>
-            <td>Price</td>
+            <td>Price (Including VAT)</td>
         </tr>
         <tr>
             <td>
@@ -170,32 +172,27 @@
             <td></td>
             <td></td>
             <td></td>
-            <td colspan="2"></td>
-            <td></td>
             <td></td>
         </tr>
         <tr>
-            <td colspan="3" rowspan="4" style="vertical-align: top; ">
+            <td style="vertical-align: top; ">
                 Repair Description
             </td>
             <td>Returend Items</td>
             <td>Customer Signature</td>
             <td colspan="2">Total Cost of spares:</td>
-            <td></td>
         </tr>
         <tr>
             <td rowspan="3"></td>
+            <td rowspan="3"></td>
             <td rowspan="3">{{ $ticket->purchase->customer->name }}</td>
             <td colspan="2">Repair Charge</td>
-            <td></td>
         </tr>
         <tr>
             <td  colspan="2">Other Charge:</td>
-            <td></td>
         </tr>
         <tr>
             <td  colspan="2">Total</td>
-            <td></td>
         </tr>
     </table>
 </body>

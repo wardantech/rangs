@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\ProductPurchase\Purchase;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Job\JobAttachment;
 
 class Ticket extends Model
 {
@@ -116,5 +117,9 @@ class Ticket extends Model
     public function warrantytype()
     {
         return $this->belongsTo(WarrantyType::class, 'warranty_type_id');
+    }
+    public function ticketAttachments()
+    {
+        return $this->hasMany(JobAttachment::class, 'ticket_id');
     }
 }

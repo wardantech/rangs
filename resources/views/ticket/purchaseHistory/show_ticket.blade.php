@@ -186,7 +186,7 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('label.CREATED_AT')}}</td>
-                                    <td>{{ $ticket->created_at->format('m/d/yy H:i:s') }}</td>
+                                    <td>{{ $ticket->created_at->format('m/d/Y H:i:s') }}</td>
                                 </tr> 
                                 <tr>
                                     <td>{{ __('label.SL')}}</td>
@@ -443,9 +443,27 @@
                                 @endif
                             </tbody>
                         </table>
+                        <hr class="mt-2 mb-3"/>
+                        <fieldset class="form-group border p-3" style="background: #f0f0f0">
+                            <legend class="w-auto">Attachment Area</legend>
+                            @if($ticket->ticketAttachments)
+                                <div class="row mb-2">
+                                    @foreach ($ticket->ticketAttachments as $item)
+                                        @foreach (json_decode($item->name) as $attachment)
+                                        <div class="col-sm-2">
+                                            <a  href="{{ route('technician.photo.download', $attachment) }}" class="ml-10">
+                                                <img id="" class="rounded mx-auto d-block mt-3 mb-3" src="{{ asset('attachments/'.$attachment) }}" alt="Not Found" height="150px" width="150px" title="Download">
+                                            </a>
+                                        </div>
+                                        @endforeach
+                                    @endforeach
+                                </div>
+                            @endif
+                        </fieldset>
                     </div>
                 </div>
             </div>
+
             @if($jobs)
             <div class="col-md-12">
                 <div class="card p-3">

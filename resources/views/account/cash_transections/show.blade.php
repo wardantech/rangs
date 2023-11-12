@@ -38,7 +38,7 @@
             <div class="col-md-12">
                 <div class="card p-3">
                     <div class="card-header">
-                        <h3>{{ __('Cash Transactions Details')}}</h3>
+                        <h3>{{ __('Cash Transaction Details')}}</h3>
                         <div class="card-header-right">
                         </div>
                     </div>
