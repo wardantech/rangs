@@ -50,19 +50,8 @@
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label for="customer_id">{{ __('label.SELECT_CUSTOMER')}}<span class="text-red">*</span></label>
-                                        <select name="customer_id" id="customer_id" class="form-control select2">
-                                            <option value="">Select</option>
-                                            @forelse($customers as $customer)
-                                            <option value="{{ $customer->id }}"
-                                                @if( old('customer_id', optional($purchase)->customer_id) == $customer->id )
-                                                    selected
-                                                @endif
-                                                >
-                                                {{ $customer->mobile }}-{{ $customer->name }}
-                                            </option>
-                                            @empty
-                                                <option value="">No Client Found</option>
-                                            @endforelse
+                                        <select name="customer_id" id="customer_id" class="form-control js-data-example-ajax" required>
+                                        <option value="{{$purchase->customer->id}}">{{$purchase->customer->name .'-'. $purchase->customer->mobile}}</option>
                                         </select>
 
                                         <div class="help-block with-errors"></div>
@@ -310,17 +299,60 @@
             </div>
         </div>
     </div>
+    @endsection
     <!-- push external js -->
     @push('script')
         <script src="{{ asset('plugins/select2/dist/js/select2.min.js') }}"></script>
         <script src="{{ asset('js/sony/prevent-multiple-submit.js') }}"></script>
-    @endpush
 
     <script type="text/javascript">
         $(document).ready(function(){
             @if($purchase->outlet_id !=null)
                 $("#outlet_id").show();
             @endif
+
+            var selectedCustomerId = "{{ $purchase->customer->id ?? '' }}";
+            // Initialize select2
+            $(".js-data-example-ajax").select2({
+                placeholder: "Search for a customer...",
+                ajax: {
+                    url: "{{route('call-center.customer_data')}}",
+                    type: "post",
+                    delay: 250,
+                    dataType: 'json',
+                    data: function(params) {
+                        return {
+                            query: params.term, // search term
+                            "_token": "{{ csrf_token() }}",
+                        };
+                    },
+                    processResults: function(response) {
+                        return {
+                            results: response
+                        };
+                    },
+                    cache: true
+                }
+            });
+            
+            $('#customer_id').on('change', function(e){
+                e.preventDefault();
+                    var customer_id= $('#customer_id').val();
+                    var url = "{{ route('sell.get-customer-info') }}";
+
+                    $.ajax({
+                    type: "get",
+                    url: url,
+                    data: {
+                        customer_id: customer_id
+                    },
+                    success: function(data) {
+                        console.log(data.customer.name);
+                        $('#customer_name').val(data.customer.name);
+                        $('#customer_address').val(data.customer.address);
+                    }
+                });
+            });
 
             $(".own_stock").change(function() {
                 var selected = $("input[type='radio'][name='own_stock']:checked");
@@ -413,4 +445,4 @@
             });
         });
     </script>
-@endsection
+@endpush
