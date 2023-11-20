@@ -50,21 +50,6 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="customer_id">{{ __('label.CUSTOMER MOBILE')}}<span class="text-red">*</span></label>
-                                        {{-- {!! Form::select('customer_id', $customers, null,[ 'class'=>'form-control select2', 'placeholder' => __('label.SELECT_CUSTOMER'),'id'=> 'customer_id', 'required']) !!} --}}
-                                        {{-- <select name="customer_id" id="customer_id" class="form-control select2">
-                                            <option value="">Select Customer</option>
-                                            @forelse($customers as $customer)
-                                            <option value="{{ $customer->id }}"
-                                                @if( old('customer_id') == $customer->id )
-                                                selected
-                                            @endif
-                                                >
-                                                {{ $customer->mobile }}-{{ $customer->name }}
-                                            </option>
-                                            @empty
-                                                <option value="">No Client Found</option>
-                                            @endforelse
-                                        </select> --}}
                                         <select name="customer_id" id="customer_id" class="form-control js-data-example-ajax" required>
                                         </select>
                                         <div class="help-block with-errors"></div>
@@ -268,7 +253,7 @@
         {{-- <script src="{{ asset('plugins/select2/dist/js/select2.min.js') }}"></script> --}}
         <script src="{{ asset('js/sony/prevent-multiple-submit.js') }}"></script>
     <script type="text/javascript">
-            $(document).ready(function() {
+        $(document).ready(function() {
             // Initialize select2
             $(".js-data-example-ajax").select2({
                 placeholder: "Search for a customer...",
