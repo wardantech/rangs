@@ -139,11 +139,11 @@
                                 @if ( $ticket->is_reopened == 1 )
                                 <tr>
                                     <td style="color: rgb(255, 0, 0)" ><strong>Re-Open Note</strong></td>
-                                    <td style="color: rgb(255, 0, 0)">{{ $ticket->reopen_note }}</td>
+                                    <td style="color: rgb(255, 0, 0)">{{ $ticket->reopen_note ?? null }}</td>
                                 </tr>
                                 <tr>
                                     <td style="color: rgb(255, 0, 0)" ><strong>Re-Open Date</strong></td>
-                                    <td style="color: rgb(255, 0, 0)">{{ $ticket->reopen_date->format('d/m/Y') }}</td>
+                                    <td style="color: rgb(255, 0, 0)">{{ $ticket->reopen_date ? $ticket->reopen_date->format('d/m/Y') : null }}</td>
                                 </tr>
                                 @endif
                                 <tr>
