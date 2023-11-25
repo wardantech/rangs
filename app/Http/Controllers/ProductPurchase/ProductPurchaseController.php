@@ -31,40 +31,50 @@ class ProductPurchaseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $purchases = Purchase::with('outlet', 'customer', 'category', 'brand', 'modelname')->orderBy('id', 'desc');
-           // $purchases = Purchase::with('outlet', 'customer', 'category', 'brand', 'modelname')->latest()->get();
             if (request()->ajax()) {
+                $purchases = DB::table('purchases')->join('outlets','outlets.id','=', 'purchases.outlet_id')
+                ->join('customers','customers.id','=', 'purchases.customer_id')
+                ->join('categories','categories.id','=', 'purchases.product_category_id')
+                ->join('brands','brands.id','=', 'purchases.brand_id')
+                ->join('brand_models','brand_models.id','=', 'purchases.brand_model_id')
+                ->select(
+                    'purchases.id',
+                    'purchases.product_serial',
+                    'purchases.invoice_number',
+                    'outlets.name as outlet_name',
+                    'customers.name as customer_name',
+                    'customers.mobile as customer_mobile',
+                    'categories.name as category_name',
+                    'brands.name as brand_name',
+                    'brand_models.model_name',
+                )
+                ->orderBy('purchases.id', 'desc');
+
                 return DataTables::of($purchases)
 
-                    ->addColumn('customerName', function ($purchases) {
-                        $data = isset($purchases->customer) ? $purchases->customer->name : null;
+                    ->addColumn('customer_name', function ($purchases) {
+                        return $purchases->customer_name;
+                    })
+                    ->addColumn('customer_mobile', function ($purchases) {
+                        return $purchases->customer_mobile;
+                    })
+                    ->addColumn('category_name', function ($purchases) {
+                        $data = isset($purchases->category_name) ? $purchases->category_name : null;
                         return $data;
                     })
-                    ->addColumn('customerMobile', function ($purchases) {
-                        $data = isset($purchases->customer) ? $purchases->customer->mobile : null;
+                    ->addColumn('brand_name', function ($purchases) {
+                        $data = isset($purchases->brand_name) ? $purchases->brand_name : null;
                         return $data;
                     })
-                    ->addColumn('categoryName', function ($purchases) {
-                        $data = isset($purchases->category) ? $purchases->category->name : null;
+                    ->addColumn('model_name', function ($purchases) {
+                        $data = isset($purchases->model_name) ? $purchases->model_name : null;
                         return $data;
                     })
-                    ->addColumn('brandName', function ($purchases) {
-                        $data = isset($purchases->brand) ? $purchases->brand->name : null;
-                        return $data;
-                    })
-                    ->addColumn('modelName', function ($purchases) {
-                        $data = isset($purchases->modelname) ? $purchases->modelname->model_name : null;
-                        return $data;
-                    })
-                    ->addColumn('invoice_number', function ($purchases) {
-                        $data = $purchases->invoice_number ?? null;
-                        return $data;
-                    })
-                    ->addColumn('outletName', function ($purchases) {
-                        $data = isset($purchases->outlet) ? $purchases->outlet->name : null;
+                    ->addColumn('outlet_name', function ($purchases) {
+                        $data = isset($purchases->outlet_name) ? $purchases->outlet_name : null;
                         return $data;
                     })
 
@@ -90,11 +100,11 @@ class ProductPurchaseController extends Controller
                         }
                     })
                     ->addIndexColumn()
-                    ->rawColumns(['customerName', 'categoryName', 'brandName', 'modelName', 'outletName','customerMobile','action'])
+                    ->rawColumns(['action'])
                     ->make(true);
             }
 
-            return view('purchase.index', compact('purchases'));
+            return view('purchase.index');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

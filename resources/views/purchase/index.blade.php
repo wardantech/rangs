@@ -121,14 +121,14 @@
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    {data:'customerName', name: 'customerName', orderable: true, searchable: true},
-                    {data:'customerMobile', name: 'customerMobile', orderable: true, searchable: true},
-                    {data:'categoryName', name: 'categoryName', orderable: true, searchable: true},
+                    {data:'customer_name', name: 'customer_name', orderable: true, searchable: true},
+                    {data:'customer_mobile', name: 'customer_mobile', orderable: true, searchable: true},
+                    {data:'category_name', name: 'category_name', orderable: true, searchable: true},
                     {data:'product_serial', name: 'product_serial', orderable: true, searchable: true},
                     {data:'invoice_number', name: 'invoice_number', orderable: true, searchable: true},
-                    {data:'brandName', name: 'brandName', orderable: true, searchable: true},
-                    {data:'modelName', name: 'modelName', orderable: true, searchable: true},
-                    {data:'outletName', name: 'outletName', orderable: true, searchable: true},
+                    {data:'brand_name', name: 'brand_name', orderable: true, searchable: true},
+                    {data:'model_name', name: 'model_name', orderable: true, searchable: true},
+                    {data:'outlet_name', name: 'outlet_name', orderable: true, searchable: true},
                     {data:'action', name: 'action',  orderable: false, searchable: false}
 
                 ],

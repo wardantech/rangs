@@ -56,8 +56,8 @@
                                     <th>{{ __('SL')}}</th>
                                     <th>{{ __('label.CUSTOMER NAME')}}</th>
                                     <th>{{ __('label.GRADE')}}</th>
-                                    <th>{{ __('label.CUSTOMER MOBILE')}}</th>
-                                    <th>{{ __('label.CUSTOMER EMAIL')}}</th>
+                                    <th>{{ __('Primary Mobile No')}}</th>
+                                    <th>{{ __('Secondary Mobile No')}}</th>
                                     <th>{{ __('label.ADDRESS')}}</th>
                                     <th>{{ __('label.ACTION')}}</th>
                                 </tr>
@@ -110,11 +110,22 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="mobile" class="col-form-label">
-                                        {{ __('label.CUSTOMER MOBILE')}}
+                                        {{ __('Primary Mobile No')}}
                                         <span class="text-red">*</span>
                                     </label>
-                                    <input type="text" class="form-control" id="mobile" name="mobile" placeholder="Customer Mobile Number" value="{{ old('mobile') }}" required>
+                                    <input type="text" class="form-control" id="mobile" name="mobile" placeholder="Primary Mobile No" value="{{ old('mobile') }}" required>
                                     @error('mobile')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="secondary_mobile" class="col-form-label">
+                                        {{ __('Secondary Mobile No')}}
+                                    </label>
+                                    <input type="text" class="form-control" id="secondary_mobile" name="secondary_mobile" placeholder="Secondary Mobile No" value="{{ old('secondary_mobile') }}">
+                                    @error('secondary_mobile')
                                         <div class="text-danger">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -208,7 +219,8 @@
                     {data:'name', name: 'name', orderable: true, searchable: true},
                     {data:'GradeName', name: 'GradeName', orderable: true, searchable: true},
                     {data:'mobile', name: 'mobile', orderable: true, searchable: true},
-                    {data:'email', name: 'email', orderable: true, searchable: true},
+                    {data:'secondary_mobile', name: 'secondary_mobile', orderable: true, searchable: true},
+                    // {data:'email', name: 'email', orderable: true, searchable: true},
                     {data:'address', name: 'address', orderable: true, searchable: true},
                     {data:'action', name: 'action',  orderable: false, searchable: false}
 

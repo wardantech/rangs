@@ -127,6 +127,8 @@
                                     <th>{{ __('label.ASSIGNED_BY')}}</th>
                                     <th>{{ __('label.BRAND_MODEL')}}</th>
                                     <th>{{ __('label.FAULT_DESCRIPTION')}}</th>
+                                    <th>{{ __('label.FAULT_DESCRIPTION_NOTE')}}</th>
+                                    <th>{{ __('label.JOB ENDING REMARK')}}</th>
                                     <th>{{ __('label.REPAIR_DESCRIPTION')}}</th>
                                     <th>{{ __('Ticket Date')}}</th>
                                     <th>{{ __('label.RECEIVED_DATE')}}</th>
@@ -225,6 +227,8 @@
                     {data:'created_by', name: 'created_by', orderable: true, searchable: true},
                     {data:'model_name', name: 'model_name', orderable: true, searchable: true},
                     {data:'fault_description', name: 'fault_description', orderable: true, searchable: true},
+                    {data:'fault_description_note', name: 'fault_description_note', orderable: true, searchable: true},
+                    {data:'job_ending_remark', name: 'job_ending_remark', orderable: true, searchable: true},
                     {data:'repairDescription', name: 'repairDescription', orderable: true, searchable: true},
                     {data:'ticket_date', name: 'ticket_date', orderable: true, searchable: true},
                     {data:'job_assigned_date', name: 'job_assigned_date', orderable: true, searchable: true},

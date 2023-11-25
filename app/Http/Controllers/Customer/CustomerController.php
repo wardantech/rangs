@@ -17,20 +17,20 @@ class CustomerController extends Controller
     public function index()
     {
         try {
-            $customers = Customer::with('grade')->orderBy('id', 'desc');
+
             $divisions = Division::all();
             $customerGrades = CustomerGrade::where('status', 1)->orderBy('id', 'desc')->get();
             if (request()->ajax()) {
+                $customers = Customer::with('grade')->orderBy('id', 'desc');
                 return DataTables::of($customers)
 
                     ->addColumn('GradeName', function ($customers) {
-                        $data = isset($customers->grade) ? $customers->grade->name : null;
+                        $data = $customers->grade ? $customers->grade->name : null;
                         return $data;
                     })
-
                     ->addColumn('action', function ($customers) {
                         if (Auth::user()->can('edit') && Auth::user()->can('delete')) {
-                            return '<div class="table-actions text-center">
+                            return '<div class="table-actions d-flex">
                                             <a href="' . route('call-center.edit.customer', $customers->id) . '" title="Edit"><i class="ik ik-edit-2 f-16 mr-15 text-green"></i></a>
                                             <a type="submit" onclick="showDeleteConfirm(' . $customers->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
                                             </div>';
@@ -45,11 +45,11 @@ class CustomerController extends Controller
                         }
                     })
                     ->addIndexColumn()
-                    ->rawColumns(['GradeName', 'action'])
+                    ->rawColumns(['GradeName', 'secondary_mobile', 'action'])
                     ->make(true);
             }
 
-            return view('customer.index', compact('customers', 'divisions', 'customerGrades'));
+            return view('customer.index', compact('divisions', 'customerGrades'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -72,6 +72,7 @@ class CustomerController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'mobile' => $request->mobile,
+                'secondary_mobile' => $request->secondary_mobile,
                 'address' => $request->address,
                 'customer_grade_id' => $request->customer_grade_id,
             ]);
@@ -110,6 +111,7 @@ class CustomerController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'mobile' => $request->mobile,
+                'secondary_mobile' => $request->secondary_mobile,
                 'customer_grade_id' => $request->customer_grade_id,
                 'address' => $request->address,
             ]);

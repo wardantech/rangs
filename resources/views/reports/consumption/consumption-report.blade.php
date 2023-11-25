@@ -92,6 +92,7 @@
                                     <th>{{ __('label.SL')}}</th>
                                     <th>{{ __('label.PART_CODE')}}</th>
                                     <th>{{ __('label.PART_NAME')}}</th>
+                                    <th>{{ __('Ticket SL')}}</th>
                                     <th>{{ __('label.JOB_SL')}}</th>
 
                                     <th>{{ __('Ticket Date')}}</th>
@@ -184,6 +185,7 @@
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     {data:'part_name', name: 'part_name', orderable: true, searchable: true},
                     {data:'part_code', name: 'part_code', orderable: true, searchable: true},
+                    {data:'ticket_sl', name: 'ticket_sl', orderable: true, searchable: true},
                     {data:'job_sl', name: 'job_sl', orderable: true, searchable: true},
 
                     {data:'ticket_date', name: 'ticket_date', orderable: true, searchable: true},

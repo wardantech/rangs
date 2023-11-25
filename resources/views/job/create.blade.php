@@ -258,8 +258,8 @@
                         dataType: "json",
                         success: function(data){
                             $.each(data, function(key, value){
-                                // var option = "<option value='"+value.user_id+"'>"+value.name+"</option>";
-                                var option = "<option value='"+value.id+"'>"+value.name+"</option>";
+                                var option = "<option value='"+value.user_id+"'>"+value.name+"</option>";
+                                // var option = "<option value='"+value.id+"'>"+value.name+"</option>";
                                 $("#employee").append(option);
                             });
                             if (employee) {

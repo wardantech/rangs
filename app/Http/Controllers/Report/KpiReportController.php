@@ -96,6 +96,12 @@ class KpiReportController extends Controller
 
                                     return rtrim($fault_name, ', ');
                                 }) 
+                                ->addColumn('fault_description_note', function($jobs){
+                                    return $jobs->faultDescription;
+                                })
+                                ->addColumn('job_ending_remark', function($jobs){
+                                    return $jobs->job_ending_remark;
+                                })
                                 ->addColumn('ticket_date', function ($jobs) {
                                     $ticket_date=null;
                                     if($jobs->ticket_date){
@@ -338,7 +344,7 @@ class KpiReportController extends Controller
                                 ->rawColumns(['data','fault_description','part_name','tat','status','cmi','ticket_sl'])
                                 ->make(true);
             }
-            return view ('reports.kpi.kpi-report', compact('outlets','technicians'));
+            return view('reports.kpi.kpi-report', compact('outlets','technicians'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -384,7 +390,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('tickets.outlet_id','=',$branch)
                 ->where('jobs.user_id','=',$technician)
@@ -410,7 +416,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('tickets.outlet_id','=',$branch)
                 ->where('jobs.user_id','=',$technician)
@@ -435,7 +441,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('tickets.outlet_id','=',$branch)
                 ->where('jobs.deleted_at',null)
@@ -459,7 +465,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.outlet_id','=',$branch)
                 ->where('jobs.user_id','=',$technician)
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
@@ -484,7 +490,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('jobs.user_id','=',$technician)
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
@@ -509,7 +515,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('jobs.user_id','=',$technician)
                 ->where('jobs.deleted_at',null)
@@ -532,7 +538,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('tickets.outlet_id','=',$branch)
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
@@ -557,7 +563,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
                 ->where('jobs.deleted_at',null)
@@ -580,7 +586,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.outlet_id','=',$branch)
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
                 ->where('jobs.deleted_at',null)
@@ -603,7 +609,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('jobs.user_id','=',$technician)
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
                 ->where('jobs.deleted_at',null)
@@ -625,7 +631,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->whereDate('tickets.delivery_date_by_team_leader',$startDate)
                 ->where('jobs.deleted_at',null)
                 ->get();            
@@ -646,7 +652,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed','purchases.purchase_date as purchase_date','employees.name as employee_name','outlets.name as outlet_name','users.name as created_by',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->whereBetween('tickets.delivery_date_by_team_leader',[$startDate, $endDate])
                 ->where('tickets.deleted_at',null)
                 ->get(); 
@@ -666,7 +672,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.product_category_id','=',$product_category)
                 ->where('jobs.deleted_at',null)
                 ->get();
@@ -686,7 +692,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('tickets.outlet_id','=',$branch)
                 ->where('jobs.deleted_at',null)
                 ->get();
@@ -705,7 +711,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->where('jobs.user_id','=',$technician)
                 ->where('jobs.deleted_at',null)
                 ->get();
@@ -725,7 +731,7 @@ class KpiReportController extends Controller
                 'tickets.is_reopened as reopened','tickets.is_delivered_by_teamleader as deliveredby_teamleader','tickets.is_closed as ticket_closed','tickets.is_delivered_by_call_center as deliveredby_call_center',
                 'tickets.is_started as started','tickets.is_paused as is_paused','tickets.is_accepted as accepted','tickets.is_assigned as assigned','tickets.is_rejected as rejected','tickets.id as ticket_id',
                 'jobs.created_at as job_assigned_date','jobs.job_close_remark as repairDescription','jobs.is_consumed as is_consumed',
-                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note')
+                'jobs.job_start_time as receivedDate','jobs.job_end_time as repairDate','jobs.job_pending_note as job_pending_note','jobs.job_ending_remark')
                 ->whereDate('tickets.delivery_date_by_team_leader',$formattedCurrentDate)
                 ->where('jobs.deleted_at',null)
                 ->get();
@@ -763,6 +769,9 @@ class KpiReportController extends Controller
                         };
                 $item['fault_description'] = $fault_name;
                 }
+                $item['fault_description_note'] = $value->faultDescription;
+                $item['job_ending_remark'] = $value->job_ending_remark;
+
                 $item['repair_description'] = $value->repairDescription;
                 
                 $ticket_date=null;

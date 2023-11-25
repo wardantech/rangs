@@ -60,6 +60,8 @@
                                     <th>{{ __('label.ASSIGNED_BY')}}</th>
                                     <th>{{ __('label.BRAND_MODEL')}}</th>
                                     <th>{{ __('label.FAULT_DESCRIPTION')}}</th>
+                                    <th>{{ __('label.FAULT_DESCRIPTION_NOTE')}}</th>
+                                    <th>{{ __('label.JOB ENDING REMARK')}}</th>
                                     <th>{{ __('label.REPAIR_DESCRIPTION')}}</th>
                                     <th>{{ __('Ticket Date')}}</th>
                                     <th>{{ __('label.RECEIVED_DATE')}}</th>
@@ -92,6 +94,9 @@
                                     <td>{{$item['assigned_by']}}</td>
                                     <td>{{$item['model_name']}}</td>
                                     <td>{{$item['fault_description']}}</td>
+
+                                    <td>{{$item['fault_description_note']}}</td>
+                                    <td>{{$item['job_ending_remark']}}</td>
 
                                     <td>{{$item['repair_description']}}</td>
                                     <td>{{$item['ticket_date']}}</td>

@@ -28,7 +28,7 @@ class Ticket extends Model
     use HasFactory;
     use SoftDeletes;
     protected $guarded = [];
-    protected $dates = ['deleted_at','date','created_at','start_date','end_date','delivery_date_by_call_center'];
+    protected $dates = ['deleted_at','date','created_at','start_date','end_date','delivery_date_by_call_center','reopen_date'];
 
     protected $cast = [
         'fault_description_id' => 'array',
