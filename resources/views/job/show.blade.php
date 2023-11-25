@@ -260,7 +260,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>{{ __('label.CREATED_AT')}}</strong></td>
-                                    <td>{{ $job->created_at->format('m/d/yy H:i:s') }}</td>
+                                    <td>{{ $job->created_at->format('m/d/Y H:i:s') }}</td>
                                 </tr>
                                 @isset($job->job_close_remark)
                                 <tr>

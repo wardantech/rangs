@@ -104,22 +104,21 @@
                             
                             {{-- @if(($ticket->status == 8 || $ticket->status == 10) && $is_teamleader == null ) --}}
                             @if( $ticket->status == 8 || $ticket->status == 10 )
-                                    @if ($ticket->is_delivered_by_call_center == 0)
+                                    @if ($ticket->is_delivered_by_call_center == 0 && $is_teamleader == null)
                                         <a href="" class="btn btn-primary" data-toggle="modal" data-target="#ticketDeliveryByCCModal" title="Click to Delivery">
                                             <i class='fas fa-check-circle'></i>
                                             Delivery By (CC)
                                         </a>
-                                    @elseif($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 )
+                                    @elseif($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 && $is_teamleader == null )
                                     <button class="btn btn-danger" title="Delivered By TL">
                                         <i class='fas fa-check-circle'></i>
                                         Delivered By CC
                                     </button> 
+                                    <a href="" class="btn btn-success" data-toggle="modal" data-target="#demoModal" title="Click To Close">
+                                        <i class='fas fa-check-circle'></i>
+                                        Close By (CC)
+                                    </a>
                                     @endif
-
-                                <a href="" class="btn btn-success" data-toggle="modal" data-target="#demoModal" title="Click To Close">
-                                    <i class='fas fa-check-circle'></i>
-                                    Close By (CC)
-                                </a>
 
                                 <a href="{{ route('edit-ticket-details', $ticket->id)}}" class="btn btn-warning" data-toggle="modal" data-target="#ticketReopenModal" title="Click To Re-Open">
                                     <i class='fas fa-check-circle'></i>
