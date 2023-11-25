@@ -64,19 +64,33 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="mobile" class="col-form-label">
-                                            {{ __('label.CUSTOMER MOBILE')}}
+                                            {{ __('Primary Mobile No')}}
                                             <span class="text-red">*</span>
                                         </label>
-                                        <input type="text" class="form-control" id="mobile" name="mobile" value="{{$customer->mobile}}" placeholder="Customer Mobile Number" required>
+                                        <input type="text" class="form-control" id="mobile" name="mobile" value="{{$customer->mobile}}" placeholder="Primary Mobile No" required>
                                         @error('mobile')
                                             <div class="text-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="secondary_mobile" class="col-form-label">
+                                            {{ __('Secondary Mobile No')}}
+                                            <span class="text-red">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="secondary_mobile" name="secondary_mobile" value="{{$customer->secondary_mobile}}" placeholder="Secondary Mobile No" required>
+                                        @error('secondary_mobile')
+                                            <div class="text-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="customer_grade_id" class="col-form-label">
                                             {{ __('Customer Grade') }}

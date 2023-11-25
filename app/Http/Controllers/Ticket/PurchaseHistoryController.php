@@ -638,7 +638,8 @@ class PurchaseHistoryController extends Controller
             $ticket->update([
                 'status' => 8,
                 'is_delivered_by_teamleader' => 1,
-                'delivery_date_by_team_leader' => $formattedCurrentDate
+                'delivery_date_by_team_leader' => $formattedCurrentDate,
+                'updated_by' => Auth::id(),
             ]);
             DB::commit();
             return redirect()->back()->with('success', __('Product Delivered Successfully.'));
@@ -664,7 +665,8 @@ class PurchaseHistoryController extends Controller
                 $ticket->update([
                     'status' => 10,
                     'is_delivered_by_call_center' => 1,
-                    'delivery_date_by_call_center' => $formattedCurrentDate
+                    'delivery_date_by_call_center' => $formattedCurrentDate,
+                    'updated_by' => Auth::id(),
                 ]);
             DB::commit();                //Sms notification 
                 if ($request->send_sms == 1) {
@@ -694,7 +696,8 @@ class PurchaseHistoryController extends Controller
             $ticket = Ticket::find($id);
             $ticket->update([
                 'status'=>7,
-                'is_closed_by_teamleader'=>1
+                'is_closed_by_teamleader'=>1,
+                'updated_by' => Auth::id(),
             ]);
             DB::commit();
             return redirect()->back()->with('success', __('Ticket CLosed Successfully.'));
@@ -725,6 +728,8 @@ class PurchaseHistoryController extends Controller
                 'delivery_date_by_call_center' => NULL,
                 'is_reopened'=> 1,
                 'reopen_note'=> $request->note,
+                'reopen_date'=> Carbon::now(),
+                'updated_by' => Auth::id(),
             ]);
             DB::commit();
             return redirect()->back()->with('success', __('Ticket Re-Opened Successfully.'));

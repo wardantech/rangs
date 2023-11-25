@@ -102,7 +102,8 @@
                                     </button> 
                             @endif
                             
-                            @if(($ticket->status == 8 || $ticket->status == 10) && $is_teamleader == null )
+                            {{-- @if(($ticket->status == 8 || $ticket->status == 10) && $is_teamleader == null ) --}}
+                            @if( $ticket->status == 8 || $ticket->status == 10 )
                                     @if ($ticket->is_delivered_by_call_center == 0)
                                         <a href="" class="btn btn-primary" data-toggle="modal" data-target="#ticketDeliveryByCCModal" title="Click to Delivery">
                                             <i class='fas fa-check-circle'></i>
@@ -122,7 +123,7 @@
 
                                 <a href="{{ route('edit-ticket-details', $ticket->id)}}" class="btn btn-warning" data-toggle="modal" data-target="#ticketReopenModal" title="Click To Re-Open">
                                     <i class='fas fa-check-circle'></i>
-                                    Ticket Re-Open (CC)
+                                    Ticket Re-Open (CC & TL)
                                 </a>
                             @endif
                             @if ($ticket->status == 12)
@@ -140,6 +141,10 @@
                                 <tr>
                                     <td style="color: rgb(255, 0, 0)" ><strong>Re-Open Note</strong></td>
                                     <td style="color: rgb(255, 0, 0)">{{ $ticket->reopen_note }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: rgb(255, 0, 0)" ><strong>Re-Open Date</strong></td>
+                                    <td style="color: rgb(255, 0, 0)">{{ $ticket->reopen_date->format('d/m/Y') }}</td>
                                 </tr>
                                 @endif
                                 <tr>
