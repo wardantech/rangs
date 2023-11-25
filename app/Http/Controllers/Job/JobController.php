@@ -573,13 +573,13 @@ class JobController extends Controller
             DB::beginTransaction();
             $job_number = $this->generateUniqueJobSl();
             $ticket = Ticket::findOrFail($request->ticket_id);
-            $employee=Employee::where('id',$request->employee_id)->first();
+            $employee=Employee::where('user_id',$request->employee_id)->first();
 
 
           $job=Job::create([
                 'purchase_id' =>  $request->purchase_id,
-                'employee_id' =>  $request->employee_id,
-                'user_id' =>  $employee->user_id,
+                'employee_id' =>  $employee->id,
+                'user_id' =>  $request->employee_id,
                 'outlet_id' =>  $employee->outlet_id,
                 'date' =>  $request->date,
                 'ticket_id' =>  $request->ticket_id,
