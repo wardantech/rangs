@@ -761,7 +761,7 @@ class JobController extends Controller
 
         $this->validate($request, [
             'date' => 'required',
-            'job_number' => 'required|unique:jobs,job_number,' . $id,
+            //'job_number' => 'required|unique:jobs,job_number,' . $id,
             'employee_id' => 'required',
         ]);
 

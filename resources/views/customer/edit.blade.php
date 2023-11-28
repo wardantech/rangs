@@ -84,7 +84,7 @@
                                             {{ __('Secondary Mobile No')}}
                                             <span class="text-red">*</span>
                                         </label>
-                                        <input type="text" class="form-control" id="secondary_mobile" name="secondary_mobile" value="{{$customer->secondary_mobile}}" placeholder="Secondary Mobile No" required>
+                                        <input type="text" class="form-control" id="secondary_mobile" name="secondary_mobile" value="{{$customer->secondary_mobile}}" placeholder="Secondary Mobile No">
                                         @error('secondary_mobile')
                                             <div class="text-danger">{{ $message }}</div>
                                         @enderror

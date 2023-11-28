@@ -443,17 +443,6 @@ class EmployeeController extends Controller
         try{
             $auth = Auth::user();
             $user_role = $auth->roles->first();
-            // if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Call Center Admin') {
-            //     $employees=Employee::whereNotNull('team_leader_id')->latest()->get();
-            // } else {
-            //     $teamleader=TeamLeader::where('user_id',Auth::user()->id)->first();
-            //     if ($teamleader != null) {
-            //         $employees=Employee::where('team_leader_id',$teamleader->id)->latest()->get();
-            //     }else{
-            //         return redirect()->back()->with('error', __('Sorry you dont have the permission.'));
-            //     }
-            // }
-
             if ($type==2) {
                 if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Call Center Admin') {
                     $employees=Employee::whereNotNull('vendor_id')->whereNotNull('team_leader_id')->latest()->get();
