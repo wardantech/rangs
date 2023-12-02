@@ -176,15 +176,15 @@
                                 <div class="col-md-6">
                                     <div class="position-relative form-group">
                                         <label for="employee">{{ __('label.ASSIGN_TO_TECHNICIAN')}}<span class="text-red">*</span></label>
-                                        <select name="employee_id" id="employee" class="form-control select2">
+                                        <select name="user_id" id="employee" class="form-control select2">
                                             <option value="">Select</option>
                                             {{-- @foreach ($employees as $employee)
                                             <option value="{{$employee->id}}">{{$employee->name}}</option>
                                             @endforeach --}}
                                         </select>
-                                        @if ($errors->has('employee_id'))
+                                        @if ($errors->has('user_id'))
                                             <span class="text-danger">
-                                                <strong>{{ $errors->first('employee_id') }}</strong>
+                                                <strong>{{ $errors->first('user_id') }}</strong>
                                             </span>
                                         @endif
                                     </div>
