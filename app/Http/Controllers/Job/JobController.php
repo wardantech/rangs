@@ -93,10 +93,10 @@ class JobController extends Controller
                 {
                     $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
                     $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
-                    $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
+                    $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest('jobs.id')->get();
                 } 
                 else{
-                    $jobs=$data->latest()->get();
+                    $jobs=$data->latest('jobs.id')->get();
                 }
                 return DataTables::of($jobs)
 
@@ -566,20 +566,20 @@ class JobController extends Controller
             'date' => 'required',
             'note' => 'required',
             // 'job_number' => 'required|unique:jobs,job_number,NULL,id,deleted_at,NULL',
-            'employee_id' => 'required',
+            'user_id' => 'required',
         ]);
 
         try{
             DB::beginTransaction();
             $job_number = $this->generateUniqueJobSl();
             $ticket = Ticket::findOrFail($request->ticket_id);
-            $employee=Employee::where('user_id',$request->employee_id)->first();
+            $employee=Employee::where('user_id',$request->user_id)->first();
 
 
           $job=Job::create([
                 'purchase_id' =>  $request->purchase_id,
                 'employee_id' =>  $employee->id,
-                'user_id' =>  $request->employee_id,
+                'user_id' =>  $request->user_id,
                 'outlet_id' =>  $employee->outlet_id,
                 'date' =>  $request->date,
                 'ticket_id' =>  $request->ticket_id,
