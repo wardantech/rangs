@@ -51,8 +51,27 @@ class ProductPurchaseController extends Controller
                     'brands.name as brand_name',
                     'brand_models.model_name',
                 )
+                ->whereNull('purchases.deleted_at')
                 ->orderBy('purchases.id', 'desc');
 
+                if(!empty($request->custom_search))
+                {
+                    $searchTerm = $request->custom_search;
+                    $purchases->where(function ($query) use ($searchTerm) {
+                        $query->where('purchases.product_serial', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('purchases.invoice_number', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('outlets.name', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('customers.name', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('customers.mobile', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('categories.name', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('brands.name', 'like', '%' . $searchTerm . '%')
+                              ->orWhere('brand_models.model_name', 'like', '%' . $searchTerm . '%');
+                    });
+                } 
+                else{
+                    $purchases->whereNotNull('purchases.id');
+                }
+                
                 return DataTables::of($purchases)
 
                     ->addColumn('customer_name', function ($purchases) {

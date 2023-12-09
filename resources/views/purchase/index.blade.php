@@ -42,28 +42,38 @@
             <!-- end message area-->
             <div class="col-md-12">
                 <div class="card p-3">
-                    <div class="card-header">
+                    <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
                         <h3>{{ __('label.PURCHASE')}}</h3>
                         @can('create')
-                            <div style="margin: 0 auto">
-                                <a href="{{route('product.sample-purchase-excel')}}" class="btn btn-success">Sample Excel Download</a>
-                            </div>
-                            <div style="margin: 0 auto">
-                                <form action="{{route('product.import-purchase')}}" method="post" enctype="multipart/form-data">
-                                @csrf
-                                <div>
-                                    {{-- <label for="" class="badge badge-danger">Import</label> --}}
-                                    <input type="file" name="import_file" required>
-                                    <input type="submit" class="btn btn-success" value="Import">
+                            <div class="d-flex mt-2 mt-md-0">
+                                <div class="mr-2">
+                                    <a href="{{route('product.sample-purchase-excel')}}" class="btn btn-success" title="Click To Downaload">Sample Excel</a>
                                 </div>
-                                </form>
-                            </div>
-                            <div class="card-header-right">
-                                <a href="{{URL::to('product/purchase/create')}}" class="btn btn-primary">  @lang('label.CREATE')</a>
+                    
+                                <div class="mr-2">
+                                    <form action="{{route('product.import-purchase')}}" method="post" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="d-flex align-items-center">
+                                            <input type="file" name="import_file" required>
+                                            <input type="submit" class="btn btn-success" value="Import">
+                                        </div>
+                                    </form>
+                                </div>
+                    
+                                <div class="mr-2">
+                                    <a href="{{URL::to('product/purchase/create')}}" class="btn btn-primary">  @lang('label.CREATE')</a>
+                                </div>
                             </div>
                         @endcan
-
                     </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mx-auto text-center mt-5">
+                            <label for="inputpc">Enter Search Term:</label>
+                            <input type="text" class="form-control bg-light" id="custom_search" name="custom_search" value="" placeholder="Type your search term here">
+                        </div>
+                    </div>
+                    
                     <div class="card-body table-responsive">
                         <table id="table" class="table">
                             <thead>
@@ -73,7 +83,7 @@
                                     <th>{{ __('label.CUSTOMER MOBILE')}}</th>
                                     <th>{{ __('label.PRODUCT_NAME')}}</th>
                                     <th>{{ __('label.PRODUCT_SERIAL')}}</th>
-                                    <th>Invoice Number</th>
+                                    <th>{{ __('Invoice Number') }}</th>
                                     <th>{{ __('label.BRAND_NAME')}}</th>
                                     <th>{{ __('label.MODEL_NAME')}}</th>
                                     <th>{{ __('label.POINT_OF_PURCHASE')}}</th>
@@ -117,7 +127,10 @@
                 // dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",
                 ajax: {
                     url: "{{route('product.purchase.index')}}",
-                    type: "get"
+                    type: "get",
+                    data: function (d) {
+                        d.custom_search = $('input[name="custom_search"]').val()
+                    }
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -191,6 +204,9 @@
                                 }
                             }
                         ],
+            });
+            $('#custom_search').on('keyup', function () {
+                dTable.draw();
             });
         });
                         // delete Confirm
