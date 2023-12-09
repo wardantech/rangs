@@ -219,12 +219,6 @@
             <td class="mfoot" colspan="5">Advanced</td>
             <td style="text-align: center;">{{ number_format($jobSubmission->advance_amount, 2) }}</td>
         </tr>
-        {{-- @if (isset($jobSubmission->vat))
-            <tr>
-                <td class="mfoot" colspan="5">Vat</td>
-                <td style="text-align: center;">{{ number_format($jobSubmission->vat, 2) }}</td>
-            </tr>
-        @endif --}}
         <tr>
             <th class="mfoot" colspan="5">Total</th>
             <?php

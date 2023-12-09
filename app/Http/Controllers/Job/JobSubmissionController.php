@@ -34,94 +34,60 @@ class JobSubmissionController extends Controller
         $this->imageUploadService = $imageUploadService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try{
             $auth = Auth::user();
-            $employee=Employee::where('user_id',Auth::user()->id)->first();
-            $user_role = $auth->roles->first();
-            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin') {
-                $submittedJobs=DB::table('job_submissions')
-                ->join('jobs', 'job_submissions.job_id', '=', 'jobs.id')
-                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
-                ->select('job_submissions.id as id','job_submissions.submission_date as submission_date','job_submissions.total_amount as total_amount',
-                'jobs.job_number as job_number','jobs.id as job_id','jobs.is_ticket_reopened_job as is_ticket_reopened_job','jobs.created_at as job_assigned_date','tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as ticket_delivery_date_by_team_leader')
-                ->where('job_submissions.deleted_at',null)
-                ->orderBy('job_submissions.id', 'desc');
-                // ->get();
-            }elseif($user_role->name == 'Team Leader'){
-                $submittedJobs=DB::table('job_submissions')
-                ->join('jobs', 'job_submissions.job_id', '=', 'jobs.id')
-                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
-                ->select('job_submissions.id as id','job_submissions.submission_date as submission_date','job_submissions.total_amount as total_amount',
-                'jobs.job_number as job_number','jobs.id as job_id','jobs.is_ticket_reopened_job as is_ticket_reopened_job','jobs.created_at as job_assigned_date','tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as ticket_delivery_date_by_team_leader')
-                ->where('job_submissions.team_leader_user_id',Auth::user()->id)
-                ->where('job_submissions.deleted_at',null)
-                ->orderBy('job_submissions.id', 'desc');
-                // ->get();
-            }elseif($user_role->name == 'Technician'){
-                $submittedJobs=DB::table('job_submissions')
-                ->join('jobs', 'job_submissions.job_id', '=', 'jobs.id')
-                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
-                ->select('job_submissions.id as id','job_submissions.submission_date as submission_date','job_submissions.total_amount as total_amount',
-                'jobs.job_number as job_number','jobs.id as job_id','jobs.is_ticket_reopened_job as is_ticket_reopened_job','jobs.created_at as job_assigned_date','tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as ticket_delivery_date_by_team_leader')
-                ->where('job_submissions.user_id',Auth::user()->id)
-                ->where('job_submissions.deleted_at',null)
-                ->orderBy('job_submissions.id', 'desc');
-                // ->get();
-            }else { 
-                if($employee==null){
-                    return redirect()->back()->with('error', __("Sorry! You don't have the access."));
-                }else{
-                $submittedJobs=DB::table('job_submissions')
-                    ->join('jobs', 'job_submissions.job_id', '=', 'jobs.id')
-                    ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
-                    ->select('job_submissions.id as id','job_submissions.submission_date as submission_date','job_submissions.total_amount as total_amount',
-                        'jobs.job_number as job_number','jobs.id as job_id','jobs.is_ticket_reopened_job as is_ticket_reopened_job','jobs.created_at as job_assigned_date','tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as ticket_delivery_date_by_team_leader','tickets.outlet_id as outlet_id')
-                    ->where('job_submissions.deleted_at',null)
-                    ->where('tickets.outlet_id', $employee->outlet_id)
-                    ->orderBy('job_submissions.id', 'desc');
-                    // ->get();
-                }
-            }
+            $employee = Employee::where('user_id', $auth->id)->first();
+            $userRole = $auth->roles->first();
+
             if (request()->ajax()) {
+                $submittedJobs = $this->getSubmittedJobsQuery($userRole, $employee);
+
+                if(!empty($request->start_date && $request->end_date))
+                {
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
+                    $submittedJobs->whereBetween('job_submissions.created_at',[$startDate, $endDate]);
+                }
+
                 return DataTables::of($submittedJobs)
 
                     ->addColumn('date', function ($submittedJobs) {
-                        $date=Carbon::parse($submittedJobs->submission_date)->format('m/d/Y');
-                        return $date;
+                        return optional(Carbon::parse($submittedJobs->submission_date))->format('m/d/Y');
                     })
 
                     ->addColumn('ticket_number', function ($submittedJobs) {
                         $ticket_number='TSL'.'-'.$submittedJobs->ticket_id;
                         return $ticket_number;
                     })
+
                     ->addColumn('ticket_date', function ($submittedJobs) {
-                        $ticket_date=null;
-                        if($submittedJobs->ticket_date){
-                            $ticket_date=Carbon::parse($submittedJobs->ticket_date)->format('m/d/Y'); 
-                        }
-                        return $ticket_date;
+                        return optional(Carbon::parse($submittedJobs->ticket_date))->format('m/d/Y');
+                    })
+
+                    ->addColumn('branch', function ($submittedJobs) {
+                        return $submittedJobs->outlet_name;
                     })
 
                     ->addColumn('job_number', function ($submittedJobs) {
                         $job_number='JSL-'.$submittedJobs->job_id;
                         return $job_number;
                     })
+
                     ->addColumn('job_assigned_date', function ($submittedJobs) {
-                        $job_assigned_date=null;
-                        if($submittedJobs->job_assigned_date){
-                            $job_assigned_date=Carbon::parse($submittedJobs->job_assigned_date)->format('m/d/Y'); 
-                        }
-                        return $job_assigned_date;
+                        return optional(Carbon::parse($submittedJobs->job_assigned_date))->format('m/d/Y');
                     })
+                    
+
                     ->addColumn('ticket_delivery_date_by_team_leader', function ($submittedJobs) {
-                        $ticket_delivery_date_by_team_leader=null;
-                        if($submittedJobs->ticket_delivery_date_by_team_leader){
-                            $ticket_delivery_date_by_team_leader=Carbon::parse($submittedJobs->ticket_delivery_date_by_team_leader)->format('m/d/Y'); 
-                        }
-                        return $ticket_delivery_date_by_team_leader;
+                        return optional(Carbon::parse($submittedJobs->delivery_date_by_team_leader))->format('m/d/Y');
                     })
+
+                    ->addColumn('ticket_delivery_date_by_callcenter', function ($submittedJobs) {
+                        return optional(Carbon::parse($submittedJobs->delivery_date_by_call_center))->format('m/d/Y');
+                    })
+
                     ->addColumn('amount', function ($submittedJobs) {
                         $amount=$submittedJobs->total_amount ?? 0;
                         return $amount;
@@ -136,39 +102,33 @@ class JobSubmissionController extends Controller
                                              
                     })
                     ->addColumn('action', function ($submittedJobs) {
-                            if (Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
-                                    return '<div class="table-actions text-center" style="display: flex;">           
-                                                <a href=" '.route('technician.submitted-jobs.edit', $submittedJobs->id). ' " title="View">
-                                                    <i class="ik ik-edit f-16 mr-15 text-info"></i>
-                                                </a>
-                                                <a href=" '.route('technician.submitted-job-show', $submittedJobs->id). ' " title="View">
-                                                    <i class="ik ik-eye f-16 mr-15 text-green"></i>
-                                                </a>
-                                                <a type="submit" onclick="showDeleteConfirm(' . $submittedJobs->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                            </div>';
-
-                            } elseif (Auth::user()->can('edit') && Auth::user()->can('show')) {
-                                return '<div class="table-actions text-center" style="display: flex;">           
-                                            <a href=" '.route('technician.submitted-jobs.edit', $submittedJobs->id). ' " title="View">
+                        $canEdit = Auth::user()->can('edit');
+                        $canDelete = Auth::user()->can('delete');
+                        $canShow = Auth::user()->can('show');
+                    
+                        $actions = [];
+                    
+                        if ($canEdit) {
+                            $actions[] = '<a href="' . route('technician.submitted-jobs.edit', $submittedJobs->id) . '" title="Edit">
                                                 <i class="ik ik-edit f-16 mr-15 text-info"></i>
-                                            </a>
-                                            <a href=" '.route('technician.submitted-job-show', $submittedJobs->id). ' " title="View">
+                                            </a>';
+                        }
+                    
+                        if ($canShow) {
+                            $actions[] = '<a href="' . route('technician.submitted-job-show', $submittedJobs->id) . '" title="View">
                                                 <i class="ik ik-eye f-16 mr-15 text-green"></i>
-                                            </a>
-                                            <a type="submit" onclick="showDeleteConfirm(' . $submittedJobs->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                        </div>';
-                            } elseif (Auth::user()->can('show')) {
-                                return '<div class="table-actions text-center" style="display: flex;">           
-                                            <a href=" '.route('technician.submitted-jobs.edit', $submittedJobs->id). ' " title="View">
-                                                <i class="ik ik-edit f-16 mr-15 text-info"></i>
-                                            </a>
-                                            <a href=" '.route('technician.submitted-job-show', $submittedJobs->id). ' " title="View">
-                                                <i class="ik ik-eye f-16 mr-15 text-green"></i>
-                                            </a>
-                                            <a type="submit" onclick="showDeleteConfirm(' . $submittedJobs->id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                        </div>';
-                            } 
+                                            </a>';
+                        }
+                    
+                        if ($canDelete) {
+                            $actions[] = '<a type="submit" onclick="showDeleteConfirm(' . $submittedJobs->id . ')" title="Delete">
+                                                <i class="ik ik-trash-2 f-16 text-red"></i>
+                                            </a>';
+                        }
+                    
+                        return '<div class="table-actions text-center" style="display: flex;">' . implode(' ', $actions) . '</div>';
                     })
+                    
                     ->addIndexColumn()
                     ->rawColumns(['status','action'])
                     ->make(true);
@@ -180,6 +140,46 @@ class JobSubmissionController extends Controller
         }
 
     }
+
+    private function getSubmittedJobsQuery($userRole, $employee)
+    {
+        $query = DB::table('job_submissions')
+            ->join('jobs', 'job_submissions.job_id', '=', 'jobs.id')
+            ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
+            ->join('outlets','tickets.outlet_id','=','outlets.id')
+            ->select(
+                'job_submissions.id as id',
+                'job_submissions.submission_date as submission_date',
+                'job_submissions.total_amount as total_amount',
+                'jobs.job_number as job_number',
+                'jobs.id as job_id',
+                'jobs.is_ticket_reopened_job as is_ticket_reopened_job',
+                'jobs.created_at as job_assigned_date',
+                'tickets.id as ticket_id',
+                'tickets.created_at as ticket_date',
+                'tickets.delivery_date_by_team_leader',
+                'tickets.delivery_date_by_call_center',
+                'outlets.name as outlet_name'
+            );
+
+        $isAdmin = $userRole->name == 'Super Admin' || $userRole->name == 'Admin';
+
+        if ($isAdmin) {
+            $query->orderBy('job_submissions.id', 'desc');
+        } elseif ($userRole->name == 'Team Leader') {
+            $query->where('job_submissions.team_leader_user_id', $user->id)->orderBy('job_submissions.id', 'desc');
+        } elseif ($userRole->name == 'Technician') {
+            $query->where('job_submissions.user_id', $user->id)->orderBy('job_submissions.id', 'desc');
+        } else {
+            if (!$employee) {
+                return redirect()->back()->with('error', __("Sorry! You don't have access."));
+            }
+            $query->where('tickets.outlet_id', $employee->outlet_id)->orderBy('job_submissions.id', 'desc');
+        }
+
+        return $query->whereNull('job_submissions.deleted_at');
+    }
+
 
     public function createJobSubmission($id)
     {
@@ -401,29 +401,6 @@ class JobSubmissionController extends Controller
 
     public function submissionImageStore(Request $request)
     {
-
-        // try{
-        //  if($request->hasfile('filename'))
-        //     {
-                
-        //         foreach($request->file('filename') as $key=>$image)
-        //         {
-        //             $newimage = Image::make($image);
-        //             $name=date('m-d-Y_H-i-s').'-'.$image->getClientOriginalName();
-        //             $destinationPath = public_path('attachments/');
-        //             $newimage->save($destinationPath.$name,60);
-        //             $data[] = $name;    
-        //         }
-        //     }
-        //     $JobAttachment= new JobAttachment();
-        //     $JobAttachment->name=json_encode($data);
-        //     $JobAttachment->job_id=$request->job_id;
-        //     $JobAttachment->save();
-        //     return redirect()->route('technician.jobs.show', $request->job_id)->with('success', __('Attachment uploaded successfully.'));
-        // } catch (\Exception $e) {
-        //     $bug = $e->getMessage();
-        //     return redirect()->back()->with('error', $bug);
-        // }
         $this->validate($request, [
             'filename' => 'required',
             'filename.*' => 'mimes:jpeg,jpg,png|required|max:10000' // max 10000kb

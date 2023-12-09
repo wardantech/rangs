@@ -59,64 +59,72 @@
                                 <th><strong>{{trans('label.DATE')}}</strong></th>
                                 <td>{{$jobSubmission->submission_date->format('m/d/Y')}}</td>
                             </tr>  
+
                             <tr>
                                 <th><strong>{{trans('label.TICKET_SL')}}</strong></th>
                                 <td>TSL-{{$jobSubmission->job->ticket->id}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.JOB NUMBER')}}</strong></th>
                                 <td>JSL-{{$jobSubmission->job->id}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.CUSTOMER')}}</strong></th>
                                 <td>{{$jobSubmission->job->ticket->purchase->customer->name}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.PHONE')}}</strong></th>
                                 <td>{{$jobSubmission->job->ticket->purchase->customer->mobile}}</td>
                             </tr> 
+                            
                             <tr>
                                 <th><strong>{{trans('label.PRODUCT')}}</strong></th>
                                 <td>{{$jobSubmission->job->ticket->category->name}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.BRAND')}}</strong></th>
                                 <td>{{$jobSubmission->job->ticket->purchase->brand->name}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.BRAND_MODEL')}}</strong></th>
                                 <td>{{$jobSubmission->job->ticket->purchase->modelname->model_name}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.PRODUCT_SERIAL')}}</strong></th>
                                 <td>{{$jobSubmission->job->ticket->purchase->product_serial}}</td>
                             </tr>
+
                             <tr>
                                 <th><strong>{{trans('label.SERVICE_AMOUNT')}}</strong></th>
                                 <td>{{$jobSubmission->service_amount}}</td>
                             </tr>
-                            @isset($jobSubmission->createdBy)
-                                <tr>
-                                    <td><strong>{{ __('Created By') }}</strong></td>
-                                    <td>{{ $jobSubmission->createdBy->name }}</td>
-                                </tr>
-                            @endisset
-                            @isset($jobSubmission->updatedBy)
-                                <tr>
-                                    <td><strong>{{ __('Updated By') }}</strong></td>
-                                    <td>{{ $jobSubmission->updatedBy->name }}</td>
-                                </tr>
-                            @endisset
+
+                            <tr>
+                                <td><strong>{{ __('Created By') }}</strong></td>
+                                <td>{{ optional($jobSubmission->createdBy)->name }}</td>
+                            </tr>
+                            
+                            <tr>
+                                <td><strong>{{ __('Updated By') }}</strong></td>
+                                <td>{{ optional($jobSubmission->updatedBy)->name }}</td>
+                            </tr>                            
+
                             <tr>
                                 <td><strong>{{ __('Created At') }}</strong></td>
                                 <td>{{ $jobSubmission->created_at->format('m/d/yy H:i:s') }}</td>
                             </tr>
-                            @isset($jobSubmission->remark)
-                                <tr>
-                                    <th><strong>{{trans('label.REMARK')}}</strong></th>
-                                    <td>{{isset($jobSubmission->remark) ? $jobSubmission->remark : ''}}</td>
-                                </tr>
-                            @endisset
+
+                            <tr>
+                                <th><strong>{{ trans('label.REMARK') }}</strong></th>
+                                <td>{{ optional($jobSubmission)->remark ?? '' }}</td>
+                            </tr>
+                            
                         </table>
                         <table id="datatable" class="table">
                             <thead>
@@ -132,7 +140,7 @@
                                 @if(!$jobSubmissionDetails->isEmpty())
                                     <?php
                                     $sl = 0;
-                                    $total = 0;
+                                    $parts_total = 0;
                                     ?>
                                     @foreach($jobSubmissionDetails as $item)
                                     <tr>
@@ -142,7 +150,7 @@
                                         <td>{{number_format($item->selling_price_bdt,2)}}</td>
                                         <td>{{number_format($item->selling_price_bdt * $item->used_quantity,2)}}
                                         @php
-                                            $total+=$item->selling_price_bdt;
+                                            $parts_total += $item->selling_price_bdt * $item->used_quantity;
                                         @endphp
                                         </td>
                                     </tr>
@@ -157,60 +165,75 @@
 
                             </tbody>
                         </table>
+                        @php
+                            $vat_on_parts = ($parts_total * 5) / 100;
+                            $partsamount_with_vat = $parts_total + $vat_on_parts;
+                            $total_service_amount=$jobSubmission->fault_finding_charges+$jobSubmission->repair_charges+$jobSubmission->other_charges;
+                            $vat_on_service = $total_service_amount * 10 / 100;
+                            $serviceamount_with_vat =$total_service_amount + $vat_on_service;
+                            $total_bill = $partsamount_with_vat + $serviceamount_with_vat;
+                            $subtracting=$jobSubmission->discount + $jobSubmission->advance_amount;
+                            $payable_amount = $total_bill - $subtracting;
+                        @endphp
                         <table class="table table-striped table-bordered table-hover">
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Subtotal For Spare:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->subtotal_for_spare, 2) }}</td>
+                                <td class="mfoot" colspan="5">Parts Amount</td>
+                                <td style="text-align: center;">{{ $parts_total }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Subtotal For Servicing:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->subtotal_for_servicing, 2) }}</td>
+                                <td class="mfoot" colspan="5">VAT (5%)</td>
+                                <td style="text-align: center;">{{ $vat_on_parts }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Fault Finding Charges:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->fault_finding_charges, 2) }}</td>
+                                <td class="mfoot bold" colspan="5">Parts Amount with VAT</td>
+                                <td class="bold" style="text-align: center;">{{ $partsamount_with_vat }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Repair Charges:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->repair_charges, 2) }}</td>
+                                <td class="mfoot" colspan="5">Fault Finding Charge</td>
+                                <td style="text-align: center;">{{ number_format($jobSubmission->fault_finding_charges, 2) }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Vat:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->vat, 2)}}</td>
+                                <td class="mfoot" colspan="5">Service Charge</td>
+                                <td style="text-align: center;">{{ number_format($jobSubmission->repair_charges, 2) }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Other Charges:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->other_charges, 2) }}</td>
+                                <td class="mfoot" colspan="5">Other Charge</td>
+                                <td style="text-align: center;">{{ number_format($jobSubmission->other_charges, 2) }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Discount:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->discount, 2) }}</td>
+                                <td class="mfoot" colspan="5">VAT (10%)</td>
+                                <td style="text-align: center;">
+                                    {{ $vat_on_service }}
+                                </td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Advance Amount:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->advance_amount, 2) }}</td>
+                                <td class="mfoot bold" colspan="5">Service Amount with VAT</td>
+                                <td class="bold" style="text-align: center;">
+                                    {{ $serviceamount_with_vat}}
+                                </td>
                             </tr>
                             <tr>
-                                <th style="width: 50%;">
-                                    <strong>Total Amount:</strong>
-                                </th>
-                                <td>{{ number_format($jobSubmission->total_amount, 2) }}</td>
+                                <td class="mfoot bold" colspan="5">Total Bill</td>
+                                <td class="bold" style="text-align: center;">
+                                    {{ $total_bill }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="mfoot" colspan="5">Discount</td>
+                                <td style="text-align: center;">{{ number_format($jobSubmission->discount, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="mfoot" colspan="5">Advanced</td>
+                                <td style="text-align: center;">{{ number_format($jobSubmission->advance_amount, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th colspan="5">Total</th>
+                                @php
+                                $toatl_bill = $parts_total + $jobSubmission->fault_finding_charges + $jobSubmission->repair_charges + $jobSubmission->other_charges + $jobSubmission->discount + $jobSubmission->advance_amount;
+                                $toatl_sub = $jobSubmission->discount;
+                                $current_bill = $toatl_bill - $toatl_sub;
+                                @endphp
+                                <th>{{ number_format($payable_amount, 2) }}</th>
                             </tr>
                         </table>
                         <hr class="mt-2 mb-3"/>

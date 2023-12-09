@@ -40,12 +40,19 @@
             <!-- end message area-->
             <div class="col-md-12">
                 <div class="card p-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="inputpc" class="">Start Date :</label>
+                            <input type="date" class="form-control" name="start_date" value="">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="inputpc" class="">End Date :</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="">
+                        </div>
+                    </div>
+                    <hr>
                     <div class="card-header">
                         <h3>{{ __('label.SUBMITTED JOB LIST')}}</h3>
-                        <div class="card-header-right">
-                            {{-- <a href="{{URL::to('product/purchase/create')}}" class="btn btn-primary">  @lang('label.CREATE')</a> --}}
-                         </div>
-
                     </div>
                     <div class="card-body">
                         <table id="datatable" class="table">
@@ -54,57 +61,18 @@
                                     <th>{{ __('label.SL')}}</th>
                                     <th>{{ __('Job Submission Date')}}</th>
                                     <th>{{ __('Ticket Number')}}</th>
+                                    <th>{{ __('Branch')}}</th>
                                     <th>{{ __('Ticket Date')}}</th>
                                     <th>{{ __('label.JOB NUMBER')}}</th>
                                     <th>{{ __('Job Assign Date')}}</th>
                                     <th>{{ __('Team Leader Delivery Date')}}</th>
+                                    <th>{{ __('Call Center Delivery Date')}}</th>
                                     <th>{{ __('label.AMOUNT')}}</th>
                                     <th>{{ __('label.STATUS')}}</th>
                                     <th>{{ __('label.ACTION')}}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- @php($i=1)
-                                @foreach($submittedJobs as $submittedJob)
-                                    <tr>
-                                        <td>{{$i++}}</td>
-                                        <td>{{$submittedJob->submission_date->format('m/d/Y')}}</td>
-                                        <td>TSL-{{$submittedJob->job->ticket->id}}</td>
-                                        <td>{{$submittedJob->job->job_number}}</td>
-                                        <td>
-                                        @if ($submittedJob->job->is_ticket_reopened_job == 1)
-                                            <span class="badge badge-danger">Re Opened Ticket</span>
-                                        @else
-                                            <span class="badge badge-success">Normal</span>
-                                        @endif
-                                        </td>
-                                        <td>
-                                            <div class='text-center'>
-                                                @can('edit')
-                                                    <a  href="{{ route('technician.submitted-jobs.edit', $submittedJob->id) }}">
-                                                        <i class='ik ik-edit f-16 mr-15 text-green'></i>
-                                                    </a>
-                                                @endcan
-
-                                                @can('show')
-                                                    <a  href="{{ route('technician.submitted-job-show', $submittedJob->id) }}">
-                                                        <i class='ik ik-eye f-16 mr-15 text-blue'></i>
-                                                    </a>
-                                                @endcan
-
-                                                @can('delete')
-                                                    <form class="delete d-inline" action="{{ route('technician.submitted-jobs.destroy', $submittedJob->id) }}" method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" data-placement="top" data-rel="tooltip" data-original-title="Delete" style="border: none;background-color: #fff;">
-                                                            <i class="ik ik-trash-2 f-16 text-red"></i>
-                                                        </button>
-                                                    </form>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach --}}
                             </tbody>
                         </table>
                     </div>
@@ -144,19 +112,26 @@
                     loadingIndicator: false
                 },
                 pagingType: "full_numbers",
+                scrollX:true,
                 // dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",
                 ajax: {
                     url: "{{url('technician/submitted-jobs')}}",
-                    type: "get"
+                    type: "get",
+                    data: function (d) {
+                        d.start_date = $('input[name="start_date"]').val(),
+                        d.end_date = $('input[name="end_date"]').val()
+                    },
                 },
                 columns: [
                     {data:'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     {data:'date', name: 'date', orderable: true, searchable: true},
                     {data:'ticket_number', name: 'ticket_number', orderable: true, searchable: true},
+                    {data:'branch', name: 'branch', orderable: true, searchable: true},
                     {data:'ticket_date', name: 'ticket_date', orderable: true, searchable: true},
                     {data:'job_number', name: 'job_number', orderable: true, searchable: true},
                     {data:'job_assigned_date', name: 'job_assigned_date', orderable: true, searchable: true},
                     {data:'ticket_delivery_date_by_team_leader', name: 'ticket_delivery_date_by_team_leader', orderable: true, searchable: true},
+                    {data:'ticket_delivery_date_by_callcenter', name: 'ticket_delivery_date_by_callcenter', orderable: true, searchable: true},
                     {data:'amount', name: 'amount', orderable: true, searchable: true},
                     {data:'status', name: 'status', orderable: false, searchable: false},
                     {data:'action', name: 'action',  orderable: false, searchable: false}
@@ -226,6 +201,9 @@
                                 columns: ':gt(0)'
                             },
                         ],
+            });
+            $('#end_date').change(function(){
+                dTable.draw();
             });
         });
                             // delete Confirm

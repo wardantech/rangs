@@ -101,11 +101,7 @@
                                 <div class="col-sm-4">
                                     <label for="customer_name">{{__('label.CUSTOMER')}}</label>
                                     <div>
-                                        <select name="customer_id" id="customer_id" class="form-control select2" required>
-                                            <option value="">Select Customer</option>
-                                            @foreach($customers as $customer)
-                                                <option value="{{$customer->id}}">{{$customer->name}}</option>
-                                            @endforeach
+                                        <select name="customer_id" id="customer_id" class="form-control customer_search" required>
                                         </select>
                                     </div>
                                     @error('customer_id')
@@ -135,7 +131,7 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <label for="parts">{{ __('Parts Name')}}</label>
-                                        <select name="parts_id[]" id="parts_id" class="form-control js-data-example-ajax" multiple>
+                                        <select name="parts_id[]" id="parts_id" class="form-control part_search" multiple>
                                             
                                         </select>
                                 </div>
@@ -165,8 +161,31 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+                    // Initialize select2
+            $(".customer_search").select2({
+                placeholder: "Search for a customer...",
+                ajax: {
+                    url: "{{route('call-center.customer_data')}}",
+                    type: "post",
+                    delay: 250,
+                    dataType: 'json',
+                    data: function(params) {
+                        return {
+                            query: params.term, // search term
+                            "_token": "{{ csrf_token() }}",
+                        };
+                    },
+                    processResults: function(response) {
+                        return {
+                            results: response
+                        };
+                    },
+                    cache: true
+                }
+            });
+
             // Initialize select2
-            $(".js-data-example-ajax").select2({
+            $(".part_search").select2({
                 placeholder: "Search for an Item",
                 ajax: {
                     url: "{{route('inventory.get_parts')}}",
