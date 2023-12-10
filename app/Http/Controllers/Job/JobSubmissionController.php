@@ -81,11 +81,23 @@ class JobSubmissionController extends Controller
                     
 
                     ->addColumn('ticket_delivery_date_by_team_leader', function ($submittedJobs) {
-                        return optional(Carbon::parse($submittedJobs->delivery_date_by_team_leader))->format('m/d/Y');
+                        $deliveryDateTl = $submittedJobs->delivery_date_by_team_leader;
+
+                        if ($deliveryDateTl) {
+                            return optional(Carbon::parse($deliveryDateTl))->format('m/d/Y');
+                        } else {
+                            return null; // or any default value you want to display for null dates
+                        }
                     })
 
                     ->addColumn('ticket_delivery_date_by_callcenter', function ($submittedJobs) {
-                        return optional(Carbon::parse($submittedJobs->delivery_date_by_call_center))->format('m/d/Y');
+                        $deliveryDateCc = $submittedJobs->delivery_date_by_call_center;
+
+                        if ($deliveryDateCc) {
+                            return optional(Carbon::parse($deliveryDateCc))->format('m/d/Y');
+                        } else {
+                            return null; // or any default value you want to display for null dates
+                        }
                     })
 
                     ->addColumn('amount', function ($submittedJobs) {
