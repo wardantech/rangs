@@ -137,11 +137,12 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php
+                                $sl = 0;
+                                $parts_total = 0;
+                                ?>
                                 @if(!$jobSubmissionDetails->isEmpty())
-                                    <?php
-                                    $sl = 0;
-                                    $parts_total = 0;
-                                    ?>
+
                                     @foreach($jobSubmissionDetails as $item)
                                     <tr>
                                         <td>{{++$sl}}</td>
@@ -157,7 +158,6 @@
                                     @endforeach
 
                                 @else
-
                                 <tr>
                                    <td>{{__('label.DATA_NOT_FOUND')}}</td>
                                 </tr>
