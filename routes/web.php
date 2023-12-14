@@ -594,7 +594,8 @@ Route::group(['middleware' => 'auth'], function(){
             Route::get('stock', [InventoryController::class,'stockForTechnician'])->name('stock');
             Route::get('stock_details/{id}/{store_id}', [InventoryController::class,'stockForTechnicianDetails'])->name('stock_details');
             //Employee Job
-            Route::get('jobs', [JobController::class, 'employeeJobs'])->name('jobs');
+            // Route::get('jobs', [JobController::class, 'employeeJobs'])->name('jobs');
+            Route::get('jobs', [JobController::class, 'index'])->name('jobs');
             Route::get('jobs/show/{id}', [JobController::class, 'employeeJobShow'])->name('jobs.show');
             // Route::get('jobs/status/{id}', [JobController::class, 'status'])->name('jobs.status');
 

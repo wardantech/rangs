@@ -191,17 +191,35 @@
                                     </tr>
                                 @endif
                                 @isset($job->pendingNotes)
-                                <tr>
-                                    <th><strong>Pending Status</strong></th>
-                                    <td>
-                                        <ol>
-                                            @foreach ($job->pendingNotes as $item)
-                                            <li style="font-weight: bold; color:red">{{ $item->job_pending_remark.'-'.$item->job_pending_note }} - {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
-                                            @endforeach 
-                                        </ol>
+                                    <tr>
+                                        <th><strong>Pending Status</strong></th>
+                                        <td>
+                                            <ol>
+                                                @foreach ($job->pendingNotes as $item)
+                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark.' ; '.$item->job_pending_note }} - {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
+                                                @endforeach 
+                                            </ol>
 
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Pending for Special Component :</th>
+                                        <td>
+                                            @if ($job->pendingNotes && count($job->pendingNotes) > 0)
+                                                <ul>
+                                                    @foreach ($job->pendingNotes as $item)
+                                                        @if (!empty($item->special_components))
+                                                            @foreach (json_decode($item->special_components, true) as $special_component)
+                                                                <li>{{ $special_component }}</li>
+                                                            @endforeach
+                                                        @endif
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p>Unavailable</p>
+                                            @endif                                        
+                                        </td>
+                                    </tr>                                    
                                 @endisset
                                 <tr>
                                     <th><strong>{{trans('label.JOB_NUMBER')}}</strong></th>
@@ -655,7 +673,32 @@
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
-
+                        <div class="form-group">
+                            <label for="">Pending for Special Component </label>
+                            
+                            @foreach ($specialComponents as $specialComponent)
+                                <div class="form-check">
+                                    <input 
+                                        class="form-check-input" 
+                                        type="checkbox" 
+                                        name="special_components[]" 
+                                        value="{{ $specialComponent->name }}" 
+                                        id="special_components_{{ $loop->index }}"
+                                        @if(old('special_components') && in_array($specialComponent->name, old('special_components')))
+                                            checked
+                                        @endif
+                                    >
+                                    <label class="form-check-label" for="special_components_{{ $loop->index }}">
+                                        {{ $specialComponent->name }}
+                                    </label>
+                                </div>
+                            @endforeach
+                        
+                            @error('special_components')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
                         <div class="form-group my-2">
                             <label for="remark">Remark</label>
                             <textarea name="remark" id="job_pending_note" class="form-control" cols="60" rows="1"></textarea>
