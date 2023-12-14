@@ -86,13 +86,35 @@
                                 <tr>
                                     <th><strong>Pending Status</strong></th>
                                     <td>
-                                        <ol>
-                                            @foreach ($job->pendingNotes as $item)
-                                            <li style="font-weight: bold; color:red">{{ $item->job_pending_remark.'-'.$item->job_pending_note }} - {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
-                                            @endforeach 
-                                        </ol>
+                                        @if ($job->pendingNotes && count($job->pendingNotes) > 0)
+                                            <ol>
+                                                @foreach ($job->pendingNotes as $item)
+                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark.' ; '.$item->job_pending_note }} - {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
+                                                @endforeach 
+                                            </ol>
+                                        @else
+                                            <p>No Job Pending Remark Available.</p>
+                                        @endif
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th>Pending for Special Component :</th>
+                                    <td>
+                                        @if ($job->pendingNotes && count($job->pendingNotes) > 0)
+                                            <ul>
+                                                @foreach ($job->pendingNotes as $item)
+                                                    @if (!empty($item->special_components))
+                                                        @foreach (json_decode($item->special_components, true) as $special_component)
+                                                            <li>{{ $special_component }}</li>
+                                                        @endforeach
+                                                    @endif
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <p>Unavailable</p>
+                                        @endif
+                                    </td>
+                                </tr> 
                                 @endisset
                                 <tr>
                                     <th><strong>{{trans('label.JOB_NUMBER')}}</strong></th>

@@ -32,6 +32,7 @@ use App\Models\Job\CustomerAdvancedPayment;
 use App\Models\Ticket\ProductCondition;
 use App\Models\User;
 use App\Models\Outlet\Outlet;
+use App\Models\Job\SpecialComponent;
 
 class JobController extends Controller
 {
@@ -46,253 +47,6 @@ class JobController extends Controller
         try{
             $auth = Auth::user();
             $user_role = $auth->roles->first();
-
-            if ($user_role->name == 'Team Leader') {
-                $totalJobStatus = $this->jobTotalStatusByTeam($auth->id);
-            } else {
-                $totalJobStatus = $this->jobTotalstatus();
-            }
-
-            if (request()->ajax()) {
-
-                $employee=Employee::where('user_id', Auth::user()->id)->first();
-                $serviceTypes = ServiceType::where('status', 1)->get();
-
-                $data=DB::table('jobs')
-                ->join('employees', 'jobs.employee_id', '=', 'employees.id')
-                ->join('users', 'jobs.created_by', '=', 'users.id')
-                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
-                ->join('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
-                ->join('outlets','tickets.outlet_id','=','outlets.id')
-                ->join('purchases','tickets.purchase_id','=','purchases.id')
-                ->join('categories','tickets.product_category_id','=','categories.id')
-                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
-                ->join('brands','purchases.brand_id', '=', 'brands.id')
-                ->join('customers','purchases.customer_id', '=', 'customers.id')
-                ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
-                ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
-                'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',
-                'tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name','tickets.service_type_id as service_type_id','tickets.status as ticket_status',
-                'tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as ticket_is_pending','tickets.is_paused as ticket_is_paused','tickets.is_ended as ticket_is_ended',
-                'tickets.is_started as ticket_is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader','tickets.is_delivered_by_teamleader as is_delivered_by_teamleader',
-                'tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed','tickets.is_assigned as is_assigned',
-                'tickets.is_rejected as is_rejected','jobs.status as status','jobs.is_pending as is_pending','jobs.is_paused as is_paused','jobs.is_started as is_started','jobs.is_ended as is_ended','job_priorities.job_priority','tickets.outlet_id as outlet_id',
-                'warranty_types.warranty_type as warranty_type','purchases.outlet_id as outletid')
-                ->whereIn('jobs.status',[0,1,3,5])
-                ->where('jobs.deleted_at',null);
-    
-                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-                    $data;
-                } elseif ($user_role->name == 'Team Leader') {
-                    $data->where('jobs.created_by',Auth::user()->id);
-                } else {
-                    $data->where('tickets.outlet_id', $employee->outlet_id);
-                }
-
-                if(!empty($request->start_date && $request->end_date))
-                {
-                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
-                    $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest('jobs.id')->get();
-                } 
-                else{
-                    $jobs=$data->latest('jobs.id')->get();
-                }
-                return DataTables::of($jobs)
-
-                    ->addColumn('emplyee_name', function ($jobs) {
-                        $employee_name=$jobs->employee_name ?? null;
-                        return $employee_name;
-                    })
-
-                    ->addColumn('outlet_name', function ($jobs) {
-                        $outlet_name=$jobs->outlet_name ?? Null;
-                        return $outlet_name;
-                    })
-
-                    ->addColumn('ticket_sl', function ($jobs) {
-                        return '<a href="'.route('show-ticket-details', $jobs->ticket_id).'" class="badge badge-primary" title="Ticket Details">'.'TSL-'.''. $jobs->ticket_id.'</a>';
-                    })
-                    
-                    ->addColumn('ticket_created_at', function ($jobs) {
-                        $ticket_created_at=Carbon::parse($jobs->created_at)->format('m/d/Y');   
-                        return $ticket_created_at;
-                    })
-                    ->addColumn('purchase_date', function ($jobs) {
-                        $purchase_date=Carbon::parse($jobs->purchase_date)->format('m/d/Y');                        
-                        return $purchase_date;
-                    })
-                    ->addColumn('job_number', function ($jobs) {
-                        $job_number='JSL-'.$jobs->job_id; 
-                        return $job_number;
-                    })
-                    
-                    ->addColumn('service_type', function($jobs) use($serviceTypes){
-                        $selectedServiceTypeIds=json_decode($jobs->service_type_id);
-                        $data='';
-                        foreach ($serviceTypes as $key => $serviceType) {
-                           if (in_array($serviceType->id, $selectedServiceTypeIds)) {
-                               $data=$serviceType->service_type;
-                           }
-                        }
-                        return $data;
-                   })
-                   ->addColumn('warranty_type', function ($jobs) {
-                        $warranty_type=$jobs->warranty_type ?? null; 
-                        return $warranty_type;
-                    })
-                    ->addColumn('assigning_date', function ($jobs) {
-                        $assigning_date=Carbon::parse($jobs->assigning_date)->format('m/d/Y'); 
-                        return $assigning_date;
-                    })
-                    ->addColumn('created_by', function ($jobs) {
-                        $created_by=$jobs->created_by; 
-                        return $created_by;
-                    })
-                    ->addColumn('job_priority', function($jobs){
-                        $job_priority=$jobs->job_priority?? Null;
-                        return $job_priority;
-                    })
-                    ->addColumn('product_category', function ($jobs) {
-                        $product_category=$jobs->product_category ?? Null;
-                        return $product_category;
-                    })
-                    ->addColumn('brand_name', function ($jobs) {
-                        $brand_name=$jobs->brand_name ?? Null;
-                        return $brand_name;
-                    })
-                    ->addColumn('model_name', function ($jobs) {
-                        $model_name=$jobs->model_name ?? Null;
-                        return $model_name;
-                    })
-                    ->addColumn('product_serial', function ($jobs) {
-                        $product_serial=$jobs->product_serial ?? Null;
-                        return $product_serial;
-                    })
-                    ->addColumn('point_of_purchase', function($tickets){
-                        $point_of_purchase=Outlet::where('id', '=', $tickets->outletid)->first();
-                            return $point_of_purchase->name ?? null;
-                    })
-                    ->addColumn('invoice_number', function ($jobs) {
-                        $invoice_number=$jobs->invoice_number;
-                        return $invoice_number;
-                    })
-                    ->addColumn('customer_name', function ($jobs) {
-                        $invoice_number=$jobs->customer_name;
-                        return $invoice_number;
-                    })
-                    ->addColumn('customer_mobile', function ($jobs) {
-                        $invoice_number=$jobs->customer_mobile;
-                        return $invoice_number;
-                    })
-                    ->addColumn('technician_type', function ($jobs) {
-                        $tech_type='';
-                        if ($jobs->vendor_id != null) {
-                            $tech_type='Vendor';
-                        }else{
-                            $tech_type='Own';
-                        }
-                        return $tech_type;
-                    })
-                    ->addColumn('status', function ($jobs) {
-
-                        if ($jobs->status == 6){
-                            return '<span class="badge badge-red">Paused</span>';
-                        }
-                        
-                        elseif( $jobs->status == 5 ){
-                            return '<span class="badge badge-orange">Pending</span>';
-                        }
-
-                        
-                        elseif($jobs->status == 0)
-                        {
-                            return '<span class="badge badge-yellow">Created</span>';
-                        }
-
-                        elseif($jobs->status == 4 )
-                        {
-                            return '<span class="badge badge-info">Job Completed</span>';
-                        }
-
-                        elseif($jobs->status == 3 )
-                        {
-                            return '<span class="badge badge-success">Job Started</span>';
-                        }
-                        elseif($jobs->status == 1)
-                        {
-                            return '<span class="badge badge-success">Accepted</span>';
-                        }
-                        elseif($jobs->status==2)
-                        {
-                            return '<span class="badge badge-danger">Rejected</span>';
-                        }
-                        
-                    })
-                    ->addColumn('job_created_at', function ($jobs) {
-                        $job_created_at=Carbon::parse($jobs->job_created_at)->format('m/d/Y');
-                        return $job_created_at;
-                    })
-
-                    ->addColumn('job_pending_remark', function ($jobs) {
-                        $data=null;
-                        $pendingNotes=DB::table('job_pending_notes')->where('job_id',$jobs->job_id)->get();
-                        
-                        foreach ($pendingNotes as $key => $item) {
-                            $data.= '<ol style="font-weight: bold; color:red">'. $item->job_pending_remark.'-'.$item->job_pending_note.'</ol>';
-                        }
-                        return $data;
-                    })
-
-                    ->addColumn('action', function ($jobs) {
-                            if (Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
-                                return '<div class="table-actions text-center" style="display: flex;">
-                                            <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-eye f-16 mr-15 text-blue"></i>
-                                            </a>
-                                            <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-edit f-16 mr-15 text-green" title="Edit"></i>
-                                            </a>
-                                            <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                        </div>';
-                            } elseif (Auth::user()->can('edit') && Auth::user()->can('show')) {
-                                return '<div class="table-actions" style="display: flex;">
-                                                <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
-                                                    <i class="ik ik-eye f-16 mr-15 text-blue"></i>
-                                                </a>
-                                                <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
-                                                    <i class="ik ik-edit f-16 mr-15 text-green" title="Edit"></i>
-                                                </a>
-                                                </div>';
-                            } elseif (Auth::user()->can('delete')) {
-                                return '<div class="table-actions">
-                                            <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                        </div>';
-                            } elseif (Auth::user()->can('show')) {
-                                return '<div class="table-actions">
-                                            <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-eye f-16 mr-15 text-blue"></i>
-                                            </a>
-                                        </div>';
-                            } 
-                    })
-                    ->addIndexColumn()
-                    ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','action'])
-                    ->make(true);
-            }
-            return view('job.index', compact('totalJobStatus'));
-        } catch (\Exception $e) {
-            $bug = $e->getMessage();
-            return redirect()->back()->with('error', $bug);
-        }
-    }
-
-    //Technician's Job
-    public function employeeJobs(Request $request)
-    {
-        try{
-            $auth = Auth::user();
-            $user_role = $auth->roles->first();
             if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
                 $totalJobStatus = $this->jobTotalstatus();
             } elseif ($user_role->name == 'Team Leader') {
@@ -300,8 +54,6 @@ class JobController extends Controller
             } else {
                 $totalJobStatus = $this->jobTotalStatusByUser(Auth::user()->id);
             }
-            // $totalJobStatus = ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader Admin') ?
-            // $this->jobTotalstatus() : ($user_role->name == 'Team Leader' ? $this->jobTotalStatusByTeam($auth->id) : $this->jobTotalStatusByUser($auth->id));
             
             if (request()->ajax()) {
                 $employee = Employee::where('user_id', Auth::user()->id)->first();
@@ -333,8 +85,10 @@ class JobController extends Controller
                     $data;
                 } elseif ($user_role->name == 'Team Leader') {
                     $data->where('jobs.created_by',Auth::user()->id);
-                } else {
+                } elseif ($user_role->name == 'Technician') {
                     $data->where('jobs.user_id',Auth::user()->id);
+                } else {
+                    $data->where('tickets.outlet_id', $employee->outlet_id);
                 }
 
                 if(!empty($request->start_date && $request->end_date))
@@ -443,74 +197,628 @@ class JobController extends Controller
                         return $job_priority;
                     })
                     ->addColumn('status', function ($jobs) {
-
-                        if ($jobs->status == 6){
-                            return '<span class="badge badge-red">Paused</span>';
+                        switch ($jobs->status) {
+                            case 6:
+                                $badgeClass = 'badge-red';
+                                $statusText = 'Paused';
+                                break;
+                    
+                            case 5:
+                                $badgeClass = 'badge-orange';
+                                $statusText = 'Pending';
+                                break;
+                    
+                            case 0:
+                                $badgeClass = 'badge-yellow';
+                                $statusText = 'Created';
+                                break;
+                    
+                            case 4:
+                                $badgeClass = 'badge-info';
+                                $statusText = 'Job Completed';
+                                break;
+                    
+                            case 3:
+                                $badgeClass = 'badge-success';
+                                $statusText = 'Job Started';
+                                break;
+                    
+                            case 1:
+                                $badgeClass = 'badge-success';
+                                $statusText = 'Accepted';
+                                break;
+                    
+                            case 2:
+                                $badgeClass = 'badge-danger';
+                                $statusText = 'Rejected';
+                                break;
+                    
+                            default:
+                                $badgeClass = '';
+                                $statusText = 'Unknown';
                         }
-                        
-                        elseif( $jobs->status == 5 ){
-                            return '<span class="badge badge-orange">Pending</span>';
-                        }
-
-                        
-                        elseif($jobs->status == 0)
-                        {
-                            return '<span class="badge badge-yellow">Created</span>';
-                        }
-
-                        elseif($jobs->status == 4 )
-                        {
-                            return '<span class="badge badge-info">Job Completed</span>';
-                        }
-
-                        elseif($jobs->status == 3 )
-                        {
-                            return '<span class="badge badge-success">Job Started</span>';
-                        }
-                        elseif($jobs->status == 1)
-                        {
-                            return '<span class="badge badge-success">Accepted</span>';
-                        }
-                        elseif($jobs->status==2)
-                        {
-                            return '<span class="badge badge-danger">Rejected</span>';
-                        }
-                        
+                    
+                        return $badgeClass ? "<span class=\"badge $badgeClass\">$statusText</span>" : '';
                     })
+                    
                     ->addColumn('job_created_at', function ($jobs) {
                         $job_created_at=Carbon::parse($jobs->job_created_at)->format('m/d/Y');
                         return $job_created_at;
                     })
 
                     ->addColumn('job_pending_remark', function ($jobs) {
-                        $data=null;
-                        $pendingNotes=DB::table('job_pending_notes')->where('job_id',$jobs->job_id)->get();
-                        
-                        foreach ($pendingNotes as $key => $item) {
-                            $data.= '<ol style="font-weight: bold; color:red">'. $item->job_pending_remark.'-'.$item->job_pending_note.'</ol>';
-                        }
-                        return $data;
+                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+                        $data = collect($pendingNotes)->map(function ($item) {
+                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->job_pending_note . '</ol>';
+                        })->implode('');
+                    
+                        return $data ?: 'Unavailable.';
                     })
+                    ->addColumn('pending_for_special_components', function ($jobs) {
+                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+                        $data = collect($pendingNotes)->flatMap(function ($item) {
+                            $specialComponents = json_decode($item->special_components, true);
+                    
+                            return $specialComponents ? array_map(function ($special_component) {
+                                return '<li>' . $special_component . '</li>';
+                            }, $specialComponents) : [];
+                        })->implode('');
+                    
+                        return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+                    })
+                    
 
-                    ->addColumn('action', function ($jobs) {
-                            if (Auth::user()->can('show')) {
-                                return '<div class="table-actions text-center" style="display: flex;">
-                                            <a href=" '.route('technician.jobs.show', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-eye f-16 mr-15 text-blue"></i>
-                                                </a>
-                                        </div>';
+                    ->addColumn('action', function ($jobs) use ($user_role) {
+                        $html = '<div class="table-actions';
+                        
+                        if (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('show')) {
+                            $html .= ' text-center" style="display: flex;">';
+                            $html .= '<a href="'.route('job.job.show', $jobs->job_id).'" title="View"><i class="ik ik-eye f-16 mr-15 text-green"></i></a>';
+                    
+                            if (Auth::user()->can('edit')) {
+                                $html .= '<a href="'.route('job.job.edit', $jobs->job_id).'" title="Edit"><i class="ik ik-edit f-16 mr-15 text-blue"></i></a>';
                             }
+                    
+                            if (Auth::user()->can('delete')) {
+                                $html .= '<a type="submit" onclick="showDeleteConfirm('.$jobs->job_id.')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>';
+                            }
+                        } elseif (Auth::user()->can('access_to_technician_jobs_list') && Auth::user()->can('show')) {
+                            $html .= '">';
+                            $html .= '<a href="'.route('technician.jobs.show', $jobs->job_id).'" title="View"><i class="ik ik-eye f-16 mr-15 text-green"></i></a>';
+                        }
+                    
+                        $html .= '</div>';
+                        return $html;
                     })
+                    
+                    
                     ->addIndexColumn()
-                    ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','action'])
+                    ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','pending_for_special_components','action'])
                     ->make(true);
             }
-            return view('job.technician-index', compact('totalJobStatus'));
+            return view('job.index', compact('totalJobStatus'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
     }
+    // public function index(Request $request)
+    // {
+    //     try{
+    //         $auth = Auth::user();
+    //         $user_role = $auth->roles->first();
+
+    //         if ($user_role->name == 'Team Leader') {
+    //             $totalJobStatus = $this->jobTotalStatusByTeam($auth->id);
+    //         } else {
+    //             $totalJobStatus = $this->jobTotalstatus();
+    //         }
+
+    //         if (request()->ajax()) {
+
+    //             $employee=Employee::where('user_id', Auth::user()->id)->first();
+    //             $serviceTypes = ServiceType::where('status', 1)->get();
+
+    //             $data=DB::table('jobs')
+    //             ->join('employees', 'jobs.employee_id', '=', 'employees.id')
+    //             ->join('users', 'jobs.created_by', '=', 'users.id')
+    //             ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
+    //             ->join('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
+    //             ->join('outlets','tickets.outlet_id','=','outlets.id')
+    //             ->join('purchases','tickets.purchase_id','=','purchases.id')
+    //             ->join('categories','tickets.product_category_id','=','categories.id')
+    //             ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+    //             ->join('brands','purchases.brand_id', '=', 'brands.id')
+    //             ->join('customers','purchases.customer_id', '=', 'customers.id')
+    //             ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
+    //             ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
+    //             'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',
+    //             'tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name','tickets.service_type_id as service_type_id','tickets.status as ticket_status',
+    //             'tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as ticket_is_pending','tickets.is_paused as ticket_is_paused','tickets.is_ended as ticket_is_ended',
+    //             'tickets.is_started as ticket_is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader','tickets.is_delivered_by_teamleader as is_delivered_by_teamleader',
+    //             'tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed','tickets.is_assigned as is_assigned',
+    //             'tickets.is_rejected as is_rejected','jobs.status as status','jobs.is_pending as is_pending','jobs.is_paused as is_paused','jobs.is_started as is_started','jobs.is_ended as is_ended','job_priorities.job_priority','tickets.outlet_id as outlet_id',
+    //             'warranty_types.warranty_type as warranty_type','purchases.outlet_id as outletid')
+    //             ->whereIn('jobs.status',[0,1,3,5])
+    //             ->where('jobs.deleted_at',null);
+    
+    //             if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+    //                 $data;
+    //             } elseif ($user_role->name == 'Team Leader') {
+    //                 $data->where('jobs.created_by',Auth::user()->id);
+    //             } else {
+    //                 $data->where('tickets.outlet_id', $employee->outlet_id);
+    //             }
+
+    //             if(!empty($request->start_date && $request->end_date))
+    //             {
+    //                 $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+    //                 $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
+    //                 $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest('jobs.id')->get();
+    //             } 
+    //             else{
+    //                 $jobs=$data->latest('jobs.id')->get();
+    //             }
+    //             return DataTables::of($jobs)
+
+    //                 ->addColumn('emplyee_name', function ($jobs) {
+    //                     $employee_name=$jobs->employee_name ?? null;
+    //                     return $employee_name;
+    //                 })
+
+    //                 ->addColumn('outlet_name', function ($jobs) {
+    //                     $outlet_name=$jobs->outlet_name ?? Null;
+    //                     return $outlet_name;
+    //                 })
+
+    //                 ->addColumn('ticket_sl', function ($jobs) {
+    //                     return '<a href="'.route('show-ticket-details', $jobs->ticket_id).'" class="badge badge-primary" title="Ticket Details">'.'TSL-'.''. $jobs->ticket_id.'</a>';
+    //                 })
+                    
+    //                 ->addColumn('ticket_created_at', function ($jobs) {
+    //                     $ticket_created_at=Carbon::parse($jobs->created_at)->format('m/d/Y');   
+    //                     return $ticket_created_at;
+    //                 })
+    //                 ->addColumn('purchase_date', function ($jobs) {
+    //                     $purchase_date=Carbon::parse($jobs->purchase_date)->format('m/d/Y');                        
+    //                     return $purchase_date;
+    //                 })
+    //                 ->addColumn('job_number', function ($jobs) {
+    //                     $job_number='JSL-'.$jobs->job_id; 
+    //                     return $job_number;
+    //                 })
+                    
+    //                 ->addColumn('service_type', function($jobs) use($serviceTypes){
+    //                     $selectedServiceTypeIds=json_decode($jobs->service_type_id);
+    //                     $data='';
+    //                     foreach ($serviceTypes as $key => $serviceType) {
+    //                        if (in_array($serviceType->id, $selectedServiceTypeIds)) {
+    //                            $data=$serviceType->service_type;
+    //                        }
+    //                     }
+    //                     return $data;
+    //                })
+    //                ->addColumn('warranty_type', function ($jobs) {
+    //                     $warranty_type=$jobs->warranty_type ?? null; 
+    //                     return $warranty_type;
+    //                 })
+    //                 ->addColumn('assigning_date', function ($jobs) {
+    //                     $assigning_date=Carbon::parse($jobs->assigning_date)->format('m/d/Y'); 
+    //                     return $assigning_date;
+    //                 })
+    //                 ->addColumn('created_by', function ($jobs) {
+    //                     $created_by=$jobs->created_by; 
+    //                     return $created_by;
+    //                 })
+    //                 ->addColumn('job_priority', function($jobs){
+    //                     $job_priority=$jobs->job_priority?? Null;
+    //                     return $job_priority;
+    //                 })
+    //                 ->addColumn('product_category', function ($jobs) {
+    //                     $product_category=$jobs->product_category ?? Null;
+    //                     return $product_category;
+    //                 })
+    //                 ->addColumn('brand_name', function ($jobs) {
+    //                     $brand_name=$jobs->brand_name ?? Null;
+    //                     return $brand_name;
+    //                 })
+    //                 ->addColumn('model_name', function ($jobs) {
+    //                     $model_name=$jobs->model_name ?? Null;
+    //                     return $model_name;
+    //                 })
+    //                 ->addColumn('product_serial', function ($jobs) {
+    //                     $product_serial=$jobs->product_serial ?? Null;
+    //                     return $product_serial;
+    //                 })
+    //                 ->addColumn('point_of_purchase', function($tickets){
+    //                     $point_of_purchase=Outlet::where('id', '=', $tickets->outletid)->first();
+    //                         return $point_of_purchase->name ?? null;
+    //                 })
+    //                 ->addColumn('invoice_number', function ($jobs) {
+    //                     $invoice_number=$jobs->invoice_number;
+    //                     return $invoice_number;
+    //                 })
+    //                 ->addColumn('customer_name', function ($jobs) {
+    //                     $invoice_number=$jobs->customer_name;
+    //                     return $invoice_number;
+    //                 })
+    //                 ->addColumn('customer_mobile', function ($jobs) {
+    //                     $invoice_number=$jobs->customer_mobile;
+    //                     return $invoice_number;
+    //                 })
+    //                 ->addColumn('technician_type', function ($jobs) {
+    //                     $tech_type='';
+    //                     if ($jobs->vendor_id != null) {
+    //                         $tech_type='Vendor';
+    //                     }else{
+    //                         $tech_type='Own';
+    //                     }
+    //                     return $tech_type;
+    //                 })
+    //                 ->addColumn('status', function ($jobs) {
+    //                     switch ($jobs->status) {
+    //                         case 6:
+    //                             $badgeClass = 'badge-red';
+    //                             $statusText = 'Paused';
+    //                             break;
+                    
+    //                         case 5:
+    //                             $badgeClass = 'badge-orange';
+    //                             $statusText = 'Pending';
+    //                             break;
+                    
+    //                         case 0:
+    //                             $badgeClass = 'badge-yellow';
+    //                             $statusText = 'Created';
+    //                             break;
+                    
+    //                         case 4:
+    //                             $badgeClass = 'badge-info';
+    //                             $statusText = 'Job Completed';
+    //                             break;
+                    
+    //                         case 3:
+    //                             $badgeClass = 'badge-success';
+    //                             $statusText = 'Job Started';
+    //                             break;
+                    
+    //                         case 1:
+    //                             $badgeClass = 'badge-success';
+    //                             $statusText = 'Accepted';
+    //                             break;
+                    
+    //                         case 2:
+    //                             $badgeClass = 'badge-danger';
+    //                             $statusText = 'Rejected';
+    //                             break;
+                    
+    //                         default:
+    //                             $badgeClass = '';
+    //                             $statusText = 'Unknown';
+    //                     }
+                    
+    //                     return $badgeClass ? "<span class=\"badge $badgeClass\">$statusText</span>" : '';
+    //                 })
+                    
+    //                 ->addColumn('job_created_at', function ($jobs) {
+    //                     $job_created_at=Carbon::parse($jobs->job_created_at)->format('m/d/Y');
+    //                     return $job_created_at;
+    //                 })
+
+    //                 ->addColumn('job_pending_remark', function ($jobs) {
+    //                     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+    //                     $data = collect($pendingNotes)->map(function ($item) {
+    //                         return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->job_pending_note . '</ol>';
+    //                     })->implode('');
+                    
+    //                     return $data ?: 'Unavailable.';
+    //                 })
+    //                 ->addColumn('pending_for_special_components', function ($jobs) {
+    //                     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+    //                     $data = collect($pendingNotes)->flatMap(function ($item) {
+    //                         $specialComponents = json_decode($item->special_components, true);
+                    
+    //                         return $specialComponents ? array_map(function ($special_component) {
+    //                             return '<li>' . $special_component . '</li>';
+    //                         }, $specialComponents) : [];
+    //                     })->implode('');
+                    
+    //                     return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+    //                 })
+
+    //                 ->addColumn('action', function ($jobs) {
+    //                         if (Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
+    //                             return '<div class="table-actions text-center" style="display: flex;">
+    //                                         <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+    //                                             <i class="ik ik-eye f-16 mr-15 text-blue"></i>
+    //                                         </a>
+    //                                         <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
+    //                                             <i class="ik ik-edit f-16 mr-15 text-green" title="Edit"></i>
+    //                                         </a>
+    //                                         <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+    //                                     </div>';
+    //                         } elseif (Auth::user()->can('edit') && Auth::user()->can('show')) {
+    //                             return '<div class="table-actions" style="display: flex;">
+    //                                             <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+    //                                                 <i class="ik ik-eye f-16 mr-15 text-blue"></i>
+    //                                             </a>
+    //                                             <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
+    //                                                 <i class="ik ik-edit f-16 mr-15 text-green" title="Edit"></i>
+    //                                             </a>
+    //                                             </div>';
+    //                         } elseif (Auth::user()->can('delete')) {
+    //                             return '<div class="table-actions">
+    //                                         <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+    //                                     </div>';
+    //                         } elseif (Auth::user()->can('show')) {
+    //                             return '<div class="table-actions">
+    //                                         <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+    //                                             <i class="ik ik-eye f-16 mr-15 text-blue"></i>
+    //                                         </a>
+    //                                     </div>';
+    //                         } 
+    //                 })
+    //                 ->addIndexColumn()
+    //                 ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','pending_for_special_components','action'])
+    //                 ->make(true);
+    //         }
+    //         return view('job.index', compact('totalJobStatus'));
+    //     } catch (\Exception $e) {
+    //         $bug = $e->getMessage();
+    //         return redirect()->back()->with('error', $bug);
+    //     }
+    // }
+
+    //Technician's Job
+    // public function employeeJobs(Request $request)
+    // {
+    //     try{
+    //         $auth = Auth::user();
+    //         $user_role = $auth->roles->first();
+    //         if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+    //             $totalJobStatus = $this->jobTotalstatus();
+    //         } elseif ($user_role->name == 'Team Leader') {
+    //             $totalJobStatus = $this->jobTotalStatusByTeam($auth->id);
+    //         } else {
+    //             $totalJobStatus = $this->jobTotalStatusByUser(Auth::user()->id);
+    //         }
+            
+    //         if (request()->ajax()) {
+    //             $employee = Employee::where('user_id', Auth::user()->id)->first();
+    //             $serviceTypes = ServiceType::where('status', 1)->get();
+    //             $data=DB::table('jobs')
+    //             ->join('employees', 'jobs.employee_id', '=', 'employees.id')
+    //             ->join('users', 'jobs.created_by', '=', 'users.id')
+    //             ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
+    //             ->join('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
+    //             ->join('outlets','tickets.outlet_id','=','outlets.id')
+    //             ->join('purchases','tickets.purchase_id','=','purchases.id')
+    //             ->join('categories','tickets.product_category_id','=','categories.id')
+    //             ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+    //             ->join('brands','purchases.brand_id', '=', 'brands.id')
+    //             ->join('customers','purchases.customer_id', '=', 'customers.id')
+    //             ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
+    //             ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
+    //             'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',
+    //             'tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name','tickets.service_type_id as service_type_id','tickets.status as ticket_status',
+    //             'tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as ticket_is_pending','tickets.is_paused as ticket_is_paused','tickets.is_ended as ticket_is_ended',
+    //             'tickets.is_started as ticket_is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader','tickets.is_delivered_by_teamleader as is_delivered_by_teamleader',
+    //             'tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed','tickets.is_assigned as is_assigned',
+    //             'tickets.is_rejected as is_rejected','jobs.status as status','jobs.is_pending as is_pending','jobs.is_paused as is_paused','jobs.is_started as is_started','jobs.is_ended as is_ended','job_priorities.job_priority','tickets.outlet_id as outlet_id',
+    //             'warranty_types.warranty_type as warranty_type','purchases.outlet_id as outletid')
+    //             ->whereIn('jobs.status',[0,1,3,5])
+    //             ->where('jobs.deleted_at',null);
+
+    //             if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+    //                 $data;
+    //             } elseif ($user_role->name == 'Team Leader') {
+    //                 $data->where('jobs.created_by',Auth::user()->id);
+    //             } else {
+    //                 $data->where('jobs.user_id',Auth::user()->id);
+    //             }
+
+    //             if(!empty($request->start_date && $request->end_date))
+    //             {
+    //                 $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+    //                 $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
+    //                 $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
+    //             } 
+    //             else{
+    //                 $jobs=$data->latest()->get();
+    //             }
+    //             return DataTables::of($jobs)
+
+    //                 ->addColumn('emplyee_name', function ($jobs) {
+    //                     $employee_name=$jobs->employee_name ?? null;
+    //                     return $employee_name;
+    //                 })
+
+    //                 ->addColumn('outlet_name', function ($jobs) {
+    //                     $outlet_name=$jobs->outlet_name ?? Null;
+    //                     return $outlet_name;
+    //                 })
+
+    //                 ->addColumn('ticket_sl', function ($jobs) {
+    //                     return '<a href="'.route('show-ticket-details', $jobs->ticket_id).'" class="badge badge-primary" title="Ticket Details">'.'TSL-'.''. $jobs->ticket_id.'</a>';
+    //                 })
+                    
+    //                 ->addColumn('ticket_created_at', function ($jobs) {
+    //                     $ticket_created_at=Carbon::parse($jobs->created_at)->format('m/d/Y');  
+                         
+    //                     return $ticket_created_at;
+    //                 })
+    //                 ->addColumn('purchase_date', function ($jobs) {
+    //                     $purchase_date=Carbon::parse($jobs->purchase_date)->format('m/d/Y');                        
+    //                     return $purchase_date;
+    //                 })
+    //                 ->addColumn('job_number', function ($jobs) {
+    //                     $job_number='JSL-'.$jobs->job_id; 
+    //                     return $job_number;
+    //                 })
+    //                 ->addColumn('service_type', function($jobs) use($serviceTypes){
+    //                     $selectedServiceTypeIds=json_decode($jobs->service_type_id);
+    //                     $data='';
+    //                     foreach ($serviceTypes as $key => $serviceType) {
+    //                        if (in_array($serviceType->id, $selectedServiceTypeIds)) {
+    //                            $data=$serviceType->service_type;
+    //                        }
+    //                     }
+    //                     return $data;
+    //                })
+    //                ->addColumn('warranty_type', function ($jobs) {
+    //                     $warranty_type=$jobs->warranty_type ?? null; 
+    //                     return $warranty_type;
+    //                 })
+    //                 ->addColumn('assigning_date', function ($jobs) {
+    //                     $assigning_date=Carbon::parse($jobs->assigning_date)->format('m/d/Y');    
+    //                     return $assigning_date;
+    //                 })
+    //                 ->addColumn('created_by', function ($jobs) {
+    //                     $created_by=$jobs->created_by; 
+    //                     return $created_by;
+    //                 })
+    //                 ->addColumn('product_category', function ($jobs) {
+    //                     $product_category=$jobs->product_category ?? Null;
+    //                     return $product_category;
+    //                 })
+    //                 ->addColumn('brand_name', function ($jobs) {
+    //                     $brand_name=$jobs->brand_name ?? Null;
+    //                     return $brand_name;
+    //                 })
+    //                 ->addColumn('model_name', function ($jobs) {
+    //                     $model_name=$jobs->model_name ?? Null;
+    //                     return $model_name;
+    //                 })
+    //                 ->addColumn('product_serial', function ($jobs) {
+    //                     $product_serial=$jobs->product_serial ?? Null;
+    //                     return $product_serial;
+    //                 })
+    //                 ->addColumn('point_of_purchase', function($tickets){
+    //                     $point_of_purchase=Outlet::where('id', '=', $tickets->outletid)->first();
+    //                         return $point_of_purchase->name ?? null;
+    //                 })
+    //                 ->addColumn('invoice_number', function ($jobs) {
+    //                     $invoice_number=$jobs->invoice_number;
+    //                     return $invoice_number;
+    //                 })
+    //                 ->addColumn('customer_name', function ($jobs) {
+    //                     $invoice_number=$jobs->customer_name;
+    //                     return $invoice_number;
+    //                 })
+    //                 ->addColumn('customer_mobile', function ($jobs) {
+    //                     $invoice_number=$jobs->customer_mobile;
+    //                     return $invoice_number;
+    //                 })
+    //                 ->addColumn('technician_type', function ($jobs) {
+    //                     $tech_type='';
+    //                     if ($jobs->vendor_id != null) {
+    //                         $tech_type='Vendor';
+    //                     }else{
+    //                         $tech_type='Own';
+    //                     }
+    //                     return $tech_type;
+    //                 })
+    //                 ->addColumn('job_priority', function($jobs){
+    //                     $job_priority=$jobs->job_priority?? Null;
+    //                     return $job_priority;
+    //                 })
+    //                 ->addColumn('status', function ($jobs) {
+    //                     switch ($jobs->status) {
+    //                         case 6:
+    //                             $badgeClass = 'badge-red';
+    //                             $statusText = 'Paused';
+    //                             break;
+                    
+    //                         case 5:
+    //                             $badgeClass = 'badge-orange';
+    //                             $statusText = 'Pending';
+    //                             break;
+                    
+    //                         case 0:
+    //                             $badgeClass = 'badge-yellow';
+    //                             $statusText = 'Created';
+    //                             break;
+                    
+    //                         case 4:
+    //                             $badgeClass = 'badge-info';
+    //                             $statusText = 'Job Completed';
+    //                             break;
+                    
+    //                         case 3:
+    //                             $badgeClass = 'badge-success';
+    //                             $statusText = 'Job Started';
+    //                             break;
+                    
+    //                         case 1:
+    //                             $badgeClass = 'badge-success';
+    //                             $statusText = 'Accepted';
+    //                             break;
+                    
+    //                         case 2:
+    //                             $badgeClass = 'badge-danger';
+    //                             $statusText = 'Rejected';
+    //                             break;
+                    
+    //                         default:
+    //                             $badgeClass = '';
+    //                             $statusText = 'Unknown';
+    //                     }
+                    
+    //                     return $badgeClass ? "<span class=\"badge $badgeClass\">$statusText</span>" : '';
+    //                 })
+                    
+    //                 ->addColumn('job_created_at', function ($jobs) {
+    //                     $job_created_at=Carbon::parse($jobs->job_created_at)->format('m/d/Y');
+    //                     return $job_created_at;
+    //                 })
+
+    //                 ->addColumn('job_pending_remark', function ($jobs) {
+    //                     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+    //                     $data = collect($pendingNotes)->map(function ($item) {
+    //                         return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->job_pending_note . '</ol>';
+    //                     })->implode('');
+                    
+    //                     return $data ?: 'Unavailable.';
+    //                 })
+    //                 ->addColumn('pending_for_special_components', function ($jobs) {
+    //                     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+    //                     $data = collect($pendingNotes)->flatMap(function ($item) {
+    //                         $specialComponents = json_decode($item->special_components, true);
+                    
+    //                         return $specialComponents ? array_map(function ($special_component) {
+    //                             return '<li>' . $special_component . '</li>';
+    //                         }, $specialComponents) : [];
+    //                     })->implode('');
+                    
+    //                     return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+    //                 })
+                    
+
+    //                 ->addColumn('action', function ($jobs) {
+    //                         if (Auth::user()->can('show')) {
+    //                             return '<div class="table-actions text-center" style="display: flex;">
+    //                                         <a href=" '.route('technician.jobs.show', $jobs->job_id). ' " title="View">
+    //                                             <i class="ik ik-eye f-16 mr-15 text-blue"></i>
+    //                                             </a>
+    //                                     </div>';
+    //                         }
+    //                 })
+    //                 ->addIndexColumn()
+    //                 ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','pending_for_special_components','action'])
+    //                 ->make(true);
+    //         }
+    //         return view('job.technician-index', compact('totalJobStatus'));
+    //     } catch (\Exception $e) {
+    //         $bug = $e->getMessage();
+    //         return redirect()->back()->with('error', $bug);
+    //     }
+    // }
     /**
      * Show the form for creating a new resource.
      *
@@ -709,10 +1017,11 @@ class JobController extends Controller
             $allFaults=Fault::where('status', 1)->get();
             $jobCloseRemarks = JobCloseRemark::orderBy('id', 'DESC')->get();
             $jobpendingRemarks = JobPendingRemark::orderBy('id', 'DESC')->get();
+            $specialComponents = SpecialComponent::orderBy('id', 'DESC')->get();
             $JobAttachment = JobAttachment::where('job_id',$job->id)->get();
             $submittedJobs=JobSubmission::where('job_id',$job->id)->latest()->get();
             return view('job.technician-show', compact(
-                'job','faults','accessories_lists', 'allAccessories','allFaults', 'jobCloseRemarks', 'jobpendingRemarks' ,'customerAdvancedPayment','submittedJobs','JobAttachment'
+                'job','faults','accessories_lists', 'allAccessories','allFaults', 'jobCloseRemarks', 'jobpendingRemarks' ,'customerAdvancedPayment','submittedJobs','JobAttachment','specialComponents'
             ));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
@@ -867,7 +1176,7 @@ class JobController extends Controller
             DB::beginTransaction();
             $current = Carbon::now('Asia/Dhaka');
             $job=Job::find($id);
-            $ticket = Ticket::where('id',$job->ticket_id);
+            $ticket = Ticket::where('id',$job->ticket_id)->first();
             $message='';
             if ($job->is_started == 1 && $job->is_paused == 1) {
                 $job->update([
@@ -949,21 +1258,26 @@ class JobController extends Controller
         $this->validate($request, [
             'job_pending_remark' => 'required',
         ]);
+        // dd($request->all());
         try {
             DB::beginTransaction();
+            
             $job=Job::find($id);
             $job->update([
                 'is_pending' => 1,
                 'status' => 5,
             ]);
 
+            $specialComponents = $request->input('special_components', []);
+            $jsonSpecialComponents = json_encode($specialComponents);
+
             JobPendingNote::create([
                 'job_id' => $id,
                 'job_pending_note' => $request->remark,
                 'job_pending_remark' => $request->job_pending_remark, 
+                'special_components' => $jsonSpecialComponents, 
             ]);
 
-            
             $ticket = Ticket::where('id',$job->ticket_id)
             ->update([
                 'status' => 6,
@@ -984,6 +1298,7 @@ class JobController extends Controller
 
         try {
             DB::beginTransaction();
+
             $job=Job::find($request->job_id);
             $job->status = 2;
             $job->save();
@@ -1253,89 +1568,134 @@ class JobController extends Controller
                         return $tech_type;
                     })
                     ->addColumn('status', function ($jobs) {
-
-                       if ($jobs->status == 6){
-                            return '<span class="badge badge-red">Paused</span>';
+                        switch ($jobs->status) {
+                            case 6:
+                                $badgeClass = 'badge-red';
+                                $statusText = 'Paused';
+                                break;
+                    
+                            case 5:
+                                $badgeClass = 'badge-orange';
+                                $statusText = 'Pending';
+                                break;
+                    
+                            case 0:
+                                $badgeClass = 'badge-yellow';
+                                $statusText = 'Created';
+                                break;
+                    
+                            case 4:
+                                $badgeClass = 'badge-info';
+                                $statusText = 'Job Completed';
+                                break;
+                    
+                            case 3:
+                                $badgeClass = 'badge-success';
+                                $statusText = 'Job Started';
+                                break;
+                    
+                            case 1:
+                                $badgeClass = 'badge-success';
+                                $statusText = 'Accepted';
+                                break;
+                    
+                            case 2:
+                                $badgeClass = 'badge-danger';
+                                $statusText = 'Rejected';
+                                break;
+                    
+                            default:
+                                $badgeClass = '';
+                                $statusText = 'Unknown';
                         }
-                        
-                        elseif( $jobs->status == 5 ){
-                            return '<span class="badge badge-orange">Pending</span>';
-                        }
-
-                        
-                        elseif($jobs->status == 0)
-                        {
-                            return '<span class="badge badge-yellow">Created</span>';
-                        }
-
-                        elseif($jobs->status == 4 )
-                        {
-                            return '<span class="badge badge-info">Job Completed</span>';
-                        }
-
-                        elseif($jobs->status == 3 )
-                        {
-                            return '<span class="badge badge-success">Job Started</span>';
-                        }
-                        elseif($jobs->status == 1)
-                        {
-                            return '<span class="badge badge-success">Accepted</span>';
-                        }
-                        elseif($jobs->status==2)
-                        {
-                            return '<span class="badge badge-danger">Rejected</span>';
-                        }
-                        
+                    
+                        return $badgeClass ? "<span class=\"badge $badgeClass\">$statusText</span>" : '';
                     })
+                    
                     ->addColumn('job_created_at', function ($jobs) {
                         $job_created_at=Carbon::parse($jobs->job_created_at)->format('m/d/Y');
                         return $job_created_at;
                     })
 
                     ->addColumn('job_pending_remark', function ($jobs) {
-                        $data=null;
-                        $pendingNotes=DB::table('job_pending_notes')->where('job_id',$jobs->job_id)->get();
-                        
-                        foreach ($pendingNotes as $key => $item) {
-                            $data.= '<ol style="font-weight: bold; color:red">'. $item->job_pending_remark.'-'.$item->job_pending_note.'</ol>';
-                        }
-                        return $data;
+                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+                        $data = collect($pendingNotes)->map(function ($item) {
+                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->job_pending_note . '</ol>';
+                        })->implode('');
+                    
+                        return $data ?: 'Unavailable.';
                     })
-
+                    ->addColumn('pending_for_special_components', function ($jobs) {
+                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+                        $data = collect($pendingNotes)->flatMap(function ($item) {
+                            $specialComponents = json_decode($item->special_components, true);
+                    
+                            return $specialComponents ? array_map(function ($special_component) {
+                                return '<li>' . $special_component . '</li>';
+                            }, $specialComponents) : [];
+                        })->implode('');
+                    
+                        return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+                    })
                     ->addColumn('action', function ($jobs) use ($user_role) {
-                            if (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
-                                return '<div class="table-actions text-center" style="display: flex;">
-                                            <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-eye f-16 mr-15 text-green"></i>
-                                            </a>
-                                            <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-edit f-16 mr-15 text-blue" title="Edit"></i>
-                                            </a>
-                                            <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                        </div>';
-                            } elseif (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('edit') && Auth::user()->can('show')) {
-                                return '<div class="table-actions" style="display: flex;">
-                                                <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
-                                                    <i class="ik ik-eye f-16 mr-15 text-green"></i>
-                                                </a>
-                                                <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
-                                                    <i class="ik ik-edit f-16 mr-15 text-blue" title="Edit"></i>
-                                                </a>
-                                                </div>';
-                            } elseif (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('delete') && $jobs->status !=0) {
-                                return '<div class="table-actions">
-                                            <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
-                                        </div>';
-                            } elseif (Auth::user()->can('show')) {
-                                return '<div class="table-actions">
-                                        <a href=" '.route('technician.jobs.show', $jobs->job_id). ' " title="View">
-                                                <i class="ik ik-eye f-16 mr-15 text-green"></i>
-                                            </a>
-                                        </div>';
-                            } 
+                        $html = '<div class="table-actions';
+                        
+                        if (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('show')) {
+                            $html .= ' text-center" style="display: flex;">';
+                            $html .= '<a href="'.route('job.job.show', $jobs->job_id).'" title="View"><i class="ik ik-eye f-16 mr-15 text-green"></i></a>';
+                    
+                            if (Auth::user()->can('edit')) {
+                                $html .= '<a href="'.route('job.job.edit', $jobs->job_id).'" title="Edit"><i class="ik ik-edit f-16 mr-15 text-blue"></i></a>';
+                            }
+                    
+                            if (Auth::user()->can('delete') && $jobs->status != 0) {
+                                $html .= '<a type="submit" onclick="showDeleteConfirm('.$jobs->job_id.')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>';
+                            }
+                        } elseif (Auth::user()->can('show')) {
+                            $html .= '">';
+                            $html .= '<a href="'.route('technician.jobs.show', $jobs->job_id).'" title="View"><i class="ik ik-eye f-16 mr-15 text-green"></i></a>';
+                        }
+                    
+                        $html .= '</div>';
+                        return $html;
                     })
+                    
+                    // ->addColumn('action', function ($jobs) use ($user_role) {
+                    //         if (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
+                    //             return '<div class="table-actions text-center" style="display: flex;">
+                    //                         <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+                    //                             <i class="ik ik-eye f-16 mr-15 text-green"></i>
+                    //                         </a>
+                    //                         <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
+                    //                             <i class="ik ik-edit f-16 mr-15 text-blue" title="Edit"></i>
+                    //                         </a>
+                    //                         <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                    //                     </div>';
+                    //         } elseif (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('edit') && Auth::user()->can('show')) {
+                    //             return '<div class="table-actions" style="display: flex;">
+                    //                             <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+                    //                                 <i class="ik ik-eye f-16 mr-15 text-green"></i>
+                    //                             </a>
+                    //                             <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
+                    //                                 <i class="ik ik-edit f-16 mr-15 text-blue" title="Edit"></i>
+                    //                             </a>
+                    //                             </div>';
+                    //         } elseif (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('delete') && $jobs->status !=0) {
+                    //             return '<div class="table-actions">
+                    //                         <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                    //                     </div>';
+                    //         } elseif (Auth::user()->can('show')) {
+                    //             return '<div class="table-actions">
+                    //                     <a href=" '.route('technician.jobs.show', $jobs->job_id). ' " title="View">
+                    //                             <i class="ik ik-eye f-16 mr-15 text-green"></i>
+                    //                         </a>
+                    //                     </div>';
+                    //         } 
+                    // })
                     ->addIndexColumn()
-                    ->rawColumns(['ticket_sl','job_number','service_type','status','job_pending_remark','action'])
+                    ->rawColumns(['ticket_sl','job_number','service_type','status','job_pending_remark','pending_for_special_components','action'])
                     ->make(true);
             }
             return view('job.job_status', compact('totalJobStatus', 'id'));

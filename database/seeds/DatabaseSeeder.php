@@ -8,6 +8,7 @@ use Database\Seeders\DistrictSeeder;
 use Database\Seeders\DivisionSeeder;
 use Database\Seeders\JobCloseRemarkSeeder;
 use Database\Seeders\ThanasSeeder;
+use Database\Seeders\SpecialComponentSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -27,7 +28,8 @@ class DatabaseSeeder extends Seeder
             // DistrictSeeder::class,
             // DivisionSeeder::class,
             // ThanasSeeder::class,
-            JobCloseRemarkSeeder::class,
+            // JobCloseRemarkSeeder::class,
+            SpecialComponentSeeder::class,
         ]);
     }
 }

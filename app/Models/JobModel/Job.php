@@ -42,6 +42,7 @@ class Job extends Model
     public function ticket(){
         return $this->belongsTo(Ticket::class, 'ticket_id');
     }
+    
     public function rejectNote(){
         return $this->hasOne(JobNote::class, 'job_id');
     }

@@ -169,32 +169,48 @@ class KpiReportController extends Controller
 
 
                                 })  
-                                ->addColumn('part_code', function ($jobs) {
-                                    $consumptions=DB::table('inventory_stocks')
-                                    ->join('parts','parts.id','=','inventory_stocks.part_id')
-                                    ->select('parts.code as part_code')
-                                    ->where('is_consumed', 1)->where('job_id', $jobs->id)->get();
-                                        $res='Not Found';
-                                        if(!empty($consumptions)){
+                                // ->addColumn('part_code', function ($jobs) {
+                                //     $consumptions=DB::table('inventory_stocks')
+                                //     ->join('parts','parts.id','=','inventory_stocks.part_id')
+                                //     ->select('parts.code as part_code')
+                                //     ->where('is_consumed', 1)->where('job_id', $jobs->id)->get();
+                                //         $res='Not Found';
+                                //         if(!empty($consumptions)){
 
-                                            $data = [];
-                                            $part_code = '';
-                                            foreach($consumptions as $detail){
-                                                    $data[] = $detail->part_code;
-                                            }
-                                            foreach ($data as $key => $result) {
-                                                $total = count($data);
-                                                if ($total == 1) {
-                                                    $part_code .= $result;
-                                                } else {
-                                                    $part_code .= $result . '<br/>';
-                                                }
-                                            };
-                                            return rtrim($part_code, ', ');
-                                        }else{
-                                            return $res; 
-                                        }
-                                }) 
+                                //             $data = [];
+                                //             $part_code = '';
+                                //             foreach($consumptions as $detail){
+                                //                     $data[] = $detail->part_code;
+                                //             }
+                                //             foreach ($data as $key => $result) {
+                                //                 $total = count($data);
+                                //                 if ($total == 1) {
+                                //                     $part_code .= $result;
+                                //                 } else {
+                                //                     $part_code .= $result . '<br/>';
+                                //                 }
+                                //             };
+                                //             return rtrim($part_code, ', ');
+                                //         }else{
+                                //             return $res; 
+                                //         }
+                                // }) 
+                                ->addColumn('part_code', function ($jobs) {
+                                    $consumptions = DB::table('inventory_stocks')
+                                        ->join('parts', 'parts.id', '=', 'inventory_stocks.part_id')
+                                        ->select('parts.code as part_code')
+                                        ->where('is_consumed', 1)
+                                        ->where('job_id', $jobs->id)
+                                        ->get();
+                                
+                                    if ($consumptions->isEmpty()) {
+                                        return 'Not Found';
+                                    }
+                                
+                                    $partCodes = $consumptions->pluck('part_code')->toArray();
+                                    return implode('; ', $partCodes);
+                                })
+                                
                                 ->addColumn('status', function ($jobs) {
 
                                     if ($jobs->status == 9 && $jobs->reopened == 1){
