@@ -891,6 +891,7 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('status/{id}', [JobController::class, 'status'])->name('status');
         Route::get('job-status/excel/{id}', [JobController::class,'jobExcelDownload'])->name('job-status.excel');
         Route::get('testcsv', [JobController::class,'csvTest']);
+        Route::get('get-special-component/{job_pending_remark_id}',[JobController::class, 'getSpecialComponent']);
     });
 
     Route::group(['prefix' => 'purchase', 'as' => 'purchase.'], function() {

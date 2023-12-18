@@ -247,27 +247,27 @@ class JobController extends Controller
                     })
 
                     ->addColumn('job_pending_remark', function ($jobs) {
-                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->whereNull('deleted_at')->get();
                     
                         $data = collect($pendingNotes)->map(function ($item) {
-                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->job_pending_note . '</ol>';
+                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->special_components . '-' . $item->job_pending_note . '</ol>';
                         })->implode('');
                     
                         return $data ?: 'Unavailable.';
                     })
-                    ->addColumn('pending_for_special_components', function ($jobs) {
-                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    // ->addColumn('pending_for_special_components', function ($jobs) {
+                    //     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
                     
-                        $data = collect($pendingNotes)->flatMap(function ($item) {
-                            $specialComponents = json_decode($item->special_components, true);
+                    //     $data = collect($pendingNotes)->flatMap(function ($item) {
+                    //         $specialComponents = json_decode($item->special_components, true);
                     
-                            return $specialComponents ? array_map(function ($special_component) {
-                                return '<li>' . $special_component . '</li>';
-                            }, $specialComponents) : [];
-                        })->implode('');
+                    //         return $specialComponents ? array_map(function ($special_component) {
+                    //             return '<li>' . $special_component . '</li>';
+                    //         }, $specialComponents) : [];
+                    //     })->implode('');
                     
-                        return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
-                    })
+                    //     return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+                    // })
                     
 
                     ->addColumn('action', function ($jobs) use ($user_role) {
@@ -295,7 +295,7 @@ class JobController extends Controller
                     
                     
                     ->addIndexColumn()
-                    ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','pending_for_special_components','action'])
+                    ->rawColumns(['ticket_sl','job_number','service_type','warranty_type','status','job_pending_remark','action'])
                     ->make(true);
             }
             return view('job.index', compact('totalJobStatus'));
@@ -1017,11 +1017,10 @@ class JobController extends Controller
             $allFaults=Fault::where('status', 1)->get();
             $jobCloseRemarks = JobCloseRemark::orderBy('id', 'DESC')->get();
             $jobpendingRemarks = JobPendingRemark::orderBy('id', 'DESC')->get();
-            $specialComponents = SpecialComponent::orderBy('id', 'DESC')->get();
             $JobAttachment = JobAttachment::where('job_id',$job->id)->get();
             $submittedJobs=JobSubmission::where('job_id',$job->id)->latest()->get();
             return view('job.technician-show', compact(
-                'job','faults','accessories_lists', 'allAccessories','allFaults', 'jobCloseRemarks', 'jobpendingRemarks' ,'customerAdvancedPayment','submittedJobs','JobAttachment','specialComponents'
+                'job','faults','accessories_lists', 'allAccessories','allFaults', 'jobCloseRemarks', 'jobpendingRemarks' ,'customerAdvancedPayment','submittedJobs','JobAttachment'
             ));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
@@ -1261,25 +1260,27 @@ class JobController extends Controller
         // dd($request->all());
         try {
             DB::beginTransaction();
+
+            $jobpendingRemark = JobPendingRemark::where('id', $request->job_pending_remark)->first();
             
-            $job=Job::find($id);
+            $job = Job::findOrFail($id);
+            
             $job->update([
                 'is_pending' => 1,
                 'status' => 5,
             ]);
 
-            $specialComponents = $request->input('special_components', []);
-            $jsonSpecialComponents = json_encode($specialComponents);
+            // $specialComponents = $request->input('special_components', []);
+            // $jsonSpecialComponents = json_encode($specialComponents);
 
             JobPendingNote::create([
                 'job_id' => $id,
                 'job_pending_note' => $request->remark,
-                'job_pending_remark' => $request->job_pending_remark, 
-                'special_components' => $jsonSpecialComponents, 
+                'job_pending_remark' => $jobpendingRemark->title, 
+                'special_components' => $request->special_components, 
             ]);
 
-            $ticket = Ticket::where('id',$job->ticket_id)
-            ->update([
+            $job->ticket->update([
                 'status' => 6,
                 'is_pending' => 1,
             ]);
@@ -1287,8 +1288,15 @@ class JobController extends Controller
         return redirect()->back()->with('success','Pending Note Added Successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            $bug = $e->getMessage();
-            return redirect()->back()->with('error', $bug);
+        
+            // Log the error with more context information
+            \Log::error('Error processing pending job: ' . $e->getMessage(), [
+                'job_id' => $id,
+                'request_data' => $request->all(),
+                'exception' => $e,
+            ]);
+
+            return redirect()->back()->with('error', 'An unexpected error occurred.');
         }
     }
     public function denyJob(Request $request){
@@ -1618,27 +1626,27 @@ class JobController extends Controller
                     })
 
                     ->addColumn('job_pending_remark', function ($jobs) {
-                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->whereNull('deleted_at')->get();
                     
                         $data = collect($pendingNotes)->map(function ($item) {
-                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->job_pending_note . '</ol>';
+                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->special_components . '-' . $item->job_pending_note . '</ol>';
                         })->implode('');
                     
                         return $data ?: 'Unavailable.';
                     })
-                    ->addColumn('pending_for_special_components', function ($jobs) {
-                        $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    // ->addColumn('pending_for_special_components', function ($jobs) {
+                    //     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
                     
-                        $data = collect($pendingNotes)->flatMap(function ($item) {
-                            $specialComponents = json_decode($item->special_components, true);
+                    //     $data = collect($pendingNotes)->flatMap(function ($item) {
+                    //         $specialComponents = json_decode($item->special_components, true);
                     
-                            return $specialComponents ? array_map(function ($special_component) {
-                                return '<li>' . $special_component . '</li>';
-                            }, $specialComponents) : [];
-                        })->implode('');
+                    //         return $specialComponents ? array_map(function ($special_component) {
+                    //             return '<li>' . $special_component . '</li>';
+                    //         }, $specialComponents) : [];
+                    //     })->implode('');
                     
-                        return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
-                    })
+                    //     return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+                    // })
                     ->addColumn('action', function ($jobs) use ($user_role) {
                         $html = '<div class="table-actions';
                         
@@ -2025,6 +2033,26 @@ class JobController extends Controller
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    public function getSpecialComponent(Request $request, $job_pending_remark_id)
+    {
+        try {
+            $specialComponents = SpecialComponent::where('job_pending_remark_id', $job_pending_remark_id)
+                ->orderBy('id', 'DESC')
+                ->get();
+    
+            if ($specialComponents->isEmpty()) {
+                return response()->json(['message' => 'No special components found.'], 404);
+            }
+    
+            return response()->json(['data' => $specialComponents], 200);
+        } catch (\Exception $e) {
+            // Log the error for further investigation
+            \Log::error('Error fetching special components: ' . $e->getMessage());
+    
+            return response()->json(['message' => 'Internal Server Error'], 500);
         }
     }
     
