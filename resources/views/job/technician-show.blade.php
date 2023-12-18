@@ -715,33 +715,36 @@
 
             $("#job_pending_remark").on('change', function (e) {
                 var pendingRemark = $(this).val();
-                $.ajax({
-                    url: "{{ url('job/get-special-component/') }}" + "/" + pendingRemark,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (response) {
-                        console.log(response);
-                        // Clear existing checkboxes
-                        $("#pending_for_special_components").empty();
+                if (pendingRemark) {
+                    $.ajax({
+                        url: "{{ url('job/get-special-component/') }}" + "/" + pendingRemark,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            console.log(response);
+                            // Clear existing checkboxes
+                            $("#pending_for_special_components").empty();
 
-                        // Generate and append checkboxes based on the received data
-                        $.each(response.data, function (index, specialComponent) {
-                            var checkbox = $('<div class="form-check">\
-                                                <input class="form-check-input" \
-                                                    type="radio" \
-                                                    name="special_components" \
-                                                    value="' + specialComponent.name + '" \
-                                                    id="special_components_' + index + '">\
-                                                <label class="form-check-label" \
-                                                    for="special_components_' + index + '">\
-                                                    ' + specialComponent.name + '\
-                                                </label>\
-                                            </div>');
+                            // Generate and append checkboxes based on the received data
+                            $.each(response.data, function (index, specialComponent) {
+                                var checkbox = $('<div class="form-check">\
+                                                    <input class="form-check-input" \
+                                                        type="radio" \
+                                                        name="special_components" \
+                                                        value="' + specialComponent.name + '" \
+                                                        id="special_components_' + index + '">\
+                                                    <label class="form-check-label" \
+                                                        for="special_components_' + index + '">\
+                                                        ' + specialComponent.name + '\
+                                                    </label>\
+                                                </div>');
 
-                            $("#pending_for_special_components").append(checkbox);
-                        });
-                    }
-                });
+                                $("#pending_for_special_components").append(checkbox);
+                            });
+                        }
+                    });
+                }
+                $("#pending_for_special_components").empty();
             });
 
 
