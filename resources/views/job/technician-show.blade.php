@@ -196,13 +196,13 @@
                                         <td>
                                             <ol>
                                                 @foreach ($job->pendingNotes as $item)
-                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark.' ; '.$item->job_pending_note }} - {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
+                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark }}, {{$item->special_components}}, {{ $item->job_pending_note }} | {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
                                                 @endforeach 
                                             </ol>
 
                                         </td>
                                     </tr>
-                                    <tr>
+                                    {{-- <tr>
                                         <th>Pending for Special Component :</th>
                                         <td>
                                             @if ($job->pendingNotes && count($job->pendingNotes) > 0)
@@ -219,7 +219,7 @@
                                                 <p>Unavailable</p>
                                             @endif                                        
                                         </td>
-                                    </tr>                                    
+                                    </tr>                                     --}}
                                 @endisset
                                 <tr>
                                     <th><strong>{{trans('label.JOB_NUMBER')}}</strong></th>
@@ -656,7 +656,7 @@
                     <h5 class="modal-title" id="pendingJobModal">{{ __('Job Pending Remark')}}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 </div>
-                <form action="{{route('job.pending-job', $job->id)}}" method="POST">
+                <form id="jobPendingRemark" class="form-group" action="{{route('job.pending-job', $job->id)}}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
@@ -664,7 +664,7 @@
                             <select name="job_pending_remark" class="form-control" id="job_pending_remark" required>
                                 <option value="">Select Job Pending Remarks</option>
                                 @foreach ($jobpendingRemarks as $jobpendingRemark)
-                                    <option value="{{ $jobpendingRemark->title }}">
+                                    <option value="{{ $jobpendingRemark->id }}">
                                         {{ $jobpendingRemark->title }}
                                     </option>
                                 @endforeach
@@ -673,30 +673,8 @@
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="pending_for_special_components">
                             <label for="">Pending for Special Component </label>
-                            
-                            @foreach ($specialComponents as $specialComponent)
-                                <div class="form-check">
-                                    <input 
-                                        class="form-check-input" 
-                                        type="checkbox" 
-                                        name="special_components[]" 
-                                        value="{{ $specialComponent->name }}" 
-                                        id="special_components_{{ $loop->index }}"
-                                        @if(old('special_components') && in_array($specialComponent->name, old('special_components')))
-                                            checked
-                                        @endif
-                                    >
-                                    <label class="form-check-label" for="special_components_{{ $loop->index }}">
-                                        {{ $specialComponent->name }}
-                                    </label>
-                                </div>
-                            @endforeach
-                        
-                            @error('special_components')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
                         
                         <div class="form-group my-2">
@@ -712,34 +690,63 @@
         </div>
     </div>
     <script type="text/javascript">
-        $(document).ready( function () {
+        $(document).ready(function () {
 
-             @if ($errors->any())
+            // Show modal if there are validation errors
+            @if ($errors->any())
                 $('#demoModal').modal('show');
             @endif
 
-            //Pending Validation
-            var job_pending_remark=$('#job_pending_remark').val();
+            // Function to enable/disable form elements based on job_pending_remark
+            function updateFormState() {
+                var job_pending_remark = $('#job_pending_remark').val();
+                var isFormEnabled = job_pending_remark !== '';
 
-            if(job_pending_remark){
-                $("#job_pending_note").prop('disabled', false);
-                $("#pending_submit").prop('disabled', false);
-            }else{
-                $("#job_pending_note").prop('disabled', true);
-                $("#pending_submit").prop('disabled', true);
-                $('#job_pending_remark').on('change', function(e){
-                    var job_pending_remark_new=$('#job_pending_remark').val();
-                    if (job_pending_remark_new) {
-                        $("#job_pending_note").prop('disabled', false);
-                        $("#pending_submit").prop('disabled', false);
-                    }else {
-                        $("#job_pending_note").prop('disabled', true);  
-                        $("#pending_submit").prop('disabled', true);
-                    }
-
-                }) 
+                $("#job_pending_note, #pending_submit").prop('disabled', !isFormEnabled);
             }
+
+            // Initial form state setup
+            updateFormState();
+
+            // Update form state when job_pending_remark value changes
+            $('#job_pending_remark').on('change', function (e) {
+                updateFormState();
+            });
+
+            $("#job_pending_remark").on('change', function (e) {
+                var pendingRemark = $(this).val();
+                $.ajax({
+                    url: "{{ url('job/get-special-component/') }}" + "/" + pendingRemark,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log(response);
+                        // Clear existing checkboxes
+                        $("#pending_for_special_components").empty();
+
+                        // Generate and append checkboxes based on the received data
+                        $.each(response.data, function (index, specialComponent) {
+                            var checkbox = $('<div class="form-check">\
+                                                <input class="form-check-input" \
+                                                    type="radio" \
+                                                    name="special_components" \
+                                                    value="' + specialComponent.name + '" \
+                                                    id="special_components_' + index + '">\
+                                                <label class="form-check-label" \
+                                                    for="special_components_' + index + '">\
+                                                    ' + specialComponent.name + '\
+                                                </label>\
+                                            </div>');
+
+                            $("#pending_for_special_components").append(checkbox);
+                        });
+                    }
+                });
+            });
+
+
         });
+
         $(document).ready(function(){
             //Ending Validation
             var job_close_remark=$('#job_close_remark').val();

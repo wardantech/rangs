@@ -89,7 +89,7 @@
                                         @if ($job->pendingNotes && count($job->pendingNotes) > 0)
                                             <ol>
                                                 @foreach ($job->pendingNotes as $item)
-                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark.' ; '.$item->job_pending_note }} - {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
+                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark }}, {{$item->special_components}}, {{ $item->job_pending_note }} | {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
                                                 @endforeach 
                                             </ol>
                                         @else
@@ -97,7 +97,7 @@
                                         @endif
                                     </td>
                                 </tr>
-                                <tr>
+                                {{-- <tr>
                                     <th>Pending for Special Component :</th>
                                     <td>
                                         @if ($job->pendingNotes && count($job->pendingNotes) > 0)
@@ -114,7 +114,7 @@
                                             <p>Unavailable</p>
                                         @endif
                                     </td>
-                                </tr> 
+                                </tr>  --}}
                                 @endisset
                                 <tr>
                                     <th><strong>{{trans('label.JOB_NUMBER')}}</strong></th>

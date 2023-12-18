@@ -74,5 +74,45 @@ class JobPendingRemarkSeeder extends Seeder
         JobPendingRemark::create([
             'title' => 'Others'
         ]);
+        
+        JobPendingRemark::create([
+            'title' => 'Pending for Special Component'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for MCB'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Others Parts'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Estimate Approval'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Customer Feedback'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Transport'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Others Issue'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Repair Parts'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Pending for Management Decision'
+        ]);
+
+        JobPendingRemark::create([
+            'title' => 'Work In Progress'
+        ]);
     }
 }

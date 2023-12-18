@@ -15,6 +15,7 @@ class CreateSpecialComponentsTable extends Migration
     {
         Schema::create('special_components', function (Blueprint $table) {
             $table->id();
+            $table->unsignedInteger('job_pending_remark_id')->index();
             $table->string('name');
             $table->timestamps();
             $table->softDeletes();

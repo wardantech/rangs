@@ -53,14 +53,14 @@
             $service_type_data='N/A';
             $point_of_purchase='N/A';
             $pending_notes=null;
-            $pendingNotes=DB::table('job_pending_notes')->where('job_id',$job->job_id)->get();
+            $pendingNotes=DB::table('job_pending_notes')->where('job_id',$job->job_id)->whereNull('deleted_at')->get();
             foreach ($serviceTypes as $key => $serviceType) {
                 if (in_array($serviceType->id, $selectedServiceTypeIds)) {
                     $service_type_data=$serviceType->service_type;
                     }
                 }
             foreach ($pendingNotes as $key => $item) {
-                    $pending_notes.= $item->job_pending_remark.'-'.$item->job_pending_note;
+                    $pending_notes.= $item->job_pending_remark .'-'. $item->special_components .'-'. $item->job_pending_note;
             }
             $data=App\Models\Outlet\Outlet::where('id', '=', $job->outletid)->first();
             if ($data) {
