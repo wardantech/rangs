@@ -250,7 +250,12 @@ class JobController extends Controller
                         $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->whereNull('deleted_at')->get();
                     
                         $data = collect($pendingNotes)->map(function ($item) {
-                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->special_components . '-' . $item->job_pending_note . '</ol>';
+                            // return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '*' . $item->special_components . '*' . $item->job_pending_note . '</ol>';
+                            return '<ol style="font-weight: bold; color:red">' . 
+                            $item->job_pending_remark . 
+                            ($item->special_components ? '*' . $item->special_components : '') . 
+                            ($item->job_pending_note ? '*' . $item->job_pending_note : '') . 
+                        '</ol>';                        
                         })->implode('');
                     
                         return $data ?: 'Unavailable.';
@@ -1629,7 +1634,13 @@ class JobController extends Controller
                         $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->whereNull('deleted_at')->get();
                     
                         $data = collect($pendingNotes)->map(function ($item) {
-                            return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '-' . $item->special_components . '-' . $item->job_pending_note . '</ol>';
+                            // return '<ol style="font-weight: bold; color:red">' . $item->job_pending_remark . '*' . $item->special_components . '*' . $item->job_pending_note . '</ol>';
+                            return '<ol style="font-weight: bold; color:red">' . 
+                            $item->job_pending_remark . 
+                            ($item->special_components ? '*' . $item->special_components : '') . 
+                            ($item->job_pending_note ? '*' . $item->job_pending_note : '') . 
+                        '</ol>';
+                        
                         })->implode('');
                     
                         return $data ?: 'Unavailable.';

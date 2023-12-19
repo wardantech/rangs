@@ -60,7 +60,21 @@
                     }
                 }
             foreach ($pendingNotes as $key => $item) {
-                    $pending_notes.= $item->job_pending_remark .'-'. $item->special_components .'-'. $item->job_pending_note;
+                    // $pending_notes.= $item->job_pending_remark .'*'. $item->special_components .'*'. $item->job_pending_note;
+                    
+                    $pending_notes .= $item->job_pending_remark;
+    
+                    if ($item->special_components) {
+                        $pending_notes .= '*' . $item->special_components;
+                    }
+
+                    if ($item->job_pending_note) {
+                        $pending_notes .= '*' . $item->job_pending_note;
+                    }
+                    
+                    if (!$loop->first && !$loop->last) {
+                        $pending_notes .= '; ';
+                    }
             }
             $data=App\Models\Outlet\Outlet::where('id', '=', $job->outletid)->first();
             if ($data) {
