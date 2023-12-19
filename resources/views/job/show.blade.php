@@ -89,8 +89,23 @@
                                         @if ($job->pendingNotes && count($job->pendingNotes) > 0)
                                             <ol>
                                                 @foreach ($job->pendingNotes as $item)
-                                                <li style="font-weight: bold; color:red">{{ $item->job_pending_remark }}, {{$item->special_components}}, {{ $item->job_pending_note }} | {{ $item->created_at->format('l jS \\of F Y h:i:s A') }} </li> 
-                                                @endforeach 
+                                                    @php
+                                                        $data = [];
+                                                        if ($item->job_pending_remark) {
+                                                            $data[] = $item->job_pending_remark;
+                                                        }
+                                                        if ($item->special_components) {
+                                                            $data[] = $item->special_components;
+                                                        }
+                                                        if ($item->job_pending_note) {
+                                                            $data[] = $item->job_pending_note;
+                                                        }
+                                                    @endphp
+                                            
+                                                    <li style="font-weight: bold; color:red">
+                                                        {{ implode(', ', $data) }} | {{ $item->created_at->format('l jS \\of F Y h:i:s A') }}
+                                                    </li>
+                                                @endforeach
                                             </ol>
                                         @else
                                             <p>No Job Pending Remark Available.</p>
