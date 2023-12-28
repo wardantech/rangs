@@ -149,10 +149,16 @@
                                         <td>{{$item->part->code ?? null}}-{{$item->part->name ?? null}}</td>
                                         <td>{{$item->used_quantity}}</td>
                                         <td>{{number_format($item->selling_price_bdt,2)}}</td>
-                                        <td>{{number_format($item->selling_price_bdt * $item->used_quantity,2)}}
-                                        @php
-                                            $parts_total += $item->selling_price_bdt * $item->used_quantity;
-                                        @endphp
+                                        <td>
+                                            @if ($item->selling_value != null)
+                                                {{number_format($item->selling_price_bdt * $item->used_quantity,2)}}
+                                                @php
+                                                    $parts_total += $item->selling_price_bdt * $item->used_quantity;
+                                                @endphp
+                                            @else
+                                                0
+                                            @endif
+  
                                         </td>
                                     </tr>
                                     @endforeach
@@ -233,7 +239,7 @@
                                 $toatl_sub = $jobSubmission->discount;
                                 $current_bill = $toatl_bill - $toatl_sub;
                                 @endphp
-                                <th>{{ number_format($payable_amount, 2) }}</th>
+                                <th style="text-align: center;">{{ number_format($payable_amount, 2) }}</th>
                             </tr>
                         </table>
                         <hr class="mt-2 mb-3"/>

@@ -46,11 +46,11 @@
                                     <div class="row pt-5">
                                         <div class="col-md-3">
                                                 <label for="inputpc" class="">{{__('label.COUSTOMER_PHONE_NO')}}</label>
-                                                <input type="text" class="form-control" id="coustormer_phone_number" name="coustormer_phone_number" placeholder="Customer Phone Number" value="{{ old('coustormer_phone_number') }}">
+                                                <input type="text" class="form-control" id="customer_phone_number" name="customer_phone_number" placeholder="Customer Phone Number" value="{{ old('customer_phone_number') }}">
                                         </div>
                                         <div class="col-md-3">
                                             <label for="inputpc" class="">{{__('label.COUSTOMER_NAME')}}</label>
-                                                <input type="text" class="form-control" name="coustormer_name" placeholder="Customer Name" value="{{ old('coustormer_name') }}">
+                                                <input type="text" class="form-control" name="customer_name" placeholder="Customer Name" value="{{ old('customer_name') }}">
                                         </div>
                                         <div class="col-md-3">
                                             <label for="inputpc" class="">{{__('label.PRODUCTS_SERIAL_NUMBER')}}</label>
@@ -102,10 +102,10 @@
                                         <td>{{$item['product_model_name']}}</td>
                                         <td>{{$item['point_of_purchase']}}</td>
                                         <td>
-                                            <div class='text-center'>
+                                            <div class='table-actions d-flex'>
                                                 @can('create')
                                                     <a title='Create Ticket' href="{{ url('tickets/ticket-create',$item['purchase_id']) }}">
-                                                        <i class='fas fa-check-circle'></i>
+                                                        <i class='fas fa-check-circle text-green'></i>
                                                     </a>
                                                 @endcan
                                                 @can('show')
@@ -195,14 +195,16 @@
                                                 @endforeach
                                                 </td>
                                                 <td>
-                                                    @can('show')
-                                                        <a href="{{route('show-ticket-details', $ticket->id)}}" class="btn btn-warning">{{ __('label.TICKET')}}</a>
-                                                    @endcan
-                                                    @can('show')
-                                                        @if ($ticket->job)
-                                                            <a href="{{ route('job.job.show', $ticket->job->id) }}" class="btn btn-warning">{{ __('label.JOB')}}</a>  
-                                                        @endif
-                                                    @endcan
+                                                    <div class="table-actions d-flex">
+                                                        @can('show')
+                                                            <a href="{{route('show-ticket-details', $ticket->id)}}" class="btn btn-success text-dark" title="Ticket Details">{{ __('label.TICKET')}}</a>
+                                                        @endcan
+                                                        @can('show')
+                                                            @if ($ticket->job)
+                                                                <a href="{{ route('job.job.show', $ticket->job->id) }}" class="btn btn-info text-dark" title="Job Details">{{ __('label.JOB')}}</a>  
+                                                            @endif
+                                                        @endcan
+                                                    </div>
                                                 </td>
                                             <tr>
                                         @endforeach

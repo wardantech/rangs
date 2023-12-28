@@ -17,6 +17,7 @@ use App\Models\Ticket\ReceiveMode;
 use App\Models\Ticket\ServiceType;
 use App\Models\Ticket\DeliveryMode;
 use App\Models\Ticket\WarrantyType;
+use App\Models\Ticket\PaymentType;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ProductPurchase\Purchase;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -122,4 +123,9 @@ class Ticket extends Model
     {
         return $this->hasMany(JobAttachment::class, 'ticket_id');
     }
+
+    // public function paymentType()
+    // {
+    //     return $this->belongsTo(PaymentType::class, 'payment_type_id');
+    // }
 }

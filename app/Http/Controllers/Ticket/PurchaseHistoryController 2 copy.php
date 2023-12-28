@@ -38,20 +38,16 @@ use App\Http\Requests\storeTicketRequest;
 use App\Models\Customer\FeedbackQuestion;
 use App\Models\Job\JobAttachment;
 use App\Services\ImageUploadService;
-use App\Services\TicketStatusService;
-use App\Services\TicketService;
 
 class PurchaseHistoryController extends Controller
 {
     use OTPTraits;
 
     protected $imageUploadService;
-    protected $ticketStatusService;
 
-    public function __construct(ImageUploadService $imageUploadService, TicketStatusService $ticketStatusService)
+    public function __construct(ImageUploadService $imageUploadService)
     {
         $this->imageUploadService = $imageUploadService;
-        $this->ticketStatusService = $ticketStatusService;
     }
 
     public function index()
@@ -69,69 +65,73 @@ class PurchaseHistoryController extends Controller
             $user_role = $auth->roles->first();
 
             if ($user_role->name == 'Team Leader') {
-
-                $teamLeader = TeamLeader::where('user_id', Auth::user()->id)->first();
-                if (empty($teamLeader)) {
-                    return redirect()->back()->with('error', "Whoops! You don't have the access");
+                $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
+                if(empty($teamleader)){
+                    return redirect()->back()->with('error',"Whoops! You don't have the access"); 
                 }
-    
-                $districtIds = json_decode($teamLeader->group->region->district_id, true);
-                $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
-                $categoryIds = json_decode($teamLeader->group->category_id, true);
-    
-                $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds);
+                $district_id = json_decode($teamleader->group->region->district_id, true);
+                $thana_id  = json_decode($teamleader->group->region->thana_id , true);
+                $product_category_id = json_decode($teamleader->group->category_id, true);
 
-            } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
+                $totals = $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id);
 
-                $totalTicketStatus = $this->ticketStatusService->totalStatus();
-
+            } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
+                $totals = $this->totalTicketStatus();
             } else {
-
-                $totalTicketStatus = $this->ticketStatusService->totalStatusByOutlet($employee->outlet_id);
-
+                $totals = $this->totalOutletTicketStatus($employee->outlet_id);
             }
-            
+            // $totals = ($user_role->name == 'Team Leader') ? $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id) :
+            // (($user_role->name == 'Admin' || in_array($user_role->name, ['Super Admin', 'Call Center Admin'])) ? $this->totalTicketStatus() : $this->totalOutletTicketStatus($employee->outlet_id));
             
             if (request()->ajax()) {  
+                $serviceTypes = ServiceType::where('status', 1)->get();  
+                $data=DB::table('tickets')
+                ->join('warranty_types','tickets.warranty_type_id','=','warranty_types.id')
+                ->join('outlets','tickets.outlet_id','=','outlets.id')
+                ->join('purchases','tickets.purchase_id','=','purchases.id')
+                ->join('categories','tickets.product_category_id','=','categories.id')
+                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->join('districts','tickets.district_id', '=','districts.id' )
+                ->join('thanas','thanas.id', '=', 'tickets.thana_id')
+                ->join('users', 'tickets.created_by', '=', 'users.id')
+                ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+                'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
+                'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
+                'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
+                'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
+                'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
+                'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid','warranty_types.warranty_type')
+                ->where('tickets.status',0)
+                ->where('tickets.deleted_at',null);
+    
+                if ($user_role->name == 'Team Leader') {
+                    $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
 
-                $serviceTypes = ServiceType::where('status', 1)->get(); 
-
-                $data = TicketService::buildQuery(); 
-
-                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-
-                    TicketService::admin($data);
-
-                } elseif ($user_role->name == 'Team Leader') {
-
-                    $teamLeader = TeamLeader::where('user_id', Auth::user()->id)->first();
-
-                    if (empty($teamLeader)) {
-                        return redirect()->back()->with('error', "Whoops! You don't have the access");
-                    }
-        
-                    $districtIds = json_decode($teamLeader->group->region->district_id, true);
-                    $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
-                    $categoryIds = json_decode($teamLeader->group->category_id, true);
-
-                    TicketService::extendForTeamLeader($data, $districtIds, $thanaIds, $categoryIds);
-                    
+                    $district_id = json_decode($teamleader->group->region->district_id, true);
+                    $thana_id  = json_decode($teamleader->group->region->thana_id , true);
+                    $product_category_id = json_decode($teamleader->group->category_id, true);
+    
+                    $data->whereIn('tickets.district_id', $district_id)
+                            ->whereIn('tickets.thana_id', $thana_id )
+                            ->whereIn('tickets.product_category_id',$product_category_id);
+    
+                } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
+                    $data;
                 } else {
-
-                    TicketService::extendForOutlet($data, $employee->outlet_id);
+                    $data->where('tickets.outlet_id', $employee->outlet_id);
                 }
-
-                $status=[0];
-                TicketService::extendForStatus($data, $status);
 
                 if(!empty($request->start_date && $request->end_date))
                 {
-                    $startDate = Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate = Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
-                    TicketService::extendForDateRange($data, $startDate, $endDate);
-                } 
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
 
-                $tickets = $data->latest()->get();
+                    $tickets=$data->whereBetween('tickets.created_at',[$startDate, $endDate])->latest()->get();
+                } 
+                else{
+                    $tickets=$data->latest()->get();
+                }
 
                 return DataTables::of($tickets)
 
@@ -331,7 +331,7 @@ class PurchaseHistoryController extends Controller
                     ->rawColumns(['ticket_sl', 'customer_name', 'customer_phone', 'district_thana', 'product_category', 'product_sl','created_by', 'status', 'action'])
                     ->make(true);
             }
-            return view('ticket.purchaseHistory.ticket_index', compact('totalTicketStatus'));
+            return view('ticket.purchaseHistory.ticket_index', compact('totals'));
         }catch(\Exception $e){
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -611,7 +611,7 @@ class PurchaseHistoryController extends Controller
                                 ->where('ticket_id', $id)
                                 ->select('customer_feedback.*', 'feedback_questions.question')
                                 ->get();
-
+// dd($ticket);
             return view('ticket.purchaseHistory.show_ticket', compact('ticket', 'faults', 'warrantyTypes', 'product_conditions', 'accessories_lists', 'questions', 'ticketId', 'customerFeedbacks', 'serviceTypes', 'jobs','is_teamleader','user_role'));
         }catch(\Exception $e){
             $bug = $e->getMessage();
@@ -792,57 +792,64 @@ class PurchaseHistoryController extends Controller
             $employee=Employee::where('user_id',Auth::user()->id)->first();
 
             if ($user_role->name == 'Team Leader') {
-
-                $teamLeader = TeamLeader::where('user_id', Auth::user()->id)->first();
-                if (empty($teamLeader)) {
-                    return redirect()->back()->with('error', "Whoops! You don't have the access");
+                $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
+                if(empty($teamleader)){
+                    return redirect()->back()->with('error',"Whoops! You don't have the access"); 
                 }
-    
-                $districtIds = json_decode($teamLeader->group->region->district_id, true);
-                $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
-                $categoryIds = json_decode($teamLeader->group->category_id, true);
-    
-                $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds);
+                $district_id = json_decode($teamleader->group->region->district_id, true);
+                $thana_id  = json_decode($teamleader->group->region->thana_id , true);
+                $product_category_id = json_decode($teamleader->group->category_id, true);
+                
+                $totals = $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id);
 
-            } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
+            }elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
 
-                $totalTicketStatus = $this->ticketStatusService->totalStatus();
-
+                $totals = $this->totalTicketStatus();
             } else {
 
-                $totalTicketStatus = $this->ticketStatusService->totalStatusByOutlet($employee->outlet_id);
+                $totals = $this->totalOutletTicketStatus($employee->outlet_id);
 
             }
-           
+            // $totals = ($user_role->name == 'Team Leader') ? $this->teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id) :
+            // (($user_role->name == 'Admin' || in_array($user_role->name, ['Super Admin', 'Call Center Admin'])) ? $this->totalTicketStatus() : $this->totalOutletTicketStatus($employee->outlet_id));
 
             if (request()->ajax()) {
-                $serviceTypes = ServiceType::where('status', 1)->get(); 
-                $data = TicketService::buildQuery(); 
+                $serviceTypes = ServiceType::where('status', 1)->get();
+                $data=DB::table('tickets')
+                ->join('warranty_types','tickets.warranty_type_id','=','warranty_types.id')
+                ->join('outlets','tickets.outlet_id','=','outlets.id')
+                ->join('purchases','tickets.purchase_id','=','purchases.id')
+                ->join('categories','tickets.product_category_id','=','categories.id')
+                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->join('districts','tickets.district_id', '=','districts.id' )
+                ->join('thanas','thanas.id', '=', 'tickets.thana_id')
+                ->join('users', 'tickets.created_by', '=', 'users.id')
+                ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+                'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
+                'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
+                'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
+                'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
+                'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
+                'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid','warranty_types.warranty_type')
+                ->where('tickets.deleted_at',null);
+    
+                if ($user_role->name == 'Team Leader') {
+                    $teamleader=TeamLeader::where('user_id', Auth::user()->id)->first();
 
-                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-
-                    TicketService::admin($data);
-
-                } elseif ($user_role->name == 'Team Leader') {
-
-                    $teamLeader = TeamLeader::where('user_id', Auth::user()->id)->first();
-
-                    if (empty($teamLeader)) {
-                        return redirect()->back()->with('error', "Whoops! You don't have the access");
-                    }
-        
-                    $districtIds = json_decode($teamLeader->group->region->district_id, true);
-                    $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
-                    $categoryIds = json_decode($teamLeader->group->category_id, true);
-
-                    TicketService::extendForTeamLeader($data, $districtIds, $thanaIds, $categoryIds);
-
+                    $district_id = json_decode($teamleader->group->region->district_id, true);
+                    $thana_id  = json_decode($teamleader->group->region->thana_id , true);
+                    $product_category_id = json_decode($teamleader->group->category_id, true);
+    
+                    $data->whereIn('tickets.district_id', $district_id)
+                            ->whereIn('tickets.thana_id', $thana_id )
+                            ->whereIn('tickets.product_category_id',$product_category_id);
+    
+                } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin') {
+                    $data;
                 } else {
-
-                    TicketService::extendForOutlet($data, $employee->outlet_id);
-
+                    $data->where('tickets.outlet_id', $employee->outlet_id);   
                 }
-
                 switch($id) {
                     case 0:
                         $data->where('tickets.status', 0);
@@ -905,16 +912,15 @@ class PurchaseHistoryController extends Controller
                     default:
                         return false;
                 }
-
                 if(!empty($request->start_date && $request->end_date))
                 {
-                    $startDate = Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate = Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
-                    TicketService::extendForDateRange($data, $startDate, $endDate);
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
+                    $tickets=$data->whereBetween('tickets.created_at',[$startDate, $endDate])->latest()->get();
                 } 
-                
-                $tickets=$data->latest()->get();
-
+                else{
+                    $tickets=$data->latest()->get();
+                }
                 return DataTables::of($tickets)
 
                     ->addColumn('ticket_sl', function ($tickets) {
@@ -1113,7 +1119,7 @@ class PurchaseHistoryController extends Controller
                     ->rawColumns(['ticket_sl', 'customer_name', 'customer_phone', 'district_thana', 'product_category', 'product_sl', 'status','created_by', 'action'])
                     ->make(true);
             }
-            return view('ticket.purchaseHistory.ticket_status', compact('totalTicketStatus', 'id'));
+            return view('ticket.purchaseHistory.ticket_status', compact('totals', 'id'));
         }catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -1129,6 +1135,90 @@ class PurchaseHistoryController extends Controller
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
         }
+    }
+
+    protected function totalTicketStatus()
+    {
+        try {
+            return DB::table('tickets')
+            ->where('deleted_at', NULL)
+                ->selectRaw('count(*) as total')
+                ->selectRaw("count(case when status = 0 then 1 end) as created")
+                ->selectRaw("count(case when status = 6 and is_pending = 1 and is_paused = 0 and is_ended = 0 then 1 end) as pending")
+                ->selectRaw("count(case when status = 9 and is_reopened = 1 then 1 end) as ticketReOpened")
+                ->selectRaw("count(case when status = 12 and is_ended = 1 and is_closed = 1 and is_delivered_by_call_center = 1 then 1 end) as ticketClosed")
+                ->selectRaw("count(case when status = 11 and is_ended = 1 then 1 end) as jobCompleted")
+                ->selectRaw("count(case when status = 5 and is_paused = 1 then 1 end) as jobPaused")
+                ->selectRaw("count(case when status = 4 and is_started = 1 then 1 end) as jobStarted")
+                ->selectRaw("count(case when status = 3 and is_accepted = 1 then 1 end) as jobAccepted")
+                ->selectRaw("count(case when status = 1 and is_assigned = 1 then 1 end) as assigned")
+                ->selectRaw("count(case when status = 2 and is_rejected = 1 then 1 end) as rejected")
+                ->selectRaw("count(case when status = 10 and is_delivered_by_call_center = 1 then 1 end) as deliveredby_call_center")
+                ->selectRaw("count(case when status = 8 and is_delivered_by_teamleader = 1 then 1 end) as deliveredby_teamleader")
+                ->selectRaw("count(case when status = 7 and is_closed_by_teamleader = 1 then 1 end) as closedby_teamleader")
+                ->selectRaw("count(case when status = 12 and is_delivered_by_call_center = 0 and is_ended = 1 and is_closed = 1 then 1 end) as undelivered_close")
+                ->first();
+        }catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+
+    }
+
+    protected function teamleaderTotalTicketStatus($district_id, $thana_id, $product_category_id)
+    {
+        try {
+            
+            return DB::table('tickets')->whereIn('district_id', $district_id)
+            ->where('deleted_at', NULL)
+                ->whereIn('product_category_id', $product_category_id)
+                ->whereIn('thana_id', $thana_id)
+                ->selectRaw('count(*) as total')
+                ->selectRaw("count(case when status = 0 then 1 end) as created")
+                ->selectRaw("count(case when status = 6 and is_pending = 1 and is_paused = 0 and is_ended = 0 then 1 end) as pending")
+                ->selectRaw("count(case when status = 9 and is_reopened = 1 then 1 end) as ticketReOpened")
+                ->selectRaw("count(case when status = 12 and is_ended = 1 and is_closed = 1 and is_delivered_by_call_center = 1 then 1 end) as ticketClosed")
+                ->selectRaw("count(case when status = 11 and is_ended = 1 then 1 end) as jobCompleted")
+                ->selectRaw("count(case when status = 5 and is_paused = 1 then 1 end) as jobPaused")
+                ->selectRaw("count(case when status = 4 and is_started = 1 then 1 end) as jobStarted")
+                ->selectRaw("count(case when status = 3 and is_accepted = 1 then 1 end) as jobAccepted")
+                ->selectRaw("count(case when status = 1 and is_assigned = 1 then 1 end) as assigned")
+                ->selectRaw("count(case when status = 2 and is_rejected = 1 then 1 end) as rejected")
+                ->selectRaw("count(case when status = 10 and is_delivered_by_call_center = 1 then 1 end) as deliveredby_call_center")
+                ->selectRaw("count(case when status = 8 and is_delivered_by_teamleader = 1 then 1 end) as deliveredby_teamleader")
+                ->selectRaw("count(case when status = 12 and is_delivered_by_call_center = 0 and is_ended = 1 and is_closed = 1 then 1 end) as undelivered_close")
+                ->first();
+        }catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    protected function totalOutletTicketStatus($outletId)
+    {
+        try {
+            return DB::table('tickets')->where('outlet_id', $outletId)
+            ->where('deleted_at', NULL)
+            ->selectRaw('count(*) as total')
+            ->selectRaw("count(case when status = 0 then 1 end) as created")
+            ->selectRaw("count(case when status = 6 and is_pending = 1 and is_paused = 0 and is_ended = 0 then 1 end) as pending")
+            ->selectRaw("count(case when status = 9 and is_reopened = 1 then 1 end) as ticketReOpened")
+            ->selectRaw("count(case when status = 12 and is_ended = 1 and is_closed = 1 and is_delivered_by_call_center = 1 then 1 end) as ticketClosed")
+            ->selectRaw("count(case when status = 11 and is_ended = 1 then 1 end) as jobCompleted")
+            ->selectRaw("count(case when status = 5 and is_paused = 1 then 1 end) as jobPaused")
+            ->selectRaw("count(case when status = 4 and is_started = 1 then 1 end) as jobStarted")
+            ->selectRaw("count(case when status = 3 and is_accepted = 1 then 1 end) as jobAccepted")
+            ->selectRaw("count(case when status = 1 and is_assigned = 1 then 1 end) as assigned")
+            ->selectRaw("count(case when status = 2 and is_rejected = 1 then 1 end) as rejected")
+            ->selectRaw("count(case when status = 10 and is_delivered_by_call_center = 1 then 1 end) as deliveredby_call_center")
+            ->selectRaw("count(case when status = 8 and is_delivered_by_teamleader = 1 then 1 end) as deliveredby_teamleader")
+            ->selectRaw("count(case when status = 12 and is_delivered_by_call_center = 0 and is_ended = 1 and is_closed = 1 then 1 end) as undelivered_close")
+            ->first();
+        }catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+
     }
     
     // Unique Ticket SL

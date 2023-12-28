@@ -236,6 +236,7 @@ class JobSubmissionController extends Controller
 
     public function storeJobSubmission(Request $request)
     {
+        // dd($request->all());
         $this->validate($request, [
             'job_id' => 'required',
             'submission_date' => 'required',

@@ -390,22 +390,25 @@ class RequisitionController extends Controller
             $user_role = $auth->roles->first();
             $mystore='';
 
-            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin') {
-                $requisitions=Requisition::where('status',0)->where('is_declined',0)->where('belong_to',2)->latest()->get();
-                // Rejected/Declined Requisitions removed from all requisitions need to add another route for rejected requisitions
-                $status = $this->centralStatus();
-            } else {
-                $employee=Employee::where('user_id',Auth::user()->id)->first();
-                $mystore=Store::where('id',$employee->store_id )->first();
-                if ($mystore != null) {
-                    $requisitions=Requisition::where('status',0)->where('is_declined',0)->where('store_id',$mystore->id)
-                    ->where('belong_to',2)->latest()->get();
-                    $status = $this->branchStatus($mystore->id);
-                }else{
-                    return redirect()->back()->with('error', __('Sorry you dont have the permission.'));
-                }
-            }
+
             if (request()->ajax()) {
+
+                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin') {
+                    $requisitions=Requisition::where('status',0)->where('is_declined',0)->where('belong_to',2)->latest()->get();
+                    // Rejected/Declined Requisitions removed from all requisitions need to add another route for rejected requisitions
+                    $status = $this->centralStatus();
+                } else {
+                    $employee=Employee::where('user_id',Auth::user()->id)->first();
+                    $mystore=Store::where('id',$employee->store_id )->first();
+                    if ($mystore != null) {
+                        $requisitions=Requisition::where('status',0)->where('is_declined',0)->where('store_id',$mystore->id)
+                        ->where('belong_to',2)->latest()->get();
+                        $status = $this->branchStatus($mystore->id);
+                    }else{
+                        return redirect()->back()->with('error', __('Sorry you dont have the permission.'));
+                    }
+                }
+
                 return DataTables::of($requisitions)
 
                     ->addColumn('date', function ($requisitions) {
@@ -551,7 +554,95 @@ class RequisitionController extends Controller
                     ->rawColumns(['ticket_sl','status','job_pending_remark','action'])
                     ->make(true);
             }
-            return view('requisition.requisition.central_list',compact('requisitions','status'));
+            return view('requisition.requisition.central_list');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+
+    //Item Wise Requisition
+    public function centralRequisitionItemList()
+    {
+        try{
+            $auth = Auth::user();
+            $user_role = $auth->roles->first();
+            $mystore='';
+
+            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin') {
+                $requisitionItems = RequisitionDetails::with('requisition','part')
+                ->whereHas('requisition', function ($query) {
+                    $query->where('status', 0)
+                        ->where('is_declined', 0)
+                        ->where('belong_to', 2);
+                })
+                ->latest()
+                ->get();
+                $status = $this->centralStatus();
+            } else {
+                $employee=Employee::where('user_id',Auth::user()->id)->first();
+                $mystore=Store::where('id',$employee->store_id )->first();
+                if ($mystore != null) {
+                    $requisitionItems = RequisitionDetails::with('requisition','part')
+                    ->whereHas('requisition', function ($query) use ($mystore){
+                        $query->where('status', 0)
+                            ->where('is_declined', 0)
+                            ->where('belong_to', 2)
+                            ->where('store_id', $mystore->id);
+                    })
+                    ->latest()
+                    ->get();
+                }else{
+                    return redirect()->back()->with('error', __('Sorry you dont have the permission.'));
+                }
+            }
+            if (request()->ajax()) {
+                return DataTables::of($requisitionItems)
+
+                    ->addColumn('date', function ($requisitionItem) {
+                        $date=$requisitionItem->requisition->date->format('m/d/Y');
+                        return $date;
+                    })
+
+                    ->addColumn('requisition_no', function ($requisitionItem) {
+                        $requisition_no='B-RSL'.'-'.$requisitionItem->requisition->id;
+                        return $requisition_no;
+                    })
+
+                    ->addColumn('sender_store', function ($requisitionItem) {
+                        $sender_store=$requisitionItem->requisition->senderStore->name;
+                        return $sender_store;
+                    })
+                    ->addColumn('parts_code', function ($requisitionItem) {
+                        $parts_code = $requisitionItem->part->code;
+                            return $parts_code; 
+                    })
+                    ->addColumn('parts_name', function ($requisitionItem) {
+                        $parts_name = $requisitionItem->part->name;
+                            return $parts_name; 
+                    })
+                    ->addColumn('parts_model', function ($requisitionItem) {
+                        $parts_model = $requisitionItem->part->partModel->name;
+                            return $parts_model; 
+                    })
+                    ->addColumn('total_quantity', function ($requisitionItem) {
+                        $total_quantity=$requisitionItem->required_quantity;
+                        return $total_quantity;
+                    })
+                    ->addColumn('issued_quantity', function ($requisitionItem) {
+                        $issued_quantity=$requisitionItem->issued_quantity; 
+                        return $issued_quantity;
+                    })
+                    
+                    ->addColumn('balance', function ($requisitionItem) {
+                        $balance=($requisitionItem->required_quantity) - ($requisitionItem->issued_quantity);
+                        return $balance;
+                    })
+                    ->addIndexColumn()
+                    ->rawColumns(['requisition_no','sender_store','parts_code'])
+                    ->make(true);
+            }
+            return view('requisition.requisition.central_requisition_item_list');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);

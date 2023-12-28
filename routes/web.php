@@ -178,10 +178,10 @@ Route::group(['middleware' => 'auth'], function(){
 	Route::get('/logout', [LoginController::class,'logout']);
 	Route::get('/clear-cache', [HomeController::class,'clearCache']);
 	// dashboard route
-	Route::get('/dashboard', function () {
-		return view('pages.dashboard');
-	})->name('dashboard');
-
+	// Route::get('/dashboard', function () {
+	// 	return view('pages.dashboard');
+	// })->name('dashboard');
+    Route::get('/dashboard', 'DashBoardController@index')->name('dashboard');
     // get permissions
 	Route::get('get-role-permissions-badge', [PermissionController::class,'getPermissionBadgeByRole']);
 	// permission examples
@@ -465,6 +465,7 @@ Route::group(['middleware' => 'auth'], function(){
     //Central
     Route::group(['prefix' => 'central', 'as' => 'central.'], function () {
         Route::get('requisitions', [RequisitionController::class, 'centralRequisitionList'])->name('requisitions');
+        Route::get('requisition-item', [RequisitionController::class, 'centralRequisitionItemList'])->name('requisition-item');
         Route::get('requisitions/show/{id}', [RequisitionController::class, 'centralRequisitionShow'])->name('requisitions.show');
         Route::get('requisitions/decline/{id}', [RequisitionController::class, 'requisitationDecline'])->name('requisitions.decline');
         Route::get('requisitions/allocate/{id}', [RequisitionAllocationController::class, 'requisitationAllocate'])->name('requisitations.allocate');
@@ -493,6 +494,7 @@ Route::group(['middleware' => 'auth'], function(){
 
         // Central Requisitions Allocation
         Route::resource('requisitions/allocation', 'Requisition\RequisitionAllocationController')->except('create', 'store','destroy');
+        Route::get('requisitions/allocation-item', 'Requisition\RequisitionAllocationController@allocatedItemList')->name('requisitions.allocation-item');
         Route::get('requisitions/allocation/delete/{id}', [RequisitionAllocationController::class,'destroy']);
         Route::get('requisitions/allocation/print/{id}', [RequisitionAllocationController::class,'print'])->name('requisitions.allocation.print');
     });

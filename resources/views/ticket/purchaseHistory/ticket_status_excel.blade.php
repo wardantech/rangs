@@ -31,6 +31,7 @@
             <th>Product Name</th>
             <th>Product SL</th>
             <th>Service Type</th>
+            <th>Warranty Type</th>
             <th>Branch</th>
             <th>Created By</th>
             <th>Created At</th>
@@ -69,6 +70,7 @@
 			<td>{{ $ticket->product_name }}</td>
 			<td>{{ $ticket->product_serial }}</td>
 			<td>{{ $service_type_data }}</td>
+			<td>{{ $ticket->warranty_type }}</td>
 			<td>{{ $ticket->outlet_name }}</td>
 			<td>{{ $ticket->created_by }}</td>
 			<td>{{  Carbon\Carbon::parse($ticket->created_at)->format('m/d/Y')   }}</td>

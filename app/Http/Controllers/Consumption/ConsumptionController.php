@@ -129,6 +129,7 @@ class ConsumptionController extends Controller
 
     public function consumptionStoreByJob(Request $request)
     {
+        // dd($request->all());
         $this->validate($request, [
             'job_id' => 'required',
             'date' => 'required',
