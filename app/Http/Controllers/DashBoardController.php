@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\JobStatusService;
 use App\Services\TicketStatusService;
 use App\Models\Employee\Employee;
+use App\Models\Employee\TeamLeader;
 
 class DashBoardController extends Controller
 {
