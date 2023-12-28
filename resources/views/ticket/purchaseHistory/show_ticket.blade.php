@@ -268,6 +268,14 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td>{{ __('Purchase Date')}}</td>
+                                    <td>
+                                        @isset($ticket->purchase->purchase_date)
+                                        {{ $ticket->purchase->purchase_date->format('m/d/Y') }}
+                                         @endisset
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('label.WARRANTY_END_FOR_GENERAL_PARTS')}}</td>
                                     <td>
                                         @isset($ticket->purchase->general_warranty_date)

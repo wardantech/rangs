@@ -147,10 +147,14 @@
                     <td>{{ $item->part->name ?? null }}</td>
                     <td>{{ number_format($item->selling_price_bdt, 2) }}</td>
                     <td>{{ $item->used_quantity }}</td>
-                    <td>{{ number_format($item->selling_price_bdt * $item->used_quantity, 2) }}
+                    <td>@if ($item->selling_value != null)
+                        {{ number_format($item->selling_price_bdt * $item->used_quantity, 2) }}
                         @php
                             $parts_total += $item->selling_price_bdt * $item->used_quantity;
                         @endphp
+                        @else
+                        0
+                        @endif
                     </td>
                 </tr>
             @endforeach

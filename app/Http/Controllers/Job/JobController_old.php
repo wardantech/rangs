@@ -33,20 +33,10 @@ use App\Models\Ticket\ProductCondition;
 use App\Models\User;
 use App\Models\Outlet\Outlet;
 use App\Models\Job\SpecialComponent;
-use App\Services\JobService;
-use App\Services\JobStatusService;
 
 class JobController extends Controller
 {
     use OTPTraits;
-
-    protected $jobStatusService;
-
-    public function __construct(JobStatusService $jobStatusService)
-    {
-        $this->jobStatusService = $jobStatusService;
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -56,47 +46,60 @@ class JobController extends Controller
     {
         try{
             $auth = Auth::user();
-            $employee = Employee::where('user_id', Auth::user()->id)->first();
             $user_role = $auth->roles->first();
-
             if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-                $totalJobStatus = $this->jobStatusService->totalStatus();
+                $totalJobStatus = $this->jobTotalstatus();
             } elseif ($user_role->name == 'Team Leader') {
-                $totalJobStatus = $this->jobStatusService->totalStatusByTeam($auth->id);
-            } elseif ($user_role->name == 'Technician') {
-                $totalJobStatus = $this->jobStatusService->totalStatusByTechnician($auth->id);
+                $totalJobStatus = $this->jobTotalStatusByTeam($auth->id);
             } else {
-                $totalJobStatus = $this->jobStatusService->totalStatusByOutlet($employee->outlet_id);
+                $totalJobStatus = $this->jobTotalStatusByUser(Auth::user()->id);
             }
             
             if (request()->ajax()) {
-                
-                $data = JobService::buildQuery();
-                
+                $employee = Employee::where('user_id', Auth::user()->id)->first();
                 $serviceTypes = ServiceType::where('status', 1)->get();
-                
+                $data=DB::table('jobs')
+                ->join('employees', 'jobs.employee_id', '=', 'employees.id')
+                ->join('users', 'jobs.created_by', '=', 'users.id')
+                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
+                ->join('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
+                ->join('outlets','tickets.outlet_id','=','outlets.id')
+                ->join('purchases','tickets.purchase_id','=','purchases.id')
+                ->join('categories','tickets.product_category_id','=','categories.id')
+                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->join('brands','purchases.brand_id', '=', 'brands.id')
+                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
+                ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
+                'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',
+                'tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name','tickets.service_type_id as service_type_id','tickets.status as ticket_status',
+                'tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as ticket_is_pending','tickets.is_paused as ticket_is_paused','tickets.is_ended as ticket_is_ended',
+                'tickets.is_started as ticket_is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader','tickets.is_delivered_by_teamleader as is_delivered_by_teamleader',
+                'tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed','tickets.is_assigned as is_assigned',
+                'tickets.is_rejected as is_rejected','jobs.status as status','jobs.is_pending as is_pending','jobs.is_paused as is_paused','jobs.is_started as is_started','jobs.is_ended as is_ended','job_priorities.job_priority','tickets.outlet_id as outlet_id',
+                'warranty_types.warranty_type as warranty_type','purchases.outlet_id as outletid')
+                ->whereIn('jobs.status',[0,1,3,5])
+                ->where('jobs.deleted_at',null);
+
                 if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-                    // $data;
+                    $data;
                 } elseif ($user_role->name == 'Team Leader') {
-                    JobService::extendForTeamLeader($data);
+                    $data->where('jobs.created_by',Auth::user()->id);
                 } elseif ($user_role->name == 'Technician') {
-                    JobService::extendForTechnician($data);
+                    $data->where('jobs.user_id',Auth::user()->id);
                 } else {
-                    JobService::extendForOutlet($data, $employee->outlet_id);
+                    $data->where('tickets.outlet_id', $employee->outlet_id);
                 }
 
                 if(!empty($request->start_date && $request->end_date))
                 {
-                    $startDate = Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate = Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
-                    JobService::extendForDateRange($data, $startDate, $endDate);
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
+                    $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
                 } 
-
-                $status=[0,1,3,5];
-                JobService::extendForStatus($data, $status);
-
-                $jobs=$data->latest()->get();
-
+                else{
+                    $jobs=$data->latest()->get();
+                }
                 return DataTables::of($jobs)
 
                     ->addColumn('emplyee_name', function ($jobs) {
@@ -869,60 +872,71 @@ class JobController extends Controller
     {
         try {
             $auth = Auth::user();
-            $employee = Employee::where('user_id', Auth::user()->id)->first();
             $user_role = $auth->roles->first();
 
-            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-                $totalJobStatus = $this->jobStatusService->totalStatus();
-            } elseif ($user_role->name == 'Team Leader') {
-                $totalJobStatus = $this->jobStatusService->totalStatusByTeam($auth->id);
+            if ($user_role->name == 'Team Leader') {
+                $totalJobStatus = $this->jobTotalStatusByTeam($auth->id);
             } elseif ($user_role->name == 'Technician') {
-                $totalJobStatus = $this->jobStatusService->totalStatusByTechnician($auth->id);
-            } else {
-                $totalJobStatus = $this->jobStatusService->totalStatusByOutlet($employee->outlet_id);
+                $totalJobStatus = $this->jobTotalStatusByUser(Auth::user()->id);
+            }else{
+                $totalJobStatus = $this->jobTotalstatus();
             }
 
             if (request()->ajax()) {
                 $serviceTypes = ServiceType::where('status', 1)->get();
-                
-                $data = JobService::buildQuery();
-
-                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
-                    // $data;
-                } elseif ($user_role->name == 'Team Leader') {
-                    JobService::extendForTeamLeader($data);
+                $data=DB::table('jobs')
+                ->join('employees', 'jobs.employee_id', '=', 'employees.id')
+                ->join('users', 'jobs.created_by', '=', 'users.id')
+                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
+                ->join('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
+                ->join('outlets','tickets.outlet_id','=','outlets.id')
+                ->join('purchases','tickets.purchase_id','=','purchases.id')
+                ->join('categories','tickets.product_category_id','=','categories.id')
+                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->join('brands','purchases.brand_id', '=', 'brands.id')
+                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
+                ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
+                'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',
+                'tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name','tickets.service_type_id as service_type_id','tickets.status as ticket_status',
+                'tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as ticket_is_pending','tickets.is_paused as ticket_is_paused','tickets.is_ended as ticket_is_ended',
+                'tickets.is_started as ticket_is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader','tickets.is_delivered_by_teamleader as is_delivered_by_teamleader',
+                'tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed','tickets.is_assigned as is_assigned',
+                'tickets.is_rejected as is_rejected','jobs.status as status','jobs.is_pending as is_pending','jobs.is_paused as is_paused','jobs.is_started as is_started','jobs.is_ended as is_ended','job_priorities.job_priority','tickets.outlet_id as outlet_id',
+                'warranty_types.warranty_type as warranty_type','purchases.outlet_id as outletid')
+                ->where('jobs.deleted_at',null);
+                if ($user_role->name == 'Team Leader') {
+                    $data->where('jobs.created_by',Auth::user()->id);
                 } elseif ($user_role->name == 'Technician') {
-                    JobService::extendForTechnician($data);
-                } else {
-                    JobService::extendForOutlet($data, $employee->outlet_id);
+                    $data->where('jobs.user_id',Auth::user()->id);
+                }else{
+                    $data;
                 }
-
-
                 switch($id) {
                     case 1:
-                        JobService::extendForStatus($data, [5]);
+                        $data->where('jobs.status','=',5);
                         break;
                     case 2:
-                        JobService::extendForStatus($data, [6]);
+                        $data->where('jobs.status','=',6);
                         break;
     
                     case 3:
-                        JobService::extendForStatus($data, [0]);
+                        $data->where('jobs.status','=',0);
                         break;
     
                     case 4:
-                        JobService::extendForStatus($data, [4]);
+                        $data->where('jobs.status','=',4);
                         break;
                         
                     case 5:
-                        JobService::extendForStatus($data, [3]);
+                        $data->where('jobs.status','=',3);
                         break;
                     case 6:
-                        JobService::extendForStatus($data, [1]);
+                        $data->where('jobs.status','=',1);
                         break;
     
                     case 7:
-                        JobService::extendForStatus($data, [2]);
+                        $data->where('jobs.status','=',2);
                         break;
     
                     case 8:
@@ -934,13 +948,13 @@ class JobController extends Controller
                 }
                 if(!empty($request->start_date && $request->end_date))
                 {
-                    $startDate = Carbon::parse($request->get('start_date'))->format('Y-m-d');
-                    $endDate = Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
-                    JobService::extendForDateRange($data, $startDate, $endDate);
+                    $startDate=Carbon::parse($request->get('start_date'))->format('Y-m-d');
+                    $endDate=Carbon::parse($request->get('end_date'))->addDay()->format('Y-m-d');
+                    $jobs=$data->whereBetween('jobs.created_at',[$startDate, $endDate])->latest()->get();
                 } 
-
-                $jobs=$data->latest()->get();
-
+                else{
+                    $jobs=$data->latest()->get();
+                }
                 return DataTables::of($jobs)
 
                     ->addColumn('emplyee_name', function ($jobs) {
@@ -1102,7 +1116,19 @@ class JobController extends Controller
                     
                         return $data ?: 'Unavailable.';
                     })
-
+                    // ->addColumn('pending_for_special_components', function ($jobs) {
+                    //     $pendingNotes = DB::table('job_pending_notes')->where('job_id', $jobs->job_id)->get();
+                    
+                    //     $data = collect($pendingNotes)->flatMap(function ($item) {
+                    //         $specialComponents = json_decode($item->special_components, true);
+                    
+                    //         return $specialComponents ? array_map(function ($special_component) {
+                    //             return '<li>' . $special_component . '</li>';
+                    //         }, $specialComponents) : [];
+                    //     })->implode('');
+                    
+                    //     return $data ? '<ul>' . $data . '</ul>' : 'Unavailable.';
+                    // })
                     ->addColumn('action', function ($jobs) use ($user_role) {
                         $html = '<div class="table-actions';
                         
@@ -1126,6 +1152,38 @@ class JobController extends Controller
                         return $html;
                     })
                     
+                    // ->addColumn('action', function ($jobs) use ($user_role) {
+                    //         if (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('edit') && Auth::user()->can('delete') && Auth::user()->can('show')) {
+                    //             return '<div class="table-actions text-center" style="display: flex;">
+                    //                         <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+                    //                             <i class="ik ik-eye f-16 mr-15 text-green"></i>
+                    //                         </a>
+                    //                         <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
+                    //                             <i class="ik ik-edit f-16 mr-15 text-blue" title="Edit"></i>
+                    //                         </a>
+                    //                         <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                    //                     </div>';
+                    //         } elseif (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('edit') && Auth::user()->can('show')) {
+                    //             return '<div class="table-actions" style="display: flex;">
+                    //                             <a href=" '.route('job.job.show', $jobs->job_id). ' " title="View">
+                    //                                 <i class="ik ik-eye f-16 mr-15 text-green"></i>
+                    //                             </a>
+                    //                             <a href=" '.route('job.job.edit', $jobs->job_id). ' " title="View">
+                    //                                 <i class="ik ik-edit f-16 mr-15 text-blue" title="Edit"></i>
+                    //                             </a>
+                    //                             </div>';
+                    //         } elseif (($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Team Leader') && Auth::user()->can('delete') && $jobs->status !=0) {
+                    //             return '<div class="table-actions">
+                    //                         <a type="submit" onclick="showDeleteConfirm(' . $jobs->job_id . ')" title="Delete"><i class="ik ik-trash-2 f-16 text-red"></i></a>
+                    //                     </div>';
+                    //         } elseif (Auth::user()->can('show')) {
+                    //             return '<div class="table-actions">
+                    //                     <a href=" '.route('technician.jobs.show', $jobs->job_id). ' " title="View">
+                    //                             <i class="ik ik-eye f-16 mr-15 text-green"></i>
+                    //                         </a>
+                    //                     </div>';
+                    //         } 
+                    // })
                     ->addIndexColumn()
                     ->rawColumns(['ticket_sl','job_number','service_type','status','job_pending_remark','pending_for_special_components','action'])
                     ->make(true);

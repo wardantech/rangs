@@ -42,6 +42,7 @@ class ExportTicket implements FromView, ShouldAutoSize
         $status=$this->status;
         try {
             $data=DB::table('tickets')
+            ->join('warranty_types','tickets.warranty_type_id','=','warranty_types.id')
             ->join('outlets','tickets.outlet_id','=','outlets.id')
             ->join('purchases','tickets.purchase_id','=','purchases.id')
             ->join('categories','tickets.product_category_id','=','categories.id')
@@ -56,7 +57,7 @@ class ExportTicket implements FromView, ShouldAutoSize
             'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
             'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
             'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
-            'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid')
+            'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid','warranty_types.warranty_type')
             ->where('tickets.deleted_at',null);
 
             if ($user_role->name == 'Team Leader') {

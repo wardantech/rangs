@@ -17,6 +17,11 @@ class RequisitionDetails extends Model
     protected $guarded = [];
     protected $dates = ['deleted_at','date'];
 
+    public function requisition()
+    {
+        return $this->belongsTo(Requisition::class, 'requisition_id');
+    }
+
     public function part()
     {
         return $this->belongsTo(Parts::class, 'parts_id');

@@ -62,35 +62,35 @@
                             </li>
                             <li class="breadcrumb-item">
                                 @if ($id == 0)
-                                <a href="#">{{ __('Created Tickets')}}</a>
+                                <a href="#" class="btn btn-outline-warning">{{ __('Created Tickets')}}</a>
                                 @elseif ($id == 1)
-                                    <a href="#">{{ __('Assigned Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-info">{{ __('Assigned Tickets')}}</a>
                                 @elseif ($id == 2)
-                                    <a href="#">{{ __('Canelled Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-danger">{{ __('Canelled Tickets')}}</a>
                                 @elseif ($id == 3)
-                                    <a href="#">{{ __('Accepted Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-primary">{{ __('Accepted Tickets')}}</a>
                                 @elseif ($id == 4)
-                                    <a href="#">{{ __('Started Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Started Tickets')}}</a>
                                 @elseif ($id == 5)
-                                    <a href="#">{{ __('Paused Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Paused Tickets')}}</a>
                                 @elseif ($id == 6)
-                                    <a href="#">{{ __('Pending Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Pending Tickets')}}</a>
                                 @elseif ($id == 7)
-                                    <a href="#">{{ __('Delivered BY TL Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Delivered BY TL Tickets')}}</a>
                                 @elseif ($id == 8)
-                                    <a href="#">{{ __('Reopened Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Reopened Tickets')}}</a>
                                 @elseif ($id == 9)
-                                    <a href="#">{{ __('Delivered BY CC Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Delivered BY CC Tickets')}}</a>
                                 @elseif ($id == 10)
-                                    <a href="#">{{ __('Completed Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Completed Tickets')}}</a>
                                 @elseif ($id == 11)
-                                    <a href="#">{{ __('Closed Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Closed Tickets')}}</a>
                                 @elseif ($id == 12)
-                                    <a href="#">{{ __('Total Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Total Tickets')}}</a>
                                 @elseif ($id == 13)
-                                    <a href="#">{{ __('Undelivered Close')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Undelivered Close')}}</a>
                                 @else
-                                    <a href="#">{{ __('Tickets')}}</a>
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Tickets')}}</a>
                                 @endif
                             </li>
                             <input type="hidden" id="status_id" value="{{ $id }}">
@@ -108,7 +108,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Created')}}</h6>
-                                        <h2>{{ $totals->created }}</h2>
+                                        <h2>{{ $totalTicketStatus->created }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -123,7 +123,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Assigned')}}</h6>
-                                        <h2>{{ $totals->assigned }}</h2>
+                                        <h2>{{ $totalTicketStatus->assigned }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -137,7 +137,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Cancelled')}}</h6>
-                                        <h2>{{ $totals->rejected }}</h2>
+                                        <h2>{{ $totalTicketStatus->rejected }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -151,7 +151,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Accepted')}}</h6>
-                                        <h2>{{ $totals->jobAccepted }}</h2>
+                                        <h2>{{ $totalTicketStatus->jobAccepted }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -165,7 +165,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Started')}}</h6>
-                                        <h2>{{ $totals->jobStarted }}</h2>
+                                        <h2>{{ $totalTicketStatus->jobStarted }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -179,7 +179,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Paused')}}</h6>
-                                        <h2>{{ $totals->jobPaused }}</h2>
+                                        <h2>{{ $totalTicketStatus->jobPaused }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -194,7 +194,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Pending')}}</h6>
-                                        <h2>{{ $totals->pending }}</h2>
+                                        <h2>{{ $totalTicketStatus->pending }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -209,7 +209,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Delivered By Team Leader')}}</h6>
-                                        <h2>{{ $totals->deliveredby_teamleader }}</h2>
+                                        <h2>{{ $totalTicketStatus->deliveredby_teamleader }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -223,7 +223,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Re-opened')}}</h6>
-                                        <h2>{{ $totals->ticketReOpened }}</h2>
+                                        <h2>{{ $totalTicketStatus->ticketReOpened }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -237,7 +237,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Delivered By CC')}}</h6>
-                                        <h2>{{ $totals->deliveredby_call_center }}</h2>
+                                        <h2>{{ $totalTicketStatus->deliveredby_call_center }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -251,7 +251,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Completed Job')}}</h6>
-                                        <h2>{{ $totals->jobCompleted }}</h2>
+                                        <h2>{{ $totalTicketStatus->jobCompleted }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -265,7 +265,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Closed')}}</h6>
-                                        <h2>{{ $totals->ticketClosed }}</h2>
+                                        <h2>{{ $totalTicketStatus->ticketClosed }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -279,7 +279,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Total Ticket')}}</h6>
-                                        <h2>{{ $totals->total }}</h2>
+                                        <h2>{{ $totalTicketStatus->total }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -293,7 +293,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="state">
                                         <h6>{{ __('Undlivered Close')}}</h6>
-                                        <h2>{{ $totals->undelivered_close }}</h2>
+                                        <h2>{{ $totalTicketStatus->undelivered_close }}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -371,6 +371,7 @@
                                     <th>{{ __('Product Name')}}</th>
                                     <th>{{ __('Product SL')}}</th>
                                     <th>{{ __('Service Type')}}</th>
+                                    <th>{{ __('Warranty Type')}}</th>
                                     <th>{{ __('Branch')}}</th>
                                     <th>{{ __('Created By')}}</th>
                                     <th>{{ __('label.CREATED_AT')}}</th>
@@ -446,6 +447,7 @@
                     {data:'product_name', name: 'product_name', orderable: false, searchable: true},
                     {data:'product_sl', name: 'product_sl', orderable: false, searchable: true},
                     {data:'service_type', name: 'service_type', orderable: false, searchable: true},
+                    {data:'warranty_type', name: 'warranty_type', orderable: false, searchable: true},
                     {data:'branch', name: 'branch', orderable: false, searchable: true},
                     {data:'created_by', name: 'created_by', orderable: false, searchable: true},
                     {data:'created_at', name: 'created_at', orderable: false, searchable: true},
