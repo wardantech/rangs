@@ -35,7 +35,7 @@ class JobService
                 ->where('jobs.deleted_at',null);
     }
 
-    public static function extendForTemaLeader($query)
+    public static function extendForTeamLeader($query)
     {
         return $query->where('jobs.created_by', Auth::user()->id);
     }
