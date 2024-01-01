@@ -69,6 +69,7 @@
                                     <th>{{ __('label.SL')}}</th>
                                     <th>{{ __('label.STORE')}}</th>
                                     <th>{{ __('label.PART')}}</th>
+                                    <th>{{ __('Part Code')}}</th>
                                     <th>{{ __('label.RACK') }}</th>
                                     <th>{{ __('label.BIN')}}</th>
                                     <th>{{ __('label.ACTION')}}</th>
@@ -145,6 +146,7 @@
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     {data:'storeName', name: 'storeName', orderable: true, searchable: true},
                     {data:'partName', name: 'partName', orderable: true, searchable: true},
+                    {data:'partCode', name: 'partCode', orderable: true, searchable: true},
                     {data:'rack', name: 'rack', orderable: true, searchable: true},
                     {data:'bin', name: 'bin', orderable: true, searchable: true},
                     {data:'action', name: 'action',  orderable: false, searchable: false}
