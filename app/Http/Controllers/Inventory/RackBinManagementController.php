@@ -26,7 +26,7 @@ class RackBinManagementController extends Controller
     {
         try {
             $rackBinManagement = RackBinManagement::with('store', 'parts', 'rack', 'bin')
-                ->latest();
+                ->latest()->get();
             if (request()->ajax()) {
                 return DataTables::of($rackBinManagement)
 
@@ -37,6 +37,10 @@ class RackBinManagementController extends Controller
 
                     ->addColumn('partName', function ($rackBinManagement) {
                         $data = isset($rackBinManagement->parts) ? $rackBinManagement->parts->name : null;
+                        return $data;
+                    })
+                    ->addColumn('partCode', function ($rackBinManagement) {
+                        $data = isset($rackBinManagement->parts) ? $rackBinManagement->parts->code : null;
                         return $data;
                     })
 
