@@ -12,16 +12,16 @@ class JobService
     public static function buildQuery(){
 
         return DB::table('jobs')
-                ->join('employees', 'jobs.employee_id', '=', 'employees.id')
-                ->join('users', 'jobs.created_by', '=', 'users.id')
-                ->join('tickets', 'jobs.ticket_id', '=', 'tickets.id')
-                ->join('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
-                ->join('outlets','tickets.outlet_id','=','outlets.id')
-                ->join('purchases','tickets.purchase_id','=','purchases.id')
-                ->join('categories','tickets.product_category_id','=','categories.id')
-                ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
-                ->join('brands','purchases.brand_id', '=', 'brands.id')
-                ->join('customers','purchases.customer_id', '=', 'customers.id')
+                ->leftJoin('employees', 'jobs.employee_id', '=', 'employees.id')
+                ->leftJoin('users', 'jobs.created_by', '=', 'users.id')
+                ->leftJoin('tickets', 'jobs.ticket_id', '=', 'tickets.id')
+                ->leftJoin('job_priorities', 'tickets.job_priority_id', '=', 'job_priorities.id')
+                ->leftJoin('outlets','tickets.outlet_id','=','outlets.id')
+                ->leftJoin('purchases','tickets.purchase_id','=','purchases.id')
+                ->leftJoin('categories','tickets.product_category_id','=','categories.id')
+                ->leftJoin('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+                ->leftJoin('brands','purchases.brand_id', '=', 'brands.id')
+                ->leftJoin('customers','purchases.customer_id', '=', 'customers.id')
                 ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
                 ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
                 'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',

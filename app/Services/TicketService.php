@@ -12,15 +12,15 @@ class TicketService
     public static function buildQuery(){
 
         return DB::table('tickets')
-        ->join('warranty_types','tickets.warranty_type_id','=','warranty_types.id')
-        ->join('outlets','tickets.outlet_id','=','outlets.id')
-        ->join('purchases','tickets.purchase_id','=','purchases.id')
-        ->join('categories','tickets.product_category_id','=','categories.id')
-        ->join('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
-        ->join('customers','purchases.customer_id', '=', 'customers.id')
-        ->join('districts','tickets.district_id', '=','districts.id' )
-        ->join('thanas','thanas.id', '=', 'tickets.thana_id')
-        ->join('users', 'tickets.created_by', '=', 'users.id')
+        ->leftJoin('warranty_types','tickets.warranty_type_id','=','warranty_types.id')
+        ->leftJoin('outlets','tickets.outlet_id','=','outlets.id')
+        ->leftJoin('purchases','tickets.purchase_id','=','purchases.id')
+        ->leftJoin('categories','tickets.product_category_id','=','categories.id')
+        ->leftJoin('brand_models','purchases.brand_model_id', '=', 'brand_models.id')
+        ->leftJoin('customers','purchases.customer_id', '=', 'customers.id')
+        ->leftJoin('districts','tickets.district_id', '=','districts.id' )
+        ->leftJoin('thanas','thanas.id', '=', 'tickets.thana_id')
+        ->leftJoin('users', 'tickets.created_by', '=', 'users.id')
         ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
         'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
         'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
