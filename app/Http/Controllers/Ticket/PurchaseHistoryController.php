@@ -98,7 +98,7 @@ class PurchaseHistoryController extends Controller
 
                 $data = TicketService::buildQuery(); 
 
-                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin' || $user_role->name =='Call Center Admin') {
 
                     TicketService::admin($data);
 
@@ -819,7 +819,7 @@ class PurchaseHistoryController extends Controller
                 $serviceTypes = ServiceType::where('status', 1)->get(); 
                 $data = TicketService::buildQuery(); 
 
-                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+                if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin' || $user_role->name =='Call Center Admin') {
 
                     TicketService::admin($data);
 
