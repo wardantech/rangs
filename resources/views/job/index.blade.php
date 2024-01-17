@@ -195,7 +195,7 @@
                                         <th>{{ __('label.JOB STATUS')}}</th>
                                         <th>{{ __('label.JOB_PENDING_NOTE')}}</th>
                                         {{-- <th>{{ __('Pending for Special Component')}}</th> --}}
-                                        <th>{{ __('label.CREATED_AT')}}</th>
+                                        <th>{{ __('Completed At')}}</th>
                                         <th>{{ __('Action')}}</th>
                                     </tr>
                                 </thead>
@@ -276,7 +276,7 @@
                     {data:'status', name: 'status', orderable: true, searchable: true},
                     {data:'job_pending_remark', name: 'job_pending_remark', orderable: true, searchable: true},
                     // {data:'pending_for_special_components', name: 'pending_for_special_components', orderable: true, searchable: true},
-                    {data:'job_created_at', name: 'job_created_at', orderable: true, searchable: true},
+                    {data:'job_end_time', name: 'job_end_time', orderable: true, searchable: true},
                     {data:'action', name: 'action',  orderable: false, searchable: false}
                 ],
 

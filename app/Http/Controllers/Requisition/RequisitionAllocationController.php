@@ -311,8 +311,8 @@ class RequisitionAllocationController extends Controller
                         return $issued_quantity;
                     })
                     ->addColumn('received_quantity', function ($allocationItem) {
-                        $issued_quantity=$allocationItem->received_quantity; 
-                        return $issued_quantity;
+                        $received_quantity=$allocationItem->received_quantity; 
+                        return $received_quantity;
                     })
                     
                     ->addColumn('balance', function ($allocationItem) {
@@ -320,10 +320,123 @@ class RequisitionAllocationController extends Controller
                         return $balance;
                     })
                     ->addIndexColumn()
-                    ->rawColumns(['status','action'])
+                    // ->rawColumns(['status','action'])
                     ->make(true);
             }
             return view('requisition.allocation.allocated-item-list');
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            dd($bug);
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+    public function reAllocatedItemList(Request $request)
+    {
+        try{
+            $auth = Auth::user();
+            $user_role = $auth->roles->first();
+            $mystore = '';
+            
+            $query = DB::table('allocation_details')
+                ->join('allocations', 'allocation_details.allocation_id', '=', 'allocations.id')
+                ->join('requisitions', 'allocations.requisition_id', '=', 'requisitions.id')
+                ->join('stores', 'requisitions.from_store_id', '=', 'stores.id')
+                ->join('parts', 'allocation_details.parts_id', '=', 'parts.id')
+                ->join('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
+                ->join('part_categories', 'parts.part_category_id', '=', 'part_categories.id')
+                ->select(
+                    'allocations.date as allocation_date',
+                    'parts.code as part_code',
+                    'parts.name as part_description',
+                    'parts_models.name as part_model',
+                    'part_categories.name as part_category',
+                    'allocation_details.requisition_quantity',
+                    'allocation_details.issued_quantity',
+                    'allocation_details.received_quantity',
+
+                    'allocations.requisition_id as requisition_id',
+                    'requisitions.date as requisition_date',
+
+                    'stores.name as store_name',
+                )
+                ->where('allocations.is_reallocated', 1)
+                ->where('allocations.belong_to', 1)
+                ->whereNull('allocations.deleted_at')
+                ->orderBy('allocations.id', 'desc');
+
+            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name == 'Store Admin') {
+                $allocationItems = $query->get();
+            } else {
+                $employee = Employee::where('user_id', $auth->id)->first();
+                $mystore = Store::find($employee->store_id);
+            
+                if ($mystore != null) {
+                    $allocationItems = $query
+                        ->where('allocations.store_id', $mystore->id)
+                        ->get();
+                } else {
+                    return redirect()->back()->with('error', __('Sorry, you don\'t have the permission.'));
+                }
+            }
+            if (request()->ajax()) {
+                return DataTables::of($allocationItems)
+
+                    ->addColumn('requisition_date', function ($allocationItem) {
+                        // $requisition_date = Carbon::parse($allocationItem->requisition_date)->format('m/d/Y');
+                        return $allocationItem->requisition_date;
+                    })
+                    ->addColumn('allocation_date', function ($allocationItem) {
+                        // $allocation_date=$allocationItem->allocation_date->format('m/d/Y');
+                        return $allocationItem->allocation_date;
+                    })
+
+                    ->addColumn('requisition_no', function ($allocationItem) {
+                        $requisition_no='B-RSL'.'-'.$allocationItem->requisition_id;
+                        return $requisition_no;
+                    })
+
+                    ->addColumn('sender_store', function ($allocationItem) {
+                        $sender_store=$allocationItem->store_name;
+                        return $sender_store;
+                    })
+                    ->addColumn('part_category', function ($allocationItem) {
+                        $part_category = $allocationItem->part_category;
+                            return $part_category; 
+                    })
+                    ->addColumn('parts_code', function ($allocationItem) {
+                        $parts_code = $allocationItem->part_code;
+                            return $parts_code; 
+                    })
+                    ->addColumn('parts_name', function ($allocationItem) {
+                        $parts_name = $allocationItem->part_description;
+                            return $parts_name; 
+                    })
+                    ->addColumn('parts_model', function ($allocationItem) {
+                        $parts_model = $allocationItem->part_model;
+                            return $parts_model; 
+                    })
+                    ->addColumn('requisition_quantity', function ($allocationItem) {
+                        $requisition_quantity=$allocationItem->requisition_quantity;
+                        return $requisition_quantity;
+                    })
+                    ->addColumn('issued_quantity', function ($allocationItem) {
+                        $issued_quantity=$allocationItem->issued_quantity; 
+                        return $issued_quantity;
+                    })
+                    ->addColumn('received_quantity', function ($allocationItem) {
+                        $received_quantity=$allocationItem->received_quantity; 
+                        return $received_quantity;
+                    })
+                    
+                    ->addColumn('balance', function ($allocationItem) {
+                        $balance=($allocationItem->requisition_quantity) - ($allocationItem->issued_quantity);
+                        return $balance;
+                    })
+                    ->addIndexColumn()
+                    // ->rawColumns(['status','action'])
+                    ->make(true);
+            }
+            return view('requisition.allocation.re-allocated-item-list');
         } catch (\Exception $e) {
             $bug = $e->getMessage();
             dd($bug);

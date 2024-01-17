@@ -67,7 +67,7 @@
                                 @foreach ($details as $item)
                                     <tr>
                                         <td>{{ ++$sl }}</td>
-                                        <td>{{ $item->created_at->format('m/d/yy H:i:s') }}</td>
+                                        <td>{{ $item->created_at->format('m/d/Y H:i:s') }}</td>
                                         @if($item->allocation)
                                         <td>{{ $item->allocation->senderStore->name }}</td>
                                         @else 

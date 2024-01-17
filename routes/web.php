@@ -258,6 +258,8 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('get/price/{part_id}', [PriceManagementController::class, 'getPrice'])->name('get-price');
         Route::get('inventory/parts-receive/rows', [InventoryController::class, 'getPartReceiveRow'])->name('part-receive-row');
 
+        Route::get('inventory/received-items', [InventoryController::class, 'receivedItems'])->name('inventory.received-items');
+
     });
 
     // Stock Report
@@ -495,6 +497,7 @@ Route::group(['middleware' => 'auth'], function(){
         // Central Requisitions Allocation
         Route::resource('requisitions/allocation', 'Requisition\RequisitionAllocationController')->except('create', 'store','destroy');
         Route::get('requisitions/allocation-item', 'Requisition\RequisitionAllocationController@allocatedItemList')->name('requisitions.allocation-item');
+        Route::get('requisitions/re-allocation-item', 'Requisition\RequisitionAllocationController@reAllocatedItemList')->name('requisitions.re-allocation-item');
         Route::get('requisitions/allocation/delete/{id}', [RequisitionAllocationController::class,'destroy']);
         Route::get('requisitions/allocation/print/{id}', [RequisitionAllocationController::class,'print'])->name('requisitions.allocation.print');
     });

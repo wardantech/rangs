@@ -42,7 +42,7 @@
             <th>Point Of Purchase</th>
             <th>Invoice Number</th>
             <th>Job Status</th>
-            <th>Created At</th>
+            <th>Completed At</th>
             <th>Job Pending Note</th>
         </tr>
 	</thead>
@@ -122,7 +122,9 @@
             @elseif($job->status == 2)
                 <td>Rejected</td>
             @endif
-            <td>{{   Carbon\Carbon::parse($job->job_created_at)->format('m/d/Y') ?? null  }} </td>
+            {{-- <td>{{   Carbon\Carbon::parse($job->job_end_time)->format('m/d/Y') ?? null  }} </td> --}}
+            <td>{{ optional(Carbon\Carbon::parse($job->job_end_time))->format('m/d/Y') }}</td>
+
             <td>{{ $pending_notes }}</td>
 		</tr>
 		@endforeach
