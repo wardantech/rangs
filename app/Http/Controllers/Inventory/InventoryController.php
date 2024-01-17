@@ -165,19 +165,19 @@ class InventoryController extends Controller
 
     public function update(Request $request, $id)
     {
-            $this->validate($request, [
-                'invoice_number' => 'required|string',
-                'po_number'      => 'nullable|string',
-                'lc_number'      => 'nullable|string',
-                'receive_date'   => 'required',
-                'vendor_id'      => 'nullable',
-                'source_id'      => 'nullable',
-                'part_id' => 'required',
-            ]);
+        $this->validate($request, [
+            'invoice_number' => 'required|string',
+            'po_number'      => 'nullable|string',
+            'lc_number'      => 'nullable|string',
+            'receive_date'   => 'required',
+            'vendor_id'      => 'nullable',
+            'source_id'      => 'nullable',
+            'part_id' => 'required',
+        ]);
 
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            try{
+        try{
                 $inventory = Inventory::find($id);
 
                 $inventory->update([
@@ -205,14 +205,14 @@ class InventoryController extends Controller
                 return redirect('inventory')
                 ->with('success', __('Parts Receive Updated Successfully'));
 
-            }
-            catch(\Exception $e){
+        }
+        catch(\Exception $e){
                 DB::rollback();
                 $bug = $e->getMessage();
                 return redirect()->back()->with('error', $bug);
-            }
-
         }
+
+    }
 
         public function destroy(Request $request, $id)
         {
@@ -778,7 +778,6 @@ class InventoryController extends Controller
                 ->where('store_id', $store_id)
                 ->orderBy('created_at', 'asc')
                 ->get();
-// dd($details);
 
                 return view('inventory.stock.parts_details', compact('details', 'partDetails'));
             } catch (\Exception $e) {
@@ -948,4 +947,107 @@ class InventoryController extends Controller
             ->where('status', 1)->orderBy('name');
             return Excel::download(new SingleStockExport($id), 'Stock '.$store->name.'.xlsx');
         }
+
+    public function receivedItems(Request $request)
+    {
+        try{
+            $receivedItems=DB::table('inventory_stocks')
+            ->join('inventorys','inventory_stocks.receive_id', '=', 'inventorys.id')
+            ->leftJoin('sources','inventorys.source_id', '=', 'sources.id')
+            ->leftJoin('stores','inventorys.store_id', '=', 'stores.id')
+            ->leftJoin('product_sourcing_vendors','inventorys.vendor_id', '=', 'product_sourcing_vendors.id')
+            ->leftJoin('parts','inventory_stocks.part_id', '=', 'parts.id')
+            ->leftJoin('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
+            ->leftJoin('racks','inventorys.rack_id', '=', 'racks.id')
+            ->leftJoin('bins','inventorys.bin_id', '=', 'bins.id')
+            ->select(
+                'inventorys.receive_date',
+                'inventorys.invoice_number',
+                'product_sourcing_vendors.name as vendor_name',
+                'sources.name as source_name',
+                'stores.name as store_name',
+                'parts.name as parts_name',
+                'parts.code as parts_code',
+                'parts_models.name as parts_model',
+                'racks.name as rack_name',
+                'bins.name as bin_name',
+                'inventory_stocks.stock_in as received_qnty',
+                'inventory_stocks.cost_price_usd',
+                'inventory_stocks.cost_price_bdt',
+                'inventory_stocks.selling_price_bdt as unit_price_bdt'
+            )
+            ->get();
+        if (request()->ajax()) {
+            return DataTables::of($receivedItems)
+
+                ->addColumn('receive_date', function ($receivedItem) {
+                    // $requisition_date = Carbon::parse($receivedItem->requisition_date)->format('m/d/Y');
+                    return $receivedItem->receive_date;
+                })
+                ->addColumn('invoice_number', function ($receivedItem) {
+                    // $allocation_date=$receivedItem->allocation_date->format('m/d/Y');
+                    return $receivedItem->invoice_number;
+                })
+
+                ->addColumn('vendor_name', function ($receivedItem) {
+                    $vendor_name=$receivedItem->vendor_name;
+                    return $vendor_name;
+                })
+
+                ->addColumn('source_name', function ($receivedItem) {
+                    $source_name=$receivedItem->source_name;
+                    return $source_name;
+                })
+                ->addColumn('store_name', function ($receivedItem) {
+                    $store_name = $receivedItem->store_name;
+                        return $store_name; 
+                })
+                ->addColumn('parts_code', function ($receivedItem) {
+                    $parts_code = $receivedItem->parts_code;
+                        return $parts_code; 
+                })
+                ->addColumn('parts_name', function ($receivedItem) {
+                    $parts_name = $receivedItem->parts_name;
+                        return $parts_name; 
+                })
+                ->addColumn('parts_model', function ($receivedItem) {
+                    $parts_model = $receivedItem->parts_model;
+                        return $parts_model; 
+                })
+                ->addColumn('rack_name', function ($receivedItem) {
+                    $rack_name=$receivedItem->rack_name;
+                    return $rack_name;
+                })
+                ->addColumn('bin_name', function ($receivedItem) {
+                    $bin_name=$receivedItem->bin_name; 
+                    return $bin_name;
+                })
+                ->addColumn('received_qnty', function ($receivedItem) {
+                    $received_qnty=$receivedItem->received_qnty; 
+                    return $received_qnty;
+                })
+                ->addColumn('cost_price_bdt', function ($receivedItem) {
+                    $cost_price_bdt=$receivedItem->cost_price_bdt; 
+                    return $cost_price_bdt;
+                })
+                ->addColumn('cost_price_usd', function ($receivedItem) {
+                    $cost_price_usd=$receivedItem->cost_price_usd; 
+                    return $cost_price_usd;
+                })
+                ->addColumn('unit_price_bdt', function ($receivedItem) {
+                    $unit_price_bdt=$receivedItem->unit_price_bdt; 
+                    return $unit_price_bdt;
+                })
+                ->addIndexColumn()
+                ->make(true);
+        }
+        return view('inventory.inventory.received-items');
+    } catch (\Exception $e) {
+        $bug = $e->getMessage();
+        dd($bug);
+        return redirect()->back()->with('error', $bug);
+    }
+
+    }
+
 }

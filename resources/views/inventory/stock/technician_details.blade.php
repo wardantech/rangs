@@ -51,6 +51,7 @@
                                 <tr>
                                     <th>{{ __('label.SL')}}</th>
                                     <th>{{ __('label.DATE')}}</th>
+                                    <th>{{ __('Job No')}}</th>
                                     <th>{{ __('label.STOCK_IN')}}</th>
                                     <th>{{ __('label.STOCK_OUT')}}</th>
                                     <th>{{ __('label.CURRENT_BALANCE')}}</th>
@@ -64,7 +65,12 @@
                                 @foreach ($details as $item)
                                     <tr>
                                         <td>{{ ++$sl }}</td>
-                                        <td>{{ $item->created_at->format('m/d/yy H:i:s') }}</td>
+                                        <td>{{ $item->created_at->format('m/d/Y H:i:s') }}</td>
+                                        @if($item->job_id)
+                                        <td>JSL-{{ $item->job_id }}</td>
+                                        @else 
+                                        <td>--</td>  
+                                        @endif
                                         <td>{{ $item->stock_in }}
                                         @php
                                             $total+=$item->stock_in

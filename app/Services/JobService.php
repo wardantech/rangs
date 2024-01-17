@@ -23,7 +23,7 @@ class JobService
                 ->leftJoin('brands','purchases.brand_id', '=', 'brands.id')
                 ->leftJoin('customers','purchases.customer_id', '=', 'customers.id')
                 ->leftjoin('warranty_types','tickets.warranty_type_id', '=', 'warranty_types.id')
-                ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.created_at as job_created_at','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
+                ->select('jobs.id as job_id','jobs.job_number as job_number','jobs.date as assigning_date','jobs.job_end_time as job_end_time','employees.name as employee_name','employees.vendor_id as vendor_id','brand_models.model_name as model_name','brands.name as brand_name',
                 'categories.name as product_category','users.name as created_by','customers.name as customer_name', 'customers.mobile as customer_mobile','purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','purchases.purchase_date as purchase_date',
                 'tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name','tickets.service_type_id as service_type_id','tickets.status as ticket_status',
                 'tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as ticket_is_pending','tickets.is_paused as ticket_is_paused','tickets.is_ended as ticket_is_ended',
