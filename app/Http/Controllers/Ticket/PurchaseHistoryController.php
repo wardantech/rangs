@@ -647,6 +647,16 @@ class PurchaseHistoryController extends Controller
                 'updated_by' => Auth::id(),
             ]);
             DB::commit();
+                //Sms notification 
+                if ($request->send_sms == 1) {
+                    if ($ticket->purchase->customer->mobile !=null) {
+                        $tsl_no ='TSL'.'-'.$ticket->id;
+                        $text = "Dear Valued Customer, Your product is ready and in delivery process."."Ticket No.".$tsl_no."."." All the best to you. PH: 09612 244244 (9 AM-6 PM/Sat-Thu) RANGS SERVICE";
+                        $phone = $ticket->purchase->customer->mobile;
+                        $sms = $this->sendSms($phone, $text);
+                        
+                    }
+                }
             return redirect()->back()->with('success', __('Product Delivered Successfully.'));
         }catch(\Exception $e){
             DB::rollback();
@@ -673,16 +683,17 @@ class PurchaseHistoryController extends Controller
                     'delivery_date_by_call_center' => $formattedCurrentDate,
                     'updated_by' => Auth::id(),
                 ]);
-            DB::commit();                //Sms notification 
-                if ($request->send_sms == 1) {
-                    if ($ticket->purchase->customer->mobile !=null) {
-                        $tsl_no ='TSL'.'-'.$ticket->id;
-                        $text = "Dear Valued Customer, Your product is delivered."."Ticket No.".$tsl_no."."." All the best to you. PH: 09612 244244 Ex:3 (9 AM-6 PM/Sat-Thu) RANGS SERVICE";
-                        $phone = $ticket->purchase->customer->mobile;
-                        $sms = $this->sendSms($phone, $text);
+            DB::commit();                
+            //Sms notification 
+                // if ($request->send_sms == 1) {
+                //     if ($ticket->purchase->customer->mobile !=null) {
+                //         $tsl_no ='TSL'.'-'.$ticket->id;
+                //         $text = "Dear Valued Customer, Your product is delivered."."Ticket No.".$tsl_no."."." All the best to you. PH: 09612 244244 Ex:3 (9 AM-6 PM/Sat-Thu) RANGS SERVICE";
+                //         $phone = $ticket->purchase->customer->mobile;
+                //         $sms = $this->sendSms($phone, $text);
                         
-                    }
-                }
+                //     }
+                // }
                 return redirect()->back()->with('success', __('Product Delivered Successfully.'));
             }
             return redirect()->back()->with('error', __('Something went wrong'));
