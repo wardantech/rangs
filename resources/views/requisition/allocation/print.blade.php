@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gate Pass</title>
     <style>
+        body {
+            margin: 0; /* Reset default margin */
+            padding: 0; /* Reset default padding */
+            size: A4; /* Set page size to A4 */
+            margin-top: 2.54cm; /* 1 inch in centimeters */
+            margin-bottom: 2.54cm;
+            margin-left: 2.54cm;
+            margin-right: 2.54cm;
+        }
         table{
             width:100%;
         }
@@ -16,6 +25,12 @@
             border-collapse: collapse;
             margin-top:20px;  
         }
+        .tr-font-size {
+        font-size: 12px;
+        span{
+
+        }
+    }
     </style>
 </head>
 <body onload="window.print();">
@@ -25,17 +40,17 @@
             <th style="text-align: center;"><h2>Rangs Electronics Ltd.</h2>
                 <span  style="border: 1px solid #000;padding: 10px 20px;margin-top:20px;">Gate Pass</span>
             </th>
-            <th>Print date: {{ $current_date->format('m/d/Y') }}</th>
+            <th class="p-2">Print date: {{ $current_date->format('m/d/Y') }}</th>
         </tr>
     </table>
     <table style="border: 1px solid #000;margin-top:40px;">
         <tr>
-            <td>RFF# {{ $allocation->requisition->senderStore->name }} / B-RSL-{{ $allocation->requisition_id }}</td>
-            <td  style="text-align: right;">B-RSL : {{ $allocation->created_at->format('m/d/yy H:i:s') }}</td>
+            <td><span style="font-weight: bold">RFF#</span> B-RSL-{{ $allocation->requisition_id }}</td>
+            <td  style="text-align: right;"> <span style="font-weight: bold">Issue Date :</span> {{ $allocation->created_at->format('m/d/Y h:i:s A') }}</td>
         </tr>
         <tr>
-            <td>BR Name: {{ $allocation->requisition->senderStore->outlet->name }}</td>
-            <td  style="text-align: right;">R/Q Date : {{ $allocation->requisition->created_at->format('m/d/yy H:i:s') }}</td>
+            <td><span style="font-weight: bold">Store Name:</span> {{ $allocation->requisition->senderStore->name }} </td>
+            <td  style="text-align: right;"> <span style="font-weight: bold">R/Q Date :</span> {{ $allocation->requisition->created_at->format('m/d/Y h:i:s A') }}</td>
         </tr>
     </table>
     <table class="m-body" border="1">
@@ -45,28 +60,28 @@
             <th>Description</th>
             <th>Model</th>
             <th>Purpose</th>
-            <th>Job</th>
+            <th>TSL</th>
             <th>Qnty</th>
-            <th>Unit Price</th>
-            <th>Amount</th>
+            <th style="text-align: right">Unit Price</th>
+            <th style="text-align: right">Amount</th>
         </tr>
         @php
             $total_quantity=null;
             $total_amount=null;
         @endphp
         @foreach ($allocation_details as $key=> $detail)
-        <tr>
+        <tr class="tr-font-size">
             <td>{{ $key+1 }}</td>
-            <td>
+            <td style="text-align: center">
                 {{ $detail['code'] }}
             </td>
-            <td>{{ $detail['part_name'] }}</td>
-            <td>{{ $detail['part_model'] }}</td>
-            <td>Null</td>
-            <td>Null</td>
+            <td style="text-align: center">{{ $detail['part_name'] }}</td>
+            <td style="text-align: center">{{ $detail['part_model'] }}</td>
+            <td></td>
+            <td></td>
             <td>{{ $detail['issued_quantity'] }}</td>
-            <td>{{ $detail['price'] }}</td>
-            <td>{{ $detail['amount'] }}</td>
+            <td style="text-align: right">{{ $detail['price'] }}</td>
+            <td style="text-align: right">{{ $detail['amount'] }}</td>
             @php
                 $total_quantity+=$detail['issued_quantity'];
                 $total_amount+=$detail['amount'];
@@ -77,13 +92,13 @@
             <td colspan="6" style="text-align: right;">Total</td>
             <td>{{ $total_quantity }}</td>
             <td></td>
-            <td>{{ $total_amount }}</td>
+            <td style="text-align: right">{{ $total_amount }}</td>
         </tr>
     </table>
     <div>
-        <p>Note:</p>
-        <p>R/Q BY : {{ $allocation->requisition->createdBy->name }}</p>
-        <p>Issue BY : {{ $allocation->createdBy->name }}</p>
+        <p style="font-weight: bold">Note:</p>
+        <p> <span style="font-weight: bold">R/Q BY :</span> {{ $allocation->requisition->createdBy->name }}</p>
+        <p> <span style="font-weight: bold">Issue BY :</span> {{ $allocation->createdBy->name }}</p>
     </div>
     <div style="width:300px;text-align:center;margin-top: 40px;">
         <p>__________________________</p>
