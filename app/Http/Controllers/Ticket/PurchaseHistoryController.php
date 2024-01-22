@@ -648,7 +648,7 @@ class PurchaseHistoryController extends Controller
             ]);
             DB::commit();
                 //Sms notification 
-                if ($request->send_sms == 1) {
+                // if ($request->send_sms == 1) {
                     if ($ticket->purchase->customer->mobile !=null) {
                         $tsl_no ='TSL'.'-'.$ticket->id;
                         $text = "Dear Valued Customer, Your product is ready and in delivery process."."Ticket No.".$tsl_no."."." All the best to you. PH: 09612 244244 (9 AM-6 PM/Sat-Thu) RANGS SERVICE";
@@ -656,7 +656,7 @@ class PurchaseHistoryController extends Controller
                         $sms = $this->sendSms($phone, $text);
                         
                     }
-                }
+                // }
             return redirect()->back()->with('success', __('Product Delivered Successfully.'));
         }catch(\Exception $e){
             DB::rollback();
