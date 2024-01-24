@@ -52,30 +52,46 @@
             $selectedServiceTypeIds=json_decode($job->service_type_id);
             $service_type_data='N/A';
             $point_of_purchase='N/A';
-            $pending_notes=null;
-            $pendingNotes=DB::table('job_pending_notes')->where('job_id',$job->job_id)->whereNull('deleted_at')->get();
+            // $pending_notes=null;
+            // $pendingNotes=DB::table('job_pending_notes')->where('job_id',$job->job_id)->whereNull('deleted_at')->get();
+            $pendingNote=DB::table('job_pending_notes')->where('job_id',$job->job_id)->whereNull('deleted_at')->latest()->first();
+
+            $jobPendingNote='';
+
+            if ($pendingNote->job_pending_remark) {
+                $jobPendingNote.=$pendingNote->job_pending_remark.',';
+            }
+
+            if ($pendingNote->special_components) {
+                $jobPendingNote.=$pendingNote->special_components.',';
+            }
+
+            if ($pendingNote->job_pending_note) {
+                $jobPendingNote.=$pendingNote->job_pending_note;
+            }
+
             foreach ($serviceTypes as $key => $serviceType) {
                 if (in_array($serviceType->id, $selectedServiceTypeIds)) {
                     $service_type_data=$serviceType->service_type;
                     }
                 }
-            foreach ($pendingNotes as $key => $item) {
-                    // $pending_notes.= $item->job_pending_remark .'*'. $item->special_components .'*'. $item->job_pending_note;
+            // foreach ($pendingNotes as $key => $item) {
+            //         // $pending_notes.= $item->job_pending_remark .'*'. $item->special_components .'*'. $item->job_pending_note;
                     
-                    $pending_notes .= $item->job_pending_remark;
+            //         $pending_notes .= $item->job_pending_remark;
     
-                    if ($item->special_components) {
-                        $pending_notes .= '*' . $item->special_components;
-                    }
+            //         if ($item->special_components) {
+            //             $pending_notes .= '*' . $item->special_components;
+            //         }
 
-                    if ($item->job_pending_note) {
-                        $pending_notes .= '*' . $item->job_pending_note;
-                    }
+            //         if ($item->job_pending_note) {
+            //             $pending_notes .= '*' . $item->job_pending_note;
+            //         }
                     
-                    if (!$loop->first && !$loop->last) {
-                        $pending_notes .= '; ';
-                    }
-            }
+            //         if (!$loop->first && !$loop->last) {
+            //             $pending_notes .= '; ';
+            //         }
+            // }
             $data=App\Models\Outlet\Outlet::where('id', '=', $job->outletid)->first();
             if ($data) {
                 $point_of_purchase=$data->name;
@@ -125,7 +141,7 @@
             {{-- <td>{{   Carbon\Carbon::parse($job->job_end_time)->format('m/d/Y') ?? null  }} </td> --}}
             <td>{{ optional(Carbon\Carbon::parse($job->job_end_time))->format('m/d/Y') }}</td>
 
-            <td>{{ $pending_notes }}</td>
+            <td>{{ $jobPendingNote }}</td>
 		</tr>
 		@endforeach
 	</tbody>

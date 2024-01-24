@@ -76,7 +76,7 @@
 
                             @if($ticket->status == 7  && $ticket->is_delivered_by_teamleader == 0 )
                                     @if ($is_teamleader!=null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin')
-                                    <a href="{{url('tickets/product_delivery_team_leader', $ticket->id)}}" class="btn btn-primary" title="Click to Delivery">
+                                    <a href="" class="btn btn-primary"  data-toggle="modal" data-target="#ticketDeliveryByTLModal"  title="Click to Delivery">
                                         <i class='fas fa-check-circle'></i>
                                         Delivery By Team Leader
                                     </a>
@@ -675,7 +675,8 @@
             </div>
         </div>
     </div>
-    {{-- Delibery BY CC Modal --}}
+
+    {{-- Delivery BY CC Modal --}}
     <div class="modal fade" id="ticketDeliveryByCCModal" tabindex="-1" role="dialog" aria-labelledby="ticketReopenModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -684,6 +685,51 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <form class="" method="POST" action="{{ url('tickets/product_delivery_call_center') }}">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="sl_number" class="col-form-label">{{ __('label.TICKET_SL')}}</label>
+                                    <input type="hidden" class="form-control" id="ticket_id" name="ticket_id" value="{{$ticket->id}}">
+                                    <input type="text" class="form-control" id="sl_number" name="sl_number" value="TSL-{{$ticket->id}}" readonly>
+                                    @error('sl_number')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <div class="position-relative form-group">
+                                    <div class="border-checkbox-section">
+                                        <label class="border-checkbox-label" for="send_sms">
+                                            Would you like to send delivery SMS to the customer.
+                                        </label>
+                                        <input type="radio" id="yes" name="send_sms" value="1" class="send_sms" disabled>
+                                        <label for="html">Yes</label>
+                                        <input type="radio" id="no" name="send_sms" value="0" class="send_sms" checked>
+                                        <label for="no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btn-center">{{ __('label.SUBMIT')}}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delivery BY Team Leader Modal --}}
+    <div class="modal fade" id="ticketDeliveryByTLModal" tabindex="-1" role="dialog" aria-labelledby="ticketDeliveryByTLModal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ticketDeliveryByTLModal">{{ __('Ticket Delivery By Team Leader')}}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <form class="" method="POST" action="{{ url('tickets/product_delivery_team_leader') }}">
                     @csrf
                     <div class="modal-body">
                         <div class="row">

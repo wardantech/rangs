@@ -743,7 +743,7 @@ Route::group(['middleware' => 'auth'], function(){
         Route::get('/close-by-teamleader/{id}', [PurchaseHistoryController::class, 'closeByTeamleader'])
             ->name('ticket-close-by-teamleader');
 
-        Route::get('/product_delivery_team_leader/{id}', [PurchaseHistoryController::class, 'deliveryByTeamLeader'])
+        Route::post('product_delivery_team_leader', [PurchaseHistoryController::class, 'deliveryByTeamLeader'])
             ->name('product_delivery_team_leader');
         Route::post('product_delivery_call_center', [PurchaseHistoryController::class, 'deliveryByCallCenter'])
             ->name('product_delivery_call_center');
