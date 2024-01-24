@@ -58,15 +58,15 @@
 
             $jobPendingNote='';
 
-            if ($pendingNote->job_pending_remark) {
-                $jobPendingNote.=$pendingNote->job_pending_remark.',';
+            if (isset($pendingNote->job_pending_remark)) {
+                $jobPendingNote.=$pendingNote->job_pending_remark. '*';
             }
 
-            if ($pendingNote->special_components) {
-                $jobPendingNote.=$pendingNote->special_components.',';
+            if (isset($pendingNote->special_components)) {
+                $jobPendingNote.=$pendingNote->special_components. '*';
             }
 
-            if ($pendingNote->job_pending_note) {
+            if (isset($pendingNote->job_pending_note)) {
                 $jobPendingNote.=$pendingNote->job_pending_note;
             }
 
@@ -138,8 +138,13 @@
             @elseif($job->status == 2)
                 <td>Rejected</td>
             @endif
-            {{-- <td>{{   Carbon\Carbon::parse($job->job_end_time)->format('m/d/Y') ?? null  }} </td> --}}
-            <td>{{ optional(Carbon\Carbon::parse($job->job_end_time))->format('m/d/Y') }}</td>
+
+            @if ($job->job_end_time)
+            <td>{{ optional(Carbon\Carbon::parse($job->job_end_time))->format('m/d/Y') }}</td> 
+            @else
+            <td></td>
+            @endif
+
 
             <td>{{ $jobPendingNote }}</td>
 		</tr>
