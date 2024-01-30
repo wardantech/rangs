@@ -59,7 +59,7 @@ class JobController extends Controller
             $employee = Employee::where('user_id', Auth::user()->id)->first();
             $user_role = $auth->roles->first();
 
-            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin' || $user_role->name =='Call Center Admin') {
                 $totalJobStatus = $this->jobStatusService->totalStatus();
             } elseif ($user_role->name == 'Team Leader') {
                 $totalJobStatus = $this->jobStatusService->totalStatusByTeam($auth->id);
@@ -872,7 +872,7 @@ class JobController extends Controller
             $employee = Employee::where('user_id', Auth::user()->id)->first();
             $user_role = $auth->roles->first();
 
-            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin') {
+            if ($user_role->name == 'Super Admin' || $user_role->name == 'Admin' || $user_role->name =='Team Leader Admin' || $user_role->name =='Call Center Admin') {
                 $totalJobStatus = $this->jobStatusService->totalStatus();
             } elseif ($user_role->name == 'Team Leader') {
                 $totalJobStatus = $this->jobStatusService->totalStatusByTeam($auth->id);
