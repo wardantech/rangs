@@ -202,7 +202,7 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('label.PRODUCT_CATEGORY')}}</td>
-                                    <td>{{ $ticket->category->name ?? Null }}</td>
+                                    <td>{{ $ticket->purchase->category->name ?? Null }}</td>
                                 </tr>
                                 <tr>
                                     <td>{{ __('label.BRAND')}}</td>
