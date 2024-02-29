@@ -52,6 +52,8 @@
                                     <th>{{ __('Part No')}}</th>
                                     <th>{{ __('Description')}}</th>
                                     <th>{{ __('Model No')}}</th>
+                                    <th>{{ __('TSL No')}}</th>
+                                    <th>{{ __('Purpose')}}</th>
                                     <th title="Required Quantity">{{ __('Requisition Qty')}}</th>
                                     <th title="Allocated Quantity">{{ __('Alloc Qty')}}</th>
                                     <th title="Balanced Quantity">{{ __('Balance/Pending')}}</th>
@@ -107,14 +109,16 @@
                 columns: [
                     {data:'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     {data:'date', name: 'Date', orderable: true, searchable: true},
-                    {data:'sender_store', name: 'Branch', orderable: true, searchable: true},
-                    {data:'requisition_no', name: 'BRSL No', orderable: true, searchable: true},
-                    {data:'parts_code', name: 'Part Code', orderable: true, searchable: true},
-                    {data:'parts_name', name: 'Part Name', orderable: true, searchable: true},
-                    {data:'parts_model', name: 'Part Model', orderable: true, searchable: true},
-                    {data:'total_quantity', name: 'Requisition Qnty', orderable: false, searchable: false},
-                    {data:'issued_quantity', name: 'Allocated Quantity', orderable: false, searchable: false},
-                    {data:'balance', name: 'Pending Qnty', orderable: false, searchable: false},
+                    {data:'sender_store', name: 'sender_store', orderable: true, searchable: true},
+                    {data:'requisition_no', name: 'requisition_no', orderable: true, searchable: true},
+                    {data:'parts_code', name: 'parts_code', orderable: true, searchable: true},
+                    {data:'parts_name', name: 'parts_name', orderable: true, searchable: true},
+                    {data:'parts_model', name: 'parts_model', orderable: true, searchable: true},
+                    {data:'tsl_no', name: 'tsl_no', orderable: true, searchable: true},
+                    {data:'purpose', name: 'purpose', orderable: true, searchable: true},
+                    {data:'total_quantity', name: 'total_quantity', orderable: false, searchable: false},
+                    {data:'issued_quantity', name: 'issued_quantity', orderable: false, searchable: false},
+                    {data:'balance', name: 'balance', orderable: false, searchable: false},
                 ],
 
                 dom: "<'row'<'col-sm-2'l><'col-sm-7 text-center'B><'col-sm-3'f>>tipr",

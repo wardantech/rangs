@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Blade::directive('purpose', function ($value) {
+            return "<?php
+                if ($value == 1) {
+                    echo 'On Payment';
+                } elseif ($value == 2) {
+                    echo 'Under Warranty';
+                } elseif ($value == 3) {
+                    echo 'Stock';
+                }
+            ?>";
+        });
     }
 }

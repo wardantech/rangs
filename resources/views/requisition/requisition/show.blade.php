@@ -91,7 +91,9 @@
                                 <tr>
                                     <th>{{ __('label.SL')}}</th>
                                     <th>{{ __('Parts')}}</th>
-                                    {{-- <th>{{ __('Stock In Hand')}}</th> --}}
+                                    <th>{{ __('Model No')}}</th>
+                                    <th>{{ __('TSL No')}}</th>
+                                    <th>{{ __('Purpose')}}</th>
                                     <th>{{ __('Requisition Quantity')}}</th>
                                     <th>{{ __('Issued Quantity')}}</th>
                                     <th>{{ __('Received Quantity')}}</th>
@@ -104,7 +106,9 @@
                                         <td>
                                             {{ $detail->part->code }}-{{ $detail->part->name }}
                                         </td>
-                                        {{-- <td>{{ $detail->stock_in_hand }}</td> --}}
+                                        <td>{{ $detail->model_no ?? '' }}</td>
+                                        <td>{{ $detail->tsl_no ? "TSL-".$detail->tsl_no '' }}</td>
+                                        <td>@purpose($detail->purpose)</td>
                                         <td>{{ $detail->required_quantity }}</td>
                                         <td>{{ $detail->issued_quantity }}</td>
                                         <td>{{ $detail->received_quantity }}</td>

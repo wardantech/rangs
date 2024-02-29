@@ -44,8 +44,8 @@ class RequisitionAllocationController extends Controller
                     ->where('allocations.is_reallocated', 0 )
                     ->where('allocations.belong_to', 1 )
                     ->where('allocations.deleted_at',null)
-                    ->orderBy('allocations.id', 'desc')
-                    ->get();
+                    ->orderBy('allocations.id', 'desc');
+                    // ->get();
             } else {
                 $employee = Employee::where('user_id',Auth::user()->id)->first();
                 $mystore=Store::where('id',$employee->store_id )->first();
@@ -61,8 +61,8 @@ class RequisitionAllocationController extends Controller
                     ->where('allocations.is_reallocated',0)
                     ->where('allocations.belong_to',1)
                     ->where('allocations.deleted_at',null)
-                    ->orderBy('allocations.id', 'desc')
-                    ->get();
+                    ->orderBy('allocations.id', 'desc');
+                    // ->get();
                 }else{
                     return redirect()->back()->with('error', __('Sorry you dont have the permission.'));
                 }
@@ -227,6 +227,7 @@ class RequisitionAllocationController extends Controller
             $query = DB::table('allocation_details')
                 ->join('allocations', 'allocation_details.allocation_id', '=', 'allocations.id')
                 ->join('requisitions', 'allocations.requisition_id', '=', 'requisitions.id')
+                ->leftjoin('requisition_details', 'allocation_details.requisition_detail_id', '=', 'requisition_details.id')
                 ->join('stores', 'requisitions.from_store_id', '=', 'stores.id')
                 ->join('parts', 'allocation_details.parts_id', '=', 'parts.id')
                 ->join('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
@@ -243,6 +244,9 @@ class RequisitionAllocationController extends Controller
 
                     'allocations.requisition_id as requisition_id',
                     'requisitions.date as requisition_date',
+                    'requisition_details.model_no',
+                    'requisition_details.tsl_no',
+                    'requisition_details.purpose',
 
                     'stores.name as store_name',
                 )
@@ -299,8 +303,24 @@ class RequisitionAllocationController extends Controller
                             return $parts_name; 
                     })
                     ->addColumn('parts_model', function ($allocationItem) {
-                        $parts_model = $allocationItem->part_model;
+                        $parts_model = $allocationItem->model_no;
                             return $parts_model; 
+                    })
+                    ->addColumn('tsl_no', function ($allocationItem) {
+                        $tsl_no = $allocationItem->tsl_no ? "TSL-".$allocationItem->tsl_no : '';
+                            return $tsl_no; 
+                    })
+                    ->addColumn('purpose', function ($allocationItem) {
+                        $purpose = $allocationItem->purpose;
+                        if ($purpose == 1) {
+                            return 'On Payment';
+                        } elseif ($purpose == 2) {
+                            return 'Under Warranty';
+                        } elseif ($purpose == 3) {
+                            return 'Stock';
+                        } else {
+                            return ''; // or any other default value
+                        }
                     })
                     ->addColumn('requisition_quantity', function ($allocationItem) {
                         $requisition_quantity=$allocationItem->requisition_quantity;
@@ -459,6 +479,7 @@ class RequisitionAllocationController extends Controller
                 array_push($rackbinInfo, $rackbin);
                 array_push($stock_collect,$stock_in_hand);
             }
+            // dd($details);
             return view('requisition.requisition.allocate',compact('requisition','details','rackbinInfo','stock_collect'));
         } catch (\Exception $e) {
             $bug = $e->getMessage();
@@ -499,6 +520,7 @@ class RequisitionAllocationController extends Controller
             foreach($request->issue_quantity as $key => $quantity){
                     if($allocation){
                         $allo_details['allocation_id'] = $allocation->id;
+                        $allo_details['requisition_detail_id'] = $request->requisition_detail_id[$key];
                         $allo_details['rack_id'] = $request->rack_id[$key];
                         $allo_details['bin_id'] = $request->bin_id[$key];
                         $allo_details['parts_id'] = $request->part_id[$key];

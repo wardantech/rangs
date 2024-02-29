@@ -253,6 +253,7 @@ class RequisitionController extends Controller
 
                         $details['requisition_id'] = $requisition->id;
                         $details['parts_id'] = $id;
+                        $details['model_no'] = $request->model_no[$key];
                         $details['stock_in_hand'] = $request->stock_in_hand[$key];
                         $details['required_quantity'] = $request->required_quantity[$key];
                         $details['tsl_no'] = $request->tsl_no[$key];
@@ -561,8 +562,24 @@ class RequisitionController extends Controller
                             return $parts_name; 
                     })
                     ->addColumn('parts_model', function ($requisitionItem) {
-                        $parts_model = $requisitionItem->part->partModel->name;
+                        $parts_model = $requisitionItem->model_no;
                             return $parts_model; 
+                    })
+                    ->addColumn('tsl_no', function ($requisitionItem) {
+                        $tsl_no = $requisitionItem->tsl_no ? "TSL-".$requisitionItem->tsl_no : '';
+                            return $tsl_no; 
+                    })
+                    ->addColumn('purpose', function ($requisitionItem) {
+                        $purpose = $requisitionItem->purpose;
+                        if ($purpose == 1) {
+                            return 'On Payment';
+                        } elseif ($purpose == 2) {
+                            return 'Under Warranty';
+                        } elseif ($purpose == 3) {
+                            return 'Stock';
+                        } else {
+                            return ''; // or any other default value
+                        }
                     })
                     ->addColumn('total_quantity', function ($requisitionItem) {
                         $total_quantity=$requisitionItem->required_quantity;
