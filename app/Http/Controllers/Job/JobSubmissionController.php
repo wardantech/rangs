@@ -243,8 +243,8 @@ class JobSubmissionController extends Controller
             'service_amount' => 'required',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
 
             $employee=Employee::where('user_id',Auth::user()->id)->first();
             $job=Job::where('id',$request->job_id)->first();
