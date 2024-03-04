@@ -15,7 +15,7 @@
                         <i class="ik ik-users bg-blue"></i>
                         <div class="d-inline">
                             <h5>{{ __('Requisitions Details')}}</h5>
-                            <span>{{ __('List Of Requisitions Details')}}</span>
+                            <span>{{ __('Requisition Item List')}}</span>
                         </div>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
             <div class="col-md-12">
                 <div class="card p-3">
                     <div class="card-header">
-                        <h3>@lang('Requisitions')</h3>
+                        <h3>@lang('Requisition')</h3>
                         <div class="card-header-right">
                             <button id="print" class="btn btn-info">Print</button>
                         </div>

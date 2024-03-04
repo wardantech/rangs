@@ -235,7 +235,7 @@ class RequisitionController extends Controller
         $total_quantity = array_sum($request->required_quantity);
         DB::beginTransaction();
         try {
-            
+
             $sl_number = $this->generateUniqueId();
 
             $requisition = Requisition::create([
@@ -249,6 +249,11 @@ class RequisitionController extends Controller
             ]);
             if($requisition){
                 foreach($request->part_id as $key => $id){
+
+                    if (($request->purpose[$key] == 1 || $request->purpose[$key] == 2) && ($request->model_no[$key] == null || $request->tsl_no[$key] == null)){
+                        return redirect()->back()->with('error', 'Model No or TSL No is missing');
+                    }
+
                     if($id != null &&  $id > 0){
 
                         $details['requisition_id'] = $requisition->id;
