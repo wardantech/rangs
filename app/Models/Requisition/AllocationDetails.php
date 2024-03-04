@@ -38,6 +38,10 @@ class AllocationDetails extends Model
     {
         return $this->belongsTo(Allocation::class, 'allocation_id');
     }
+    public function requistionDetail()
+    {
+        return $this->belongsTo(RequisitionDetails::class, 'requisition_detail_id');
+    }
 
     public function createdBy()
     {

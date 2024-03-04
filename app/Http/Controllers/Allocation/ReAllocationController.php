@@ -312,6 +312,7 @@ class ReAllocationController extends Controller
             foreach($request->issue_quantity as $key => $quantity){
                     if($allocation){
                         $allo_details['allocation_id'] = $allocation->id;
+                        $allo_details['requisition_detail_id'] = $request->requisition_detail_id[$key];
                         $allo_details['parts_id'] = $request->part_id[$key];
                         $allo_details['rack_id'] = $request->rack_id[$key];
                         $allo_details['bin_id'] = $request->bin_id[$key];

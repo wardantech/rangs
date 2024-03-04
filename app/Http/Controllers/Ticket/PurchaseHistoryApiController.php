@@ -605,8 +605,15 @@ class PurchaseHistoryApiController extends Controller
             $purchaseData = json_decode($response);
     
             if ($purchaseData != null) {
+
                 foreach ($purchaseData as $key => $value) {
-                    $this->storePurchaseDataLocally($value);
+                    // Try catch Modified by me based on DB:Transaction method
+                    try {
+                        $this->storePurchaseDataLocally($value);
+                    } catch (\Exception $e) {
+                        // Handle the exception by redirecting the user back with the error message
+                        return redirect()->back()->with('error', $e->getMessage());
+                    }
                 }
             }
         } else {
@@ -617,62 +624,77 @@ class PurchaseHistoryApiController extends Controller
     
     private function storePurchaseDataLocally($value)
     {
-        // Process the data and store it in the local database
-        if ($value == null) {
-            return redirect()->back()->with('error', __('Sorry ! No Data Found'));
+        // Use a database transaction
+        DB::beginTransaction();   // Try catch Modified by me based on DB:Transaction method
+
+        try {
+            // Process the data and store it in the local database
+            if ($value == null) {
+                return redirect()->back()->with('error', __('Sorry ! No Data Found'));
+            }
+            if ($value->CustomerMobile == null) {
+                return redirect()->back()->with('error', __('Sorry ! Unavailable Customer Mobile Number'));
+            }
+            if ($value->CustomerName == null) {
+                return redirect()->back()->with('error', __('Sorry ! Unavailable Customer Name'));
+            }
+
+        
+            // Warranty Date Creation
+            $general_warranty_date = Carbon::parse($value->PurchaseDate)->addYears($value->GeneralPartsWarranty);
+            $special_warranty_date = Carbon::parse($value->PurchaseDate)->addYears($value->SpecialPartsWarranty);
+            $service_warranty_date = Carbon::parse($value->PurchaseDate)->addYears($value->ServiceWarranty);
+
+            $getCustomer = Customer::firstOrNew(['mobile' => $value->CustomerMobile], [
+                'name' => $value->CustomerName,
+                'mobile' => $value->CustomerMobile,
+                'address' => $value->CustomerAddress,
+            ]);
+            $getCustomer->save();
+
+            $getCategory = Category::firstOrCreate(['name' => $value->Category]);
+            $getBrand = Brand::firstOrCreate(['name' => $value->GroupName], [
+                'product_category_id' => $getCategory->id,
+                'code' => 0,
+            ]);
+            $getBrandmodel = BrandModel::firstOrCreate(['model_name' => $value->ModelName], [
+                'product_category_id' => $getCategory->id,
+                'brand_id' => $getBrand->id,
+            ]);
+            $getOutlet = Outlet::firstOrCreate(['name' => $value->DeliveryFrom], [
+                'code' => 0,
+                'address' => "",
+                'outlet_owner_name' => "",
+                'market' => "",
+                'mobile' => "",
+                'outlet_owner_address' => "",
+            ]);
+
+            Purchase::create([
+                'customer_id' => $getCustomer->id,
+                'product_category_id' => $getCategory->id,
+                'brand_id' => $getBrand->id,
+                'brand_model_id' => $getBrandmodel->id,
+                'product_serial' => $value->ProductSerial,
+                'purchase_date' => $value->PurchaseDate,
+                'invoice_number' => $value->InvoiceNo,
+                'outlet_id' => $getOutlet->id,
+                'general_warranty_date' => $general_warranty_date,
+                'special_warranty_date' => $special_warranty_date,
+                'service_warranty_date' => $service_warranty_date,
+                'created_by' => Auth::id(),
+            ]);
+            
+            // Commit the transaction
+            DB::commit();
+
+        } catch (\Exception $e) {
+            // Something went wrong, rollback the transaction
+            DB::rollBack();
+            
+            // Throw the exception for the parent function to handle
+            throw new \Exception($e->getMessage());
         }
-        if ($value->CustomerMobile == null) {
-            return redirect()->back()->with('error', __('Sorry ! Unavailable Customer Mobile Number'));
-        }
-        if ($value->CustomerName == null) {
-            return redirect()->back()->with('error', __('Sorry ! Unavailable Customer Name'));
-        }
-
-    
-        // Warranty Date Creation
-        $general_warranty_date = Carbon::parse($value->PurchaseDate)->addYears($value->GeneralPartsWarranty);
-        $special_warranty_date = Carbon::parse($value->PurchaseDate)->addYears($value->SpecialPartsWarranty);
-        $service_warranty_date = Carbon::parse($value->PurchaseDate)->addYears($value->ServiceWarranty);
-
-        $getCustomer = Customer::firstOrNew(['mobile' => $value->CustomerMobile], [
-            'name' => $value->CustomerName,
-            'mobile' => $value->CustomerMobile,
-            'address' => $value->CustomerAddress,
-        ]);
-        $getCustomer->save();
-
-        $getCategory = Category::firstOrCreate(['name' => $value->Category]);
-        $getBrand = Brand::firstOrCreate(['name' => $value->GroupName], [
-            'product_category_id' => $getCategory->id,
-            'code' => 0,
-        ]);
-        $getBrandmodel = BrandModel::firstOrCreate(['model_name' => $value->ModelName], [
-            'product_category_id' => $getCategory->id,
-            'brand_id' => $getBrand->id,
-        ]);
-        $getOutlet = Outlet::firstOrCreate(['name' => $value->DeliveryFrom], [
-            'code' => 0,
-            'address' => "",
-            'outlet_owner_name' => "",
-            'market' => "",
-            'mobile' => "",
-            'outlet_owner_address' => "",
-        ]);
-
-        Purchase::create([
-            'customer_id' => $getCustomer->id,
-            'product_category_id' => $getCategory->id,
-            'brand_id' => $getBrand->id,
-            'brand_model_id' => $getBrandmodel->id,
-            'product_serial' => $value->ProductSerial,
-            'purchase_date' => $value->PurchaseDate,
-            'invoice_number' => $value->InvoiceNo,
-            'outlet_id' => $getOutlet->id,
-            'general_warranty_date' => $general_warranty_date,
-            'special_warranty_date' => $special_warranty_date,
-            'service_warranty_date' => $service_warranty_date,
-            'created_by' => Auth::id(),
-        ]);
 
     }
     

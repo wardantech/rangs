@@ -90,6 +90,9 @@
                                 <tr>
                                     <th>{{ __('label.SL')}}</th>
                                     <th>{{ __('Parts')}}</th>
+                                    <th>{{ __('Model No')}}</th>
+                                    <th>{{ __('TSL No')}}</th>
+                                    <th>{{ __('Purposed')}}</th>
                                     <th>{{ __('Rack')}}</th>
                                     <th>{{ __('Bin')}}</th>
                                     <th>{{ __('Requisition Quantity')}}</th>
@@ -104,6 +107,9 @@
                                         <td>
                                             {{ $detail->part->code }}-{{ $detail->part->name }}
                                         </td>
+                                        <td>{{ $detail->requistionDetail ? $detail->requistionDetail->model_no : ''}}</td>
+                                        <td>{{ $detail->requistionDetail ? "TSL-".$detail->requistionDetail->tsl_no : '' }}</td>
+                                        <td>@purpose(optional($detail->requistionDetail)->purpose)</td>
                                         <td>{{ $detail->rack ? $detail->rack->name : '' }}</td>
                                         <td>{{ $detail->bin ? $detail->bin->name : '' }}</td>
                                         <td>{{ $detail->requisition_quantity }}</td>
