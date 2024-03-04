@@ -230,13 +230,13 @@ class RequisitionAllocationController extends Controller
                 ->leftjoin('requisition_details', 'allocation_details.requisition_detail_id', '=', 'requisition_details.id')
                 ->join('stores', 'requisitions.from_store_id', '=', 'stores.id')
                 ->join('parts', 'allocation_details.parts_id', '=', 'parts.id')
-                ->join('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
+                // ->join('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
                 ->join('part_categories', 'parts.part_category_id', '=', 'part_categories.id')
                 ->select(
                     'allocations.date as allocation_date',
                     'parts.code as part_code',
                     'parts.name as part_description',
-                    'parts_models.name as part_model',
+                    // 'parts_models.name as part_model',
                     'part_categories.name as part_category',
                     'allocation_details.requisition_quantity',
                     'allocation_details.issued_quantity',
@@ -360,15 +360,16 @@ class RequisitionAllocationController extends Controller
             $query = DB::table('allocation_details')
                 ->join('allocations', 'allocation_details.allocation_id', '=', 'allocations.id')
                 ->join('requisitions', 'allocations.requisition_id', '=', 'requisitions.id')
+                ->leftjoin('requisition_details', 'allocation_details.requisition_detail_id', '=', 'requisition_details.id')
                 ->join('stores', 'requisitions.from_store_id', '=', 'stores.id')
                 ->join('parts', 'allocation_details.parts_id', '=', 'parts.id')
-                ->join('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
+                // ->join('parts_models', 'parts.part_model_id', '=', 'parts_models.id')
                 ->join('part_categories', 'parts.part_category_id', '=', 'part_categories.id')
                 ->select(
                     'allocations.date as allocation_date',
                     'parts.code as part_code',
                     'parts.name as part_description',
-                    'parts_models.name as part_model',
+                    // 'parts_models.name as part_model',
                     'part_categories.name as part_category',
                     'allocation_details.requisition_quantity',
                     'allocation_details.issued_quantity',
@@ -376,7 +377,9 @@ class RequisitionAllocationController extends Controller
 
                     'allocations.requisition_id as requisition_id',
                     'requisitions.date as requisition_date',
-
+                    'requisition_details.model_no',
+                    'requisition_details.tsl_no',
+                    'requisition_details.purpose',
                     'stores.name as store_name',
                 )
                 ->where('allocations.is_reallocated', 1)
@@ -432,8 +435,24 @@ class RequisitionAllocationController extends Controller
                             return $parts_name; 
                     })
                     ->addColumn('parts_model', function ($allocationItem) {
-                        $parts_model = $allocationItem->part_model;
+                        $parts_model = $allocationItem->model_no;
                             return $parts_model; 
+                    })
+                    ->addColumn('tsl_no', function ($allocationItem) {
+                        $tsl_no = $allocationItem->tsl_no ? "TSL-".$allocationItem->tsl_no : '';
+                            return $tsl_no; 
+                    })
+                    ->addColumn('purpose', function ($allocationItem) {
+                        $purpose = $allocationItem->purpose;
+                        if ($purpose == 1) {
+                            return 'On Payment';
+                        } elseif ($purpose == 2) {
+                            return 'Under Warranty';
+                        } elseif ($purpose == 3) {
+                            return 'Stock';
+                        } else {
+                            return ''; // or any other default value
+                        }
                     })
                     ->addColumn('requisition_quantity', function ($allocationItem) {
                         $requisition_quantity=$allocationItem->requisition_quantity;

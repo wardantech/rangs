@@ -110,9 +110,9 @@
                                                  <input type="hidden" class="form-control" name="rack_id[]" value="{{ $rackbinInfo[$key] ? $rackbinInfo[$key]->rack_id : '' }}" readonly>
                                                  <input type="hidden" class="form-control" name="bin_id[]" value="{{ $rackbinInfo[$key] ? $rackbinInfo[$key]->bin_id : '' }}" readonly>
 
-                                            <td><input type="text" class="form-control" value="{{ $detail->requistionDetail->model_no }}" readonly></td>
-                                            <td><input type="text" class="form-control" value="{{ $detail->requistionDetail->tsl_no ?  "TSL-".$detail->requistionDetail->tsl_no : ''}}" readonly></td>
-                                            <td><input type="text" class="form-control" value="@purpose($detail->requistionDetail->purpose)" readonly></td>
+                                                 <td><input type="text" class="form-control" value="{{ $detail->requistionDetail ? $detail->requistionDetail->model_no : '' }}" readonly></td>
+                                                 <td><input type="text" class="form-control" value="{{ $detail->requistionDetail ? "TSL-".$detail->requistionDetail->tsl_no : ''}}" readonly></td>
+                                                 <td><input type="text" class="form-control" value="@purpose(optional($detail->requistionDetail)->purpose)" readonly></td>
 
                                             <td><input type="number" class="form-control" data-id="{{$key}}" id='stock_in_hand-{{$key}}' name="stock_in_hand[]" value="{{ $stock_collect[$key] }}" min="0" readonly></td>
                                             <td><input type="number" class="form-control" id="issued_quantity-{{$key}}" name="issued_quantity[]" value="{{ $detail->issued_quantity }}" readonly><input type="hidden" name="part_id[]" value="{{ $detail->parts_id }}"></td>

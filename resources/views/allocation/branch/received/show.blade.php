@@ -96,9 +96,8 @@
                                         <td>
                                             {{ $detail->part->code }}-{{ $detail->part->name }}
                                         </td>
-                                        //allocationDetail
                                         <td>{{ $detail->allocationDetail->requistionDetail->model_no ?? null}}</td>
-                                        <td>{{ $detail->allocationDetail->requistionDetail->tsl_no ? "TSL-".$detail->allocationDetail->requistionDetail->tsl_no : '' }}</td>
+                                        <td>{{ $detail->allocationDetail->requistionDetail ? "TSL-".$detail->allocationDetail->requistionDetail->tsl_no : '' }}</td>
                                         <td>@purpose(optional($detail->allocationDetail->requistionDetail)->purpose)</td>
                                         <td>{{ $detail->rack ? $detail->rack ->name : '' }}</td>
                                         <td>{{ $detail->bin ? $detail->bin ->name : '' }}</td>

@@ -95,12 +95,10 @@
                                                 <th>Issue Quantity</th>
                                             </tr>
                                         </thead>
-                                        {{-- onclick="getRack({{$key}})" --}}
+
                                         <tbody>
                                             @foreach ($details as $key=>$detail)
-                                            {{-- @php
-                                                dd($detail);
-                                            @endphp --}}
+                                            
                                             <tr>
                                                 <td><input type="text" class="form-control" value="{{ $detail->part->code }}-{{ $detail->part->name }}" readonly></td>
                                                 <td><input type="text" class="form-control" value="{{ $detail->model_no }}" readonly></td>

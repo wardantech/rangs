@@ -56,6 +56,8 @@
                                     <th>{{ __('Description')}}</th>
                                     <th>{{ __('Model No')}}</th>
                                     <th>{{ __('Category')}}</th>
+                                    <th>{{ __('TSL No')}}</th>
+                                    <th>{{ __('Purpose')}}</th>
                                     <th title="Required Quantity">{{ __('Requisition Qnty')}}</th>
                                     <th title="Allocated Quantity">{{ __('Alloc Qnty')}}</th>
                                     <th title="Received Quantity">{{ __('Branch Received Qnty')}}</th>
@@ -121,6 +123,8 @@
                     {data:'parts_name', name: 'Part Name', orderable: true, searchable: true},
                     {data:'parts_model', name: 'Part Model', orderable: true, searchable: true},
                     {data:'part_category', name: 'Part Category', orderable: true, searchable: true},
+                    {data:'tsl_no', name: 'tsl_no', orderable: true, searchable: true},
+                    {data:'purpose', name: 'purpose', orderable: true, searchable: true},
                     {data:'requisition_quantity', name: 'Requisition Qnty', orderable: false, searchable: false},
                     {data:'received_quantity', name: 'Received Quantity', orderable: false, searchable: false},
                     {data:'issued_quantity', name: 'Allocated Quantity', orderable: false, searchable: false},

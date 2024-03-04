@@ -107,7 +107,7 @@
                                             {{ $detail->part->code }}-{{ $detail->part->name }}
                                         </td>
                                         <td>{{ $detail->model_no ?? '' }}</td>
-                                        <td>{{ $detail->tsl_no ? "TSL-".$detail->tsl_no '' }}</td>
+                                        <td>{{ $detail->tsl_no ? "TSL-".$detail->tsl_no : '' }}</td>
                                         <td>@purpose($detail->purpose)</td>
                                         <td>{{ $detail->required_quantity }}</td>
                                         <td>{{ $detail->issued_quantity }}</td>

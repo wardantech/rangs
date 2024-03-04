@@ -81,6 +81,8 @@
                                     <thead>
                                         <tr>
                                             <th>Parts Info</th>
+                                            <th>Model No</th>
+                                            <th>TSL No</th>
                                             <th>Stock In Hand</th>
                                             <th>Rack</th>
                                             <th>Bin</th>
@@ -94,6 +96,8 @@
                                         @foreach ($details as $key=>$detail)
                                         <tr>
                                             <td> <input type="text" class="form-control" value="{{ $detail->part->code }}-{{ $detail->part->name }}" readonly></td>
+                                            <td><input type="text" class="form-control" value="{{ $detail->model_no }}" readonly></td>
+                                            <td><input type="text" class="form-control" value="{{ $detail->tsl_no ?  "TSL-".$detail->tsl_no : ''}}" readonly></td>
                                             <td><input type="number" class="form-control" data-id="{{$key}}" id='stock_in_hand-{{$key}}' name="stock_in_hand[]" value="{{ $stock_collect[$key] }}" min="0" readonly></td>
                                             <td>
                                                 <input type="text" class="form-control" value="{{ $rackbinInfo[$key] ? $rackbinInfo[$key]->rack->name : '' }}" readonly>
@@ -103,7 +107,10 @@
                                                 <input type="text" class="form-control" value="{{ $rackbinInfo[$key] ? $rackbinInfo[$key]->bin->name : '' }}" readonly>
                                                 <input type="hidden" class="form-control" name="bin_id[]" value="{{ $rackbinInfo[$key] ? $rackbinInfo[$key]->bin_id : '' }}" readonly>
                                             </td>
-                                            <td><input type="number" class="form-control" id="required_quantity-{{$key}}" name="required_quantity[]" value="{{ $detail->required_quantity }}" min="0" readonly><input type="hidden" name="part_id[]" value="{{ $detail->parts_id }}"></td>
+                                            <td><input type="number" class="form-control" id="required_quantity-{{$key}}" name="required_quantity[]" value="{{ $detail->required_quantity }}" min="0" readonly>
+                                                <input type="hidden" name="part_id[]" value="{{ $detail->parts_id }}">
+                                                <input type="hidden" name="requisition_detail_id[]" value="{{ $detail->id }}">
+                                            </td>
                                             <td><input type="number" class="form-control" id="issued_quantity-{{$key}}" onInput="warning({{$key}})" name="issued_quantity[]" value="{{ $detail->issued_quantity }}" min="0" readonly></td>
                                             <td><input type="number" class="form-control" id="balance_quantity-{{$key}}" onInput="warning({{$key}})" name="balance_quantity[]" value="{{ $detail->required_quantity - $detail->issued_quantity}}" min="0" readonly></td>
                                             <td><input type="number" class="form-control" id="issue_quantity-{{$key}}" onInput="warning({{$key}})" name="issue_quantity[]" min="0" required></td>
