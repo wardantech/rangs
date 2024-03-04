@@ -149,7 +149,7 @@
                             <div class="col-md-12">
 
                                 <div class="form-group">
-                                    <button class="mt-2 btn btn-primary button-prevent-multiple-submits"><i class="spinner fa fa-spinner fa-spin"></i>Submit</button>
+                                    <button class="mt-2 btn btn-primary button-prevent-multiple-submits" id="submit"><i class="spinner fa fa-spinner fa-spin"></i>Submit</button>
                                 </div>
                             </div>
 
@@ -165,8 +165,7 @@
     @push('script')
     <script src="{{ asset('js/sony/prevent-multiple-submit.js') }}"></script>
     <script type="text/javascript">
-            $(document).ready(function() {
-            
+        $(document).ready(function() {
             // Initialize select2
             $(".js-data-example-ajax").select2({
                 placeholder: "Search for an Item",
@@ -191,6 +190,12 @@
             });
         });
         $(document).ready(function(){
+
+            // $("#submit").on('click', function(e){
+            //     e.preventDefault();
+            //     console.log("Submit");
+            // });
+
             $('#parts_id').on('change', function(e){
             e.preventDefault();
                 var parts_id = $("#parts_id").val();
@@ -211,6 +216,7 @@
                 });
 
             });
+
         });
     </script>
     @endpush
