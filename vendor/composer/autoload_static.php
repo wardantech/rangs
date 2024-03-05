@@ -850,6 +850,8 @@ class ComposerStaticInitca210c05f04df41a8c8c064b776a5e6a
         'App\\Models\\Ticket\\ReceiveMode' => __DIR__ . '/../..' . '/app/Models/Ticket/ReceiveMode.php',
         'App\\Models\\Ticket\\ServiceType' => __DIR__ . '/../..' . '/app/Models/Ticket/ServiceType.php',
         'App\\Models\\Ticket\\Ticket' => __DIR__ . '/../..' . '/app/Models/Ticket/Ticket.php',
+        'App\\Models\\Ticket\\TicketRecommendation' => __DIR__ . '/../..' . '/app/Models/Ticket/TicketRecommendation.php',
+        'App\\Models\\Ticket\\TicketTransfer' => __DIR__ . '/../..' . '/app/Models/Ticket/TicketTransfer.php',
         'App\\Models\\Ticket\\WarrantyType' => __DIR__ . '/../..' . '/app/Models/Ticket/WarrantyType.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',

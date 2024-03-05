@@ -1,7 +1,10 @@
 @extends('layouts.main')
 @section('title', 'Ticket Details')
 @section('content')
-
+@push('head')
+<link rel="stylesheet" href="{{ asset('plugins/select2/dist/css/select2.min.css') }}">
+<link rel="stylesheet" href="{{ asset('plugins/jquery-toast-plugin/dist/jquery.toast.min.css') }}">
+@endpush
     <div class="container-fluid">
         <div class="page-header">
             <div class="row align-items-end">
@@ -56,8 +59,12 @@
                             @if (($ticket->status == 0 || $ticket->status == 2 || $ticket->status ==9 || $ticket->status ==6) && $ticket->is_assigned == 0)
                                 @if ($is_teamleader!=null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin')
                                 <a href="{{route('job.job_create', $ticket->id)}}" class="btn btn-primary">
-                                    <i class='fas fa-check-circle'></i>
+                                    <i class='fas fa-tasks'></i>
                                     Assign To Technician
+                                </a>
+                                <a href="" class="btn btn-warning" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer">
+                                    <i class="fa fa-undo" aria-hidden="true"></i>
+                                    Transfer Ticket
                                 </a>
                                 @endif
                             @elseif($ticket->is_re_assigned == 0 && $ticket->is_rejected == 1 && $ticket->status == 2)
@@ -66,6 +73,7 @@
                                         <i class='fas fa-check-circle'></i>
                                         Assign To Technician
                                     </a>
+
                                 @endif 
                             @else
                                 <button class="btn btn-danger" title="Alredy Assigned">
@@ -455,6 +463,47 @@
                                 @endif
                             </tbody>
                         </table>
+                        
+                        @if (!empty($ticket->lastJob()->first()) && !empty($ticket->lastJob()->first()->rejectNote))
+                        <hr class="mt-2 mb-3"/>
+                        <fieldset class="form-group border p-3" style="background: #fff1f1">
+                            <legend class="w-auto text-center">Last Job Reject Note By Technician</legend>
+                            <p class="text-bold"># {{ $ticket->lastJob()->first()->rejectNote->decline_note }}</p>
+                            <hr>
+
+                            <div class="mb-5">
+                                <h5 class="text-center">Recommendation By Team Leaders</h5>
+                            </div>
+
+                            <div class="row mt-5">
+                                @foreach ($ticket->recommendations as $recommendation)
+
+                                    <div class="col-md-6 mt-5">
+                                        <div>
+                                            <span>#</span><strong>{{ $loop->iteration }}</strong>
+                                            @if ($loop->last || (Auth::user()->roles->first()->name == "Call Center Admin" || Auth::user()->roles->first()->name =="Call Center Executive"))
+                                                <a href=""  class="btn btn-success" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer">Transfer The Ticket</a>
+                                            @endif
+
+                                        </div>
+                                        <div class="d-flex">
+                                            <p><strong>Recommended Branch: </strong></p>
+                                            <p>{{ $recommendation->outlet->name }}</p>
+                                        </div>
+                                        <div class="d-flex">
+                                            <p><strong>Recommended By: </strong></p>
+                                            <p>{{ $recommendation->createdBy->name }}</p>
+                                        </div>
+                                        <div class="d-flex">
+                                            <p><strong>Recommended Note: </strong></p>
+                                            <p>{{ $recommendation->recommend_note }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </fieldset>
+                        @endif
+
                         <hr class="mt-2 mb-3"/>
                         <fieldset class="form-group border p-3" style="background: #f0f0f0">
                             <legend class="w-auto">Attachment Area</legend>
@@ -635,6 +684,60 @@
             </div>
         </div>
     </div>
+    {{-- Ticket Transfer --}}
+    <div class="modal fade" id="ticketTransferModal" tabindex="-1" role="dialog" aria-labelledby="ticketTransferModal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ticketTransferModal">{{ __('Ticket Transfer')}}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <form class="" id="ticketTransferForm" method="POST" action="{{ url('tickets/transfer') }}">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="sl_number" class="col-form-label">{{ __('label.TICKET_SL')}}</label>
+                                    <input type="hidden" class="form-control" id="ticket_id" name="ticket_id" value="{{$ticket->id}}">
+                                    <input type="text" class="form-control" id="sl_number" name="sl_number" value="TSL-{{$ticket->id}}" readonly>
+                                    @error('sl_number')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="outlet_id" class="col-form-label">{{ __('label.OUTLET')}}</label>
+                                    <select class="form-control select2" id="outlet_id" name="outlet_id">
+                                        <option value="">Select Branch</option>
+                                        @foreach($outlets as $outlet)
+                                            <option value="{{$outlet->id}}">{{$outlet->name}}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('outlet_id')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="note" class="col-form-label">{{ __('Recommendation Note') }}</label>
+                                    <textarea name="note" class="form-control" id="note" cols="12" rows="1"></textarea>
+                                    @error('note')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">{{ __('label.SUBMIT')}}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     {{-- Ticket Re Open Note --}}
     <div class="modal fade" id="ticketReopenModal" tabindex="-1" role="dialog" aria-labelledby="ticketReopenModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -768,7 +871,8 @@
 
 <!-- push external js -->
 @push('script')
-    <script src="{{ asset('plugins/sweetalert/dist/sweetalert.min.js') }}"></script>
+    <script src="{{ asset('plugins/jquery-toast-plugin/dist/jquery.toast.min.js') }}"></script>
+    <script src="{{ asset('plugins/select2/dist/js/select2.min.js') }}"></script>
     <script src="{{ asset('js/print.js') }}"></script>
 @endpush
 
@@ -793,5 +897,53 @@
 
              });
          });
+
+         $(document).ready( function () {
+            $('#ticketTransferForm').submit(function(event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                // Remove previous error messages and validation classes
+                $('.is-invalid').removeClass('is-invalid');
+                $('.text-danger').text('');
+                // Serialize the form data
+                var formData = $(this).serialize();
+
+                // Send an AJAX request to the server
+                $.ajax({
+                    url: '{{ url('tickets/transfer') }}',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        // Handle success response
+                        console.log(response);
+                        $('#ticketTransferModal').modal('hide');
+                        toaster('Success', response.message, "success");
+                        // Optionally, you can update the UI or display a success message
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error response
+                        console.error(xhr.responseText);
+                        toaster('Error', xhr.responseJSON.message, "warning");
+                        var errors = xhr.responseJSON.errors;
+                        $.each(errors, function(key, value) {
+                            $('#' + key).addClass('is-invalid');
+                            $('#' + key + '_error').text(value[0]);
+                        });
+                        // Optionally, you can display an error message
+                    }
+                });
+            });
+
+         });
+         function toaster(heading, message, icon) {
+                $.toast({
+                    heading: heading,
+                    text: message,
+                    position: 'top-right',
+                    showHideTransition: 'slide',
+                    stack: false,
+                    icon: icon
+                })
+            }
 </script>
 @endsection

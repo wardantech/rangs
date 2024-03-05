@@ -18,6 +18,7 @@ use App\Models\Ticket\ServiceType;
 use App\Models\Ticket\DeliveryMode;
 use App\Models\Ticket\WarrantyType;
 use App\Models\Ticket\PaymentType;
+use App\Models\Ticket\TicketRecommendation;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ProductPurchase\Purchase;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -60,34 +61,42 @@ class Ticket extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+    
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
     public function brand()
     {
         return $this->belongsTo(Brand::class, 'brand_id');
     }
+
     public function modelname()
     {
         return $this->belongsTo(BrandModel::class, 'brand_model_id');
     }
+
     public function category()
     {
         return $this->belongsTo(Category::class, 'product_category_id');
     }
+
     public function outlet()
     {
         return $this->belongsTo(Outlet::class, 'outlet_id')->withTrashed();
     }
+
     public function service_type()
     {
         return $this->belongsTo(ServiceType::class, 'service_type_id');
     }
+
     public function purchase()
     {
         return $this->belongsTo(Purchase::class, 'purchase_id');
     }
+
     public function faults(){
         return $this->belongsToMany(Fault::class,'fault_description_id');
     }
@@ -96,14 +105,17 @@ class Ticket extends Model
     {
         return $this->belongsTo(JobPriority::class, 'job_priority_id');
     }
+
     public function receive_mode()
     {
         return $this->belongsTo(ReceiveMode::class, 'product_receive_mode_id');
     }
+
     public function deivery_mode()
     {
         return $this->belongsTo(DeliveryMode::class, 'expected_delivery_mode_id');
     }
+
     public function service()
     {
         return $this->belongsTo(ServiceType::class, 'service_type_id');
@@ -112,20 +124,34 @@ class Ticket extends Model
     public function job(){
         return $this->hasOne(Job::class, 'ticket_id');
     }
-    // public function jobs(){
-    //     return $this->hasMany(Job::class, 'ticket_id');
-    // }
+
+    public function jobs(){
+        return $this->hasMany(Job::class, 'ticket_id');
+    }
+
+    public function lastJob()
+    {
+        return $this->hasOne(Job::class)->latest();
+    }
+
     public function warrantytype()
     {
         return $this->belongsTo(WarrantyType::class, 'warranty_type_id');
     }
+
     public function ticketAttachments()
     {
         return $this->hasMany(JobAttachment::class, 'ticket_id');
     }
 
-    // public function paymentType()
+    // public function recommend()
     // {
-    //     return $this->belongsTo(PaymentType::class, 'payment_type_id');
+    //     return $this->hasOne(TicketRecommendation::class)
+    //         ->where('outlet_id', $this->outlet_id)
+    //         ->where('teamleader_id', $this->teamleader_id);
     // }
+    public function recommendations()
+    {
+        return $this->hasMany(TicketRecommendation::class);
+    }
 }

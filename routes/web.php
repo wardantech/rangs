@@ -751,6 +751,7 @@ Route::group(['middleware' => 'auth'], function(){
         Route::post('re-open', [PurchaseHistoryController::class, 'reOpen'])->name('re-open');
         Route::get('/status/{id}', [PurchaseHistoryController::class, 'status'])->name('tickets.status');
         // Route::get('/total-jobs/{id}', [PurchaseHistoryController::class, 'totalJobs'])->name('total-job');
+        Route::post('transfer', [PurchaseHistoryController::class, 'transfer'])->name('transfer');
 
         Route::get('purchase-info', [ProductPurchaseController::class, 'purchaseInfo']);
         Route::get('purchaseinfo', [ProductPurchaseController::class, 'purchaseinfo_mobile']);

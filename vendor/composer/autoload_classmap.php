@@ -219,6 +219,8 @@ return array(
     'App\\Models\\Ticket\\ReceiveMode' => $baseDir . '/app/Models/Ticket/ReceiveMode.php',
     'App\\Models\\Ticket\\ServiceType' => $baseDir . '/app/Models/Ticket/ServiceType.php',
     'App\\Models\\Ticket\\Ticket' => $baseDir . '/app/Models/Ticket/Ticket.php',
+    'App\\Models\\Ticket\\TicketRecommendation' => $baseDir . '/app/Models/Ticket/TicketRecommendation.php',
+    'App\\Models\\Ticket\\TicketTransfer' => $baseDir . '/app/Models/Ticket/TicketTransfer.php',
     'App\\Models\\Ticket\\WarrantyType' => $baseDir . '/app/Models/Ticket/WarrantyType.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',

@@ -611,8 +611,8 @@ class PurchaseHistoryController extends Controller
                                 ->where('ticket_id', $id)
                                 ->select('customer_feedback.*', 'feedback_questions.question')
                                 ->get();
-
-            return view('ticket.purchaseHistory.show_ticket', compact('ticket', 'faults', 'warrantyTypes', 'product_conditions', 'accessories_lists', 'questions', 'ticketId', 'customerFeedbacks', 'serviceTypes', 'jobs','is_teamleader','user_role'));
+            $outlets = Outlet::where('status', 1)->orderBy('name')->get();
+            return view('ticket.purchaseHistory.show_ticket', compact('ticket', 'faults', 'warrantyTypes', 'product_conditions', 'accessories_lists', 'questions', 'ticketId', 'customerFeedbacks', 'serviceTypes', 'jobs','is_teamleader','user_role','outlets'));
         }catch(\Exception $e){
             $bug = $e->getMessage();
             return redirect()->back()->with('error', $bug);
@@ -1168,100 +1168,126 @@ class PurchaseHistoryController extends Controller
         return $ticketSl;
     }
 
-        //Print
-        public function claim($id)
-        {
-            try{
-                $ticket = Ticket::find($id);
-    
-                $faults = Fault::where('status', 1)
-                            ->where('id',[$ticket->fault_description_id] )
-                            ->pluck('name','id')->toArray();
-                $product_conditions = ProductCondition::where('status', 1)->get();
-                $accessories_lists = Accessories::where('status', 1)
-                            ->where('id',[$ticket->accessories_list_id] )
-                            ->pluck('accessories_name','id')
-                            ->toArray();
-                $serviceTypes= ServiceType::where('status', 1)->get();
-                $allAccessories=Accessories::where('status', 1)->get();
-                $allFaults=Fault::where('status', 1)->get();
-                return view('ticket.purchaseHistory.claim', compact('ticket','faults','product_conditions','accessories_lists', 'allAccessories','allFaults','serviceTypes'));
-            } catch (\Exception $e) {
-                $bug = $e->getMessage();
-                return redirect()->back()->with('error', $bug);
-            }
-        }
-        //
-        public function slip($id)
-        {
-            try{
-                $ticket = Ticket::find($id);
-    
-                $faults = Fault::where('status', 1)
-                            ->where('id',[$ticket->fault_description_id] )
-                            ->pluck('name','id')->toArray();
-                $product_conditions = ProductCondition::where('status', 1)->get();
-                $accessories_lists = Accessories::where('status', 1)
-                            ->where('id',[$ticket->accessories_list_id] )
-                            ->pluck('accessories_name','id')
-                            ->toArray();
-                $serviceTypes= ServiceType::where('status', 1)->get();
-                $allAccessories=Accessories::where('status', 1)->get();
-                $allFaults=Fault::where('status', 1)->get();
-                return view('ticket.purchaseHistory.slip', compact('ticket','faults','product_conditions','accessories_lists', 'allAccessories','allFaults','serviceTypes'));
-            } catch (\Exception $e) {
-                $bug = $e->getMessage();
-                return redirect()->back()->with('error', $bug);
-            }
-        }
-        //Excel Download
-        public function excelDownload($id){
-            $ticket = Ticket::where('status', $id)->first();
-            $status='';
-            if ($id==0)
-            {
-                $status='Created';
-            }
-			else if($id == 1){
-                $status='Assigned';
-            }
-			elseif($id == 2){
-                $status='Cancelled';
-            }
-			elseif($id == 3){
-                $status='Accepted';
-            }
-			else if($id == 4){
-                $status='Started';
-            }
-			else if($id == 5){
-                $status='Paused';
-            }
-			else if($id == 6){
-                $status='Pending';
-            }
-			else if($id == 7){
-                $status='Delivered By TL';
-            }
-			else if($id == 8){
-                $status='Re-opened';
-            }
-			else if($id == 9){
-                $status='Delivered By CC';
-            }
-			else if($id == 10){
-                $status='Completed';
-            }
-			else if($id == 11){
-                $status='Closed';
-            }
-			else if($id == 12){
-                $status='All';
-            }
-			else if($id == 13){
-                $status='Undelivered Closed';
-            }
+    //Print
+    public function claim($id)
+    {
+        try{
+            $ticket = Ticket::find($id);
 
-            return Excel::download(new ExportTicket($id,$status), 'Ticket'.'-'.$status .'.xlsx');
+            $faults = Fault::where('status', 1)
+                        ->where('id',[$ticket->fault_description_id] )
+                        ->pluck('name','id')->toArray();
+            $product_conditions = ProductCondition::where('status', 1)->get();
+            $accessories_lists = Accessories::where('status', 1)
+                        ->where('id',[$ticket->accessories_list_id] )
+                        ->pluck('accessories_name','id')
+                        ->toArray();
+            $serviceTypes= ServiceType::where('status', 1)->get();
+            $allAccessories=Accessories::where('status', 1)->get();
+            $allFaults=Fault::where('status', 1)->get();
+            return view('ticket.purchaseHistory.claim', compact('ticket','faults','product_conditions','accessories_lists', 'allAccessories','allFaults','serviceTypes'));
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
         }
+    }
+    //
+    public function slip($id)
+    {
+        try{
+            $ticket = Ticket::find($id);
+
+            $faults = Fault::where('status', 1)
+                        ->where('id',[$ticket->fault_description_id] )
+                        ->pluck('name','id')->toArray();
+            $product_conditions = ProductCondition::where('status', 1)->get();
+            $accessories_lists = Accessories::where('status', 1)
+                        ->where('id',[$ticket->accessories_list_id] )
+                        ->pluck('accessories_name','id')
+                        ->toArray();
+            $serviceTypes= ServiceType::where('status', 1)->get();
+            $allAccessories=Accessories::where('status', 1)->get();
+            $allFaults=Fault::where('status', 1)->get();
+            return view('ticket.purchaseHistory.slip', compact('ticket','faults','product_conditions','accessories_lists', 'allAccessories','allFaults','serviceTypes'));
+        } catch (\Exception $e) {
+            $bug = $e->getMessage();
+            return redirect()->back()->with('error', $bug);
+        }
+    }
+    //Excel Download
+    public function excelDownload($id){
+        $ticket = Ticket::where('status', $id)->first();
+        $status='';
+        if ($id==0)
+        {
+            $status='Created';
+        }
+        else if($id == 1){
+            $status='Assigned';
+        }
+        elseif($id == 2){
+            $status='Cancelled';
+        }
+        elseif($id == 3){
+            $status='Accepted';
+        }
+        else if($id == 4){
+            $status='Started';
+        }
+        else if($id == 5){
+            $status='Paused';
+        }
+        else if($id == 6){
+            $status='Pending';
+        }
+        else if($id == 7){
+            $status='Delivered By TL';
+        }
+        else if($id == 8){
+            $status='Re-opened';
+        }
+        else if($id == 9){
+            $status='Delivered By CC';
+        }
+        else if($id == 10){
+            $status='Completed';
+        }
+        else if($id == 11){
+            $status='Closed';
+        }
+        else if($id == 12){
+            $status='All';
+        }
+        else if($id == 13){
+            $status='Undelivered Closed';
+        }
+
+        return Excel::download(new ExportTicket($id,$status), 'Ticket'.'-'.$status .'.xlsx');
+    }
+
+    public function transfer(Request $request)
+    {
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'ticket_id' => 'required|exists:tickets,id',
+            'outlet_id' => 'required|exists:outlets,id',
+            'note' => 'required|string',
+        ]);
+
+        try {
+            $ticket = Ticket::find($request->ticket_id);
+
+            \App\Models\Ticket\TicketRecommendation::create(
+            [
+                'ticket_id' => $request->ticket_id,
+                'outlet_id' => $request->outlet_id,
+                'recommend_note' => $request->note,
+                'created_by' => Auth::user()->id,
+            ]);
+            return response()->json(['message' => 'Ticket transferred successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message'=>$e->getMessage()], 422);
+        }
+
+    }
 }
