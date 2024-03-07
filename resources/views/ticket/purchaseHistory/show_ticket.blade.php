@@ -62,7 +62,7 @@
                                     <i class='fas fa-tasks'></i>
                                     Assign To Technician
                                 </a>
-                                <a href="" class="btn btn-warning" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer">
+                                <a href="" class="btn btn-warning" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer" onclick="setType('1')">
                                     <i class="fa fa-undo" aria-hidden="true"></i>
                                     Transfer Ticket
                                 </a>
@@ -466,7 +466,7 @@
                         
                         @if (!empty($ticket->lastJob()->first()) && !empty($ticket->lastJob()->first()->rejectNote))
                         <hr class="mt-2 mb-3"/>
-                        <fieldset class="form-group border p-3" style="background: #fff1f1">
+                        <fieldset class="form-group border p-3" style="background: #ffffff">
                             <legend class="w-auto text-center">Last Job Reject Note By Technician</legend>
                             <p class="text-bold"># {{ $ticket->lastJob()->first()->rejectNote->decline_note }}</p>
                             <hr>
@@ -475,30 +475,73 @@
                                 <h5 class="text-center">Recommendation By Team Leaders</h5>
                             </div>
 
-                            <div class="row mt-5">
+                            <div class="row">
                                 @foreach ($ticket->recommendations as $recommendation)
+                                    <div class="col-md-4 ">
+                                        <div class="card">
+                                            <div class="card-body shadow-lg">
+                                                <div>
+                                                    <span>#</span><strong>{{ $loop->iteration }}</strong>
+                                                    @if (($loop->last && $ticket->status == 2) || (Auth::user()->roles->first()->name == "Call Center Admin" || Auth::user()->roles->first()->name =="Call Center Executive"))
+                                                        <a href=""  class="btn btn-success" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer" onclick="setType('2')">Transfer The Ticket</a>
+                                                    @endif
 
-                                    <div class="col-md-6 mt-5">
-                                        <div>
-                                            <span>#</span><strong>{{ $loop->iteration }}</strong>
-                                            @if ($loop->last || (Auth::user()->roles->first()->name == "Call Center Admin" || Auth::user()->roles->first()->name =="Call Center Executive"))
-                                                <a href=""  class="btn btn-success" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer">Transfer The Ticket</a>
-                                            @endif
-
-                                        </div>
-                                        <div class="d-flex">
-                                            <p><strong>Recommended Branch: </strong></p>
-                                            <p>{{ $recommendation->outlet->name }}</p>
-                                        </div>
-                                        <div class="d-flex">
-                                            <p><strong>Recommended By: </strong></p>
-                                            <p>{{ $recommendation->createdBy->name }}</p>
-                                        </div>
-                                        <div class="d-flex">
-                                            <p><strong>Recommended Note: </strong></p>
-                                            <p>{{ $recommendation->recommend_note }}</p>
+                                                </div>
+                                                <div class="">
+                                                    <p><strong>Recommended Branch:     </strong>
+                                                    {{ $recommendation->outlet->name }}</p>
+                                                </div>
+                                                <div class="">
+                                                    <p><strong>Recommended By: </strong>
+                                                    {{ $recommendation->createdBy->name }}</p>
+                                                </div>
+                                                <div class="">
+                                                    <p><strong>Recommended Note: </strong>
+                                                    {{ $recommendation->recommend_note }}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                @endforeach
+                            </div>
+                        </fieldset>
+                        @endif
+
+                        @if (!empty($ticket->lastJob()->first()) && !empty($ticket->lastJob()->first()->rejectNote))
+                        <hr class="mt-2 mb-3"/>
+                        <fieldset class="form-group border p-3" style="background: #ffffff">
+                            <legend class="w-auto text-center">Transfered By Call Centers</legend>
+                            {{-- <p class="text-bold"># {{ $ticket->lastJob()->first()->rejectNote->decline_note }}</p>
+                            <hr>
+
+                            <div class="mb-5">
+                                <h5 class="text-center">Transfered By Call Centers</h5>
+                            </div> --}}
+
+                            <div class="row mt-5">
+                                @foreach ($ticket->transfers as $transfer)
+                                <div class="col-md-4 ">
+                                    <div class="card">
+                                        <div class="card-body box-shadow">
+                                            <div>
+                                                <span>#</span><strong>{{ $loop->iteration }}</strong>
+                                                {{-- @if ($loop->last || (Auth::user()->roles->first()->name == "Call Center Admin" || Auth::user()->roles->first()->name =="Call Center Executive"))
+                                                    <a href=""  class="btn btn-success" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer" onclick="setType('2')">Transfer The Ticket</a>
+                                                @endif --}}
+
+                                            </div>
+                                            <div class="">
+                                                <p><strong>Recommended Branch: </strong> {{ $transfer->outlet->name }}</p>
+                                            </div>
+                                            <div class="">
+                                                <p><strong>Recommended By: </strong>{{ $transfer->createdBy->name }}</p>
+                                            </div>
+                                            <div class="d-flex">
+                                                <p><strong>Recommended Note: </strong>{{ $transfer->recommend_note }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 @endforeach
                             </div>
                         </fieldset>
@@ -684,7 +727,7 @@
             </div>
         </div>
     </div>
-    {{-- Ticket Transfer --}}
+    {{-- Ticket Transfer Modal --}}
     <div class="modal fade" id="ticketTransferModal" tabindex="-1" role="dialog" aria-labelledby="ticketTransferModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -694,6 +737,7 @@
                 </div>
                 <form class="" id="ticketTransferForm" method="POST" action="{{ url('tickets/transfer') }}">
                     @csrf
+                    <input type="hidden" name="type" id="type" value=""> <!-- Hidden input field for type -->
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-sm-12">
@@ -877,26 +921,48 @@
 @endpush
 
 <script type="text/javascript">
+
         $(document).ready( function () {
-             $(document).on("click", '.verification', function (e) {
-                 //This function use for sweetalert confirm message
-                 e.preventDefault();
-                 var form = this;
+            // $('#ticketTransferModal').on('shown.bs.modal', function () {
+            //     // $('#outlet_id').select2();
+            //     $('#outlet_id').select2({
+            //         // dropdownAutoWidth: true,
+            //         minimumResultsForSearch: 0 // Set to -1 to disable search input
+            //     });
+            // });
+            //  $(document).on("click", '.verification', function (e) {
+            //      //This function use for sweetalert confirm message
+            //      e.preventDefault();
+            //      var form = this;
 
-                 swal({
-                     title: "Are you sure you want to Delete?",
-                     icon: "warning",
-                     buttons: true,
-                     dangerMode: true,
-                 })
-                 .then((willDelete) => {
-                     if (willDelete) {
-                         form.submit();
-                     }
-                 });
+            //      swal({
+            //          title: "Are you sure you want to Delete?",
+            //          icon: "warning",
+            //          buttons: true,
+            //          dangerMode: true,
+            //      })
+            //      .then((willDelete) => {
+            //          if (willDelete) {
+            //              form.submit();
+            //          }
+            //      });
 
-             });
-         });
+            //  });
+        });
+
+         
+        function setType(type) {
+            // Check if user_id exists in recommendations
+            var user_id_exists = <?php echo json_encode($ticket->recommendations->pluck('user_id')->contains(auth()->user()->id)); ?>;
+            // var user_id = <?php echo auth()->user()->id; ?>;
+            console.log(user_id_exists);
+            // If user_id exists, prevent transfer
+            // if (user_id_exists) {
+            //     alert('You are not allowed to transfer this ticket.');
+            //     return false; // Prevent further execution
+            // }
+            document.getElementById('type').value = type;
+        }
 
          $(document).ready( function () {
             $('#ticketTransferForm').submit(function(event) {
@@ -936,14 +1002,14 @@
 
          });
          function toaster(heading, message, icon) {
-                $.toast({
-                    heading: heading,
-                    text: message,
-                    position: 'top-right',
-                    showHideTransition: 'slide',
-                    stack: false,
-                    icon: icon
-                })
-            }
+            $.toast({
+                heading: heading,
+                text: message,
+                position: 'top-right',
+                showHideTransition: 'slide',
+                stack: false,
+                icon: icon
+            })
+        }
 </script>
 @endsection

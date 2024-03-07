@@ -150,8 +150,14 @@ class Ticket extends Model
     //         ->where('outlet_id', $this->outlet_id)
     //         ->where('teamleader_id', $this->teamleader_id);
     // }
+
     public function recommendations()
     {
-        return $this->hasMany(TicketRecommendation::class);
+        return $this->hasMany(TicketRecommendation::class)->where('type', 1);
+    }
+
+    public function transfers()
+    {
+        return $this->hasMany(TicketRecommendation::class)->where('type', 2);
     }
 }

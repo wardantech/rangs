@@ -1282,6 +1282,7 @@ class PurchaseHistoryController extends Controller
                 'ticket_id' => $request->ticket_id,
                 'outlet_id' => $request->outlet_id,
                 'recommend_note' => $request->note,
+                'type' => $request->type,
                 'created_by' => Auth::user()->id,
             ]);
             return response()->json(['message' => 'Ticket transferred successfully'], 200);

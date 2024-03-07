@@ -18,6 +18,7 @@ class CreateTicketRecommendationsTable extends Migration
             $table->unsignedInteger('ticket_id')->index();
             $table->unsignedInteger('outlet_id')->index()->nullable();
             $table->string('recommend_note')->nullable();
+            $table->tinyInteger('type')->commet("1=Recommend, 2=Transfer");
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
             $table->timestamps();
