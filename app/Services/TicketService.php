@@ -21,7 +21,12 @@ class TicketService
         ->leftJoin('districts','tickets.district_id', '=','districts.id' )
         ->leftJoin('thanas','thanas.id', '=', 'tickets.thana_id')
         ->leftJoin('users', 'tickets.created_by', '=', 'users.id')
-        ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+        ->leftJoin('ticket_recommendations', function($join) {
+            $join->on('ticket_recommendations.ticket_id', '=', 'tickets.id')
+                 ->where('ticket_recommendations.type', '=', 2)
+                 ->whereRaw('ticket_recommendations.created_at = (SELECT MAX(created_at) FROM ticket_recommendations WHERE ticket_id = tickets.id AND type = 2)');
+        })
+        ->select('ticket_recommendations.outlet_id','users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
         'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
         'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
         'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
@@ -35,13 +40,35 @@ class TicketService
     {
         return $query;
     }
-    public static function extendForTeamLeader($query, $districtIds, $thanaIds, $categoryIds)
+
+    public static function extendForTeamLeader($query, $districtIds, $thanaIds, $categoryIds, $outletId)
     {
         return $query->whereIn('tickets.district_id', $districtIds)
         ->whereIn('tickets.thana_id', $thanaIds)
-        ->whereIn('tickets.product_category_id', $categoryIds);
+        ->whereIn('tickets.product_category_id', $categoryIds)
+        ->orWhere(function ($query) use ($outletId) {
+            $query->where('ticket_recommendations.outlet_id', $outletId);
+        });
     }
-
+    
+    // public static function extendForTeamLeader($query, $districtIds, $thanaIds, $categoryIds, $outletId)
+    // {
+    //     return $query->whereIn('tickets.district_id', $districtIds)
+    //         ->whereIn('tickets.thana_id', $thanaIds)
+    //         ->whereIn('tickets.product_category_id', $categoryIds)
+    //         ->where(function ($q) use ($outletId) {
+    //             $q->whereNotExists(function ($subQuery) {
+    //                 $subQuery->select(DB::raw(1))
+    //                     ->from('ticket_recommendations as tr2')
+    //                     ->whereRaw('ticket_recommendations.ticket_id = tr2.ticket_id')
+    //                     ->whereRaw('ticket_recommendations.id < tr2.id')
+    //                     ->orderByDesc('tr2.id')
+    //                     ->limit(1);
+    //             })->where('ticket_recommendations.outlet_id', '=', $outletId);
+    //         });
+    // }
+    
+    
     public static function extendForoutlet($query, $outletId)
     {
         return $query->where('tickets.outlet_id', $outletId);

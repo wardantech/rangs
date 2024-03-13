@@ -669,6 +669,7 @@
         </div>
     </div>
 
+    {{-- Customer Feedback Modal --}}
     <div class="modal fade" id="demoModal" tabindex="-1" role="dialog" aria-labelledby="demoModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -727,6 +728,7 @@
             </div>
         </div>
     </div>
+
     {{-- Ticket Transfer Modal --}}
     <div class="modal fade" id="ticketTransferModal" tabindex="-1" role="dialog" aria-labelledby="ticketTransferModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -782,6 +784,7 @@
             </div>
         </div>
     </div>
+
     {{-- Ticket Re Open Note --}}
     <div class="modal fade" id="ticketReopenModal" tabindex="-1" role="dialog" aria-labelledby="ticketReopenModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -824,7 +827,7 @@
     </div>
 
     {{-- Delivery BY CC Modal --}}
-    <div class="modal fade" id="ticketDeliveryByCCModal" tabindex="-1" role="dialog" aria-labelledby="ticketReopenModal" aria-hidden="true">
+    <div class="modal fade" id="ticketDeliveryByCCModal" tabindex="-1" role="dialog" aria-labelledby="ticketDeliveryByCCModal" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">

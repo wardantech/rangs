@@ -114,7 +114,7 @@ class PurchaseHistoryController extends Controller
                     $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
                     $categoryIds = json_decode($teamLeader->group->category_id, true);
 
-                    TicketService::extendForTeamLeader($data, $districtIds, $thanaIds, $categoryIds);
+                    TicketService::extendForTeamLeader($data, $districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
                     
                 } else {
 
@@ -853,7 +853,7 @@ class PurchaseHistoryController extends Controller
                     $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
                     $categoryIds = json_decode($teamLeader->group->category_id, true);
 
-                    TicketService::extendForTeamLeader($data, $districtIds, $thanaIds, $categoryIds);
+                    TicketService::extendForTeamLeader($data, $districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
 
                 } else {
 
@@ -913,7 +913,6 @@ class PurchaseHistoryController extends Controller
                             ->where('tickets.is_closed',1);
                                 break;
                         case 12:
-                            $data;
                                 break;
                         case 13:
                             $data->where('tickets.status', 12)
