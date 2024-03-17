@@ -27,6 +27,8 @@
     @section('title', 'Total')
 @elseif ($id == 13)
     @section('title', 'Undelivered Closed')
+@elseif ($id == 14)
+    @section('title', 'Recommended')
 @else
     @section('title', 'Tickets')
 @endif
@@ -89,6 +91,8 @@
                                     <a href="#" class="btn btn-outline-warning">{{ __('Total Tickets')}}</a>
                                 @elseif ($id == 13)
                                     <a href="#" class="btn btn-outline-warning">{{ __('Undelivered Close')}}</a>
+                                @elseif ($id == 14)
+                                    <a href="#" class="btn btn-outline-warning">{{ __('Recommended')}}</a>
                                 @else
                                     <a href="#" class="btn btn-outline-warning">{{ __('Tickets')}}</a>
                                 @endif
@@ -294,6 +298,20 @@
                                     <div class="state">
                                         <h6>{{ __('Undlivered Close')}}</h6>
                                         <h2>{{ $totalTicketStatus->undelivered_close }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="widget bg-lime">
+                        <a href="{{ route('tickets.status', 14) }}">
+                            <div class="widget-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="state">
+                                        <h6>{{ __('Recommended')}}</h6>
+                                        <h2>{{ $totalTicketStatus->recommended }}</h2>
                                     </div>
                                 </div>
                             </div>

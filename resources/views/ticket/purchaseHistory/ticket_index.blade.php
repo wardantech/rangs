@@ -234,6 +234,20 @@
                         </a>
                     </div>
                 </div>
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="widget bg-lime">
+                        <a href="{{ route('tickets.status', 14) }}">
+                            <div class="widget-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="state">
+                                        <h6>{{ __('Recommended')}}</h6>
+                                        <h2>{{ $totalTicketStatus->recommended }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row">

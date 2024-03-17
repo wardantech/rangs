@@ -79,7 +79,7 @@ class PurchaseHistoryController extends Controller
                 $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
                 $categoryIds = json_decode($teamLeader->group->category_id, true);
     
-                $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds);
+                $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
 
             } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
 
@@ -820,7 +820,7 @@ class PurchaseHistoryController extends Controller
                 $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
                 $categoryIds = json_decode($teamLeader->group->category_id, true);
     
-                $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds);
+                $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
 
             } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
 
@@ -918,6 +918,9 @@ class PurchaseHistoryController extends Controller
                             $data->where('tickets.status', 12)
                             ->where('tickets.is_delivered_by_call_center',0)
                             ->where('tickets.is_closed',1);
+                                break;
+                        case 14:
+                            $data->where('tickets.status', 13);
                                 break;
                     default:
                         return false;

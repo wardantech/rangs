@@ -43,31 +43,15 @@ class TicketService
 
     public static function extendForTeamLeader($query, $districtIds, $thanaIds, $categoryIds, $outletId)
     {
-        return $query->whereIn('tickets.district_id', $districtIds)
-        ->whereIn('tickets.thana_id', $thanaIds)
-        ->whereIn('tickets.product_category_id', $categoryIds)
-        ->orWhere(function ($query) use ($outletId) {
-            $query->where('ticket_recommendations.outlet_id', $outletId);
-        });
-    }
-    
-    // public static function extendForTeamLeader($query, $districtIds, $thanaIds, $categoryIds, $outletId)
-    // {
-    //     return $query->whereIn('tickets.district_id', $districtIds)
-    //         ->whereIn('tickets.thana_id', $thanaIds)
-    //         ->whereIn('tickets.product_category_id', $categoryIds)
-    //         ->where(function ($q) use ($outletId) {
-    //             $q->whereNotExists(function ($subQuery) {
-    //                 $subQuery->select(DB::raw(1))
-    //                     ->from('ticket_recommendations as tr2')
-    //                     ->whereRaw('ticket_recommendations.ticket_id = tr2.ticket_id')
-    //                     ->whereRaw('ticket_recommendations.id < tr2.id')
-    //                     ->orderByDesc('tr2.id')
-    //                     ->limit(1);
-    //             })->where('ticket_recommendations.outlet_id', '=', $outletId);
-    //         });
-    // }
-    
+        return $query->where(function ($query) use ($districtIds, $thanaIds, $categoryIds, $outletId) {
+            $query->whereIn('tickets.district_id', $districtIds)
+                    ->whereIn('tickets.thana_id', $thanaIds)
+                    ->whereIn('tickets.product_category_id', $categoryIds)
+                    ->orWhere(function ($query) use ($outletId) {
+                        $query->where('ticket_recommendations.outlet_id', $outletId);
+                    });
+            });
+    }    
     
     public static function extendForoutlet($query, $outletId)
     {
