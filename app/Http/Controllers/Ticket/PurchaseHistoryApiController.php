@@ -717,7 +717,8 @@ class PurchaseHistoryApiController extends Controller
                     'product_serial' => $purchase->product_serial,
                     'product_name' => $purchase->category->name,
                     'product_brand_name' => $purchase->brand->name,
-                    'product_model_name' => $purchase->modelname->model_name,
+                    // 'product_model_name' => $purchase->modelname->model_name,
+                    'product_model_name' => $purchase->modelname ? $purchase->modelname->model_name : null,
                     'point_of_purchase' => $purchase->outlet->name,
                 ];
     

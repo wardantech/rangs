@@ -44,8 +44,8 @@ class RequisitionAllocationController extends Controller
                     ->where('allocations.is_reallocated', 0 )
                     ->where('allocations.belong_to', 1 )
                     ->where('allocations.deleted_at',null)
-                    ->orderBy('allocations.id', 'desc');
-                    // ->get();
+                    ->orderBy('allocations.id', 'desc')
+                    ->get();
             } else {
                 $employee = Employee::where('user_id',Auth::user()->id)->first();
                 $mystore=Store::where('id',$employee->store_id )->first();
