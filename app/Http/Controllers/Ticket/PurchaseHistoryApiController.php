@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Models\Ticket\PurchaseHistory;
 use App\Models\ProductPurchase\Purchase;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseHistoryApiController extends Controller
 {
