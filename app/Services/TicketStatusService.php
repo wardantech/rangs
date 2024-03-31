@@ -29,7 +29,7 @@ class TicketStatusService
     public function totalStatusByOutlet($outletId)
     {
         return $this->getStatusQuery()
-            ->where('outlet_id', $outletId)
+            ->where('tickets.outlet_id', $outletId)
             // ->whereNull('tickets.deleted_at')
             ->first();
     }

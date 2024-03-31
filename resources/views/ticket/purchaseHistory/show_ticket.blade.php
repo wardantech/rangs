@@ -58,16 +58,20 @@
                             {{-- @if (($ticket->status == 0 || $ticket->status ==9) && $ticket->is_assigned == 0) --}}
                             @if (($ticket->status == 0 || $ticket->status == 2 || $ticket->status ==9 || $ticket->status ==6) && $ticket->is_assigned == 0)
                                 @if ($is_teamleader!=null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin')
-                                <a href="{{route('job.job_create', $ticket->id)}}" class="btn btn-primary">
-                                    <i class='fas fa-tasks'></i>
-                                    Assign To Technician
-                                </a>
-                                <a href="" class="btn btn-warning" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer" onclick="setType('1')">
-                                    <i class="fa fa-undo" aria-hidden="true"></i>
-                                    Transfer Ticket
-                                </a>
+                                    @if ($ticket->lastJob()->first()->created_by != Auth::user()->id)
+                                        <a href="{{route('job.job_create', $ticket->id)}}" class="btn btn-primary">
+                                            <i class='fas fa-tasks'></i>
+                                            Assign To Technician
+                                        </a>
+                                    @endif
+                                    @if ($ticket->lastJob()->first()->created_by == Auth::user()->id)
+                                        <a href="" class="btn btn-warning" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer" onclick="setType('1')">
+                                            <i class="fa fa-undo" aria-hidden="true"></i>
+                                            Transfer Recommendation
+                                        </a>
+                                    @endif
                                 @endif
-                            @elseif($ticket->is_re_assigned == 0 && $ticket->is_rejected == 1 && $ticket->status == 2)
+                            @elseif(($ticket->is_re_assigned == 0 && $ticket->status == 2) || $ticket->status == 13)
                                 @if ($is_teamleader!=null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name =='Call Center Admin')
                                     <a href="{{route('job.job_create', $ticket->id)}}" class="btn btn-primary">
                                         <i class='fas fa-check-circle'></i>
@@ -464,13 +468,14 @@
                             </tbody>
                         </table>
                         
-                        @if (!empty($ticket->lastJob()->first()) && !empty($ticket->lastJob()->first()->rejectNote))
+                        @if (!empty($ticket->lastJob()->first()))
                         <hr class="mt-2 mb-3"/>
                         <fieldset class="form-group border p-3" style="background: #ffffff">
+                            @if (!empty($ticket->lastJob()->first()->rejectNote))
                             <legend class="w-auto text-center">Last Job Reject Note By Technician</legend>
                             <p class="text-bold"># {{ $ticket->lastJob()->first()->rejectNote->decline_note }}</p>
                             <hr>
-
+                            @endif
                             <div class="mb-5">
                                 <h5 class="text-center">Recommendation By Team Leaders</h5>
                             </div>
@@ -482,10 +487,13 @@
                                             <div class="card-body shadow-lg">
                                                 <div>
                                                     <span>#</span><strong>{{ $loop->iteration }}</strong>
-                                                    @if (($loop->last && $ticket->status == 2) || (Auth::user()->roles->first()->name == "Call Center Admin" || Auth::user()->roles->first()->name =="Call Center Executive"))
-                                                        <a href=""  class="btn btn-success" data-toggle="modal" data-target="#ticketTransferModal"  title="Click to Transfer" onclick="setType('2')">Transfer The Ticket</a>
+                                                    @if ($loop->last && $ticket->status == 2 && $ticket->lastRecommendationByCc->created_by != Auth::user()->id)
+                                                    {{-- @dd($ticket->lastRecommendationByCc->created_by != Auth::user()->id) --}}
+                                                    {{-- @dd(Auth::user()->roles->first()) --}}
+                                                        @if (Auth::user()->roles->first()->name == "Call Centre" || Auth::user()->roles->first()->name == "Call Center Admin" || Auth::user()->roles->first()->name == "Call Center Executive")
+                                                            <a href="" class="btn btn-success" data-toggle="modal" data-target="#ticketTransferModal" title="Click to Transfer" onclick="setType('2')">Transfer The Ticket</a>
+                                                        @endif
                                                     @endif
-
                                                 </div>
                                                 <div class="">
                                                     <p><strong>Recommended Branch:     </strong>
@@ -507,7 +515,7 @@
                         </fieldset>
                         @endif
 
-                        @if (!empty($ticket->lastJob()->first()) && !empty($ticket->lastJob()->first()->rejectNote))
+                        @if (!empty($ticket->lastJob()->first()))
                         <hr class="mt-2 mb-3"/>
                         <fieldset class="form-group border p-3" style="background: #ffffff">
                             <legend class="w-auto text-center">Transfered By Call Centers</legend>
