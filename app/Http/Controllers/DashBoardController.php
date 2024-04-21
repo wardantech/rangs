@@ -49,7 +49,7 @@ class DashBoardController extends Controller
             $thanaIds = json_decode($teamLeader->group->region->thana_id, true);
             $categoryIds = json_decode($teamLeader->group->category_id, true);
 
-            $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds);
+            $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
         } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
             $totalTicketStatus = $this->ticketStatusService->totalStatus();
         } else {

@@ -38,7 +38,9 @@ class TicketStatusService
     {
         return DB::table('tickets')
         ->leftJoin('ticket_recommendations', function($join) {
+            // $join->on('ticket_recommendations.ticket_id', '=', 'tickets.id')
             $join->on('ticket_recommendations.ticket_id', '=', 'tickets.id')
+                ->where('tickets.status', '=', 13)
                  ->where('ticket_recommendations.type', '=', 2)
                  ->whereRaw('ticket_recommendations.created_at = (SELECT MAX(created_at) FROM ticket_recommendations WHERE ticket_id = tickets.id AND type = 2)');
         })

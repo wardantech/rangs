@@ -91,22 +91,26 @@
                                             <i class='fas fa-check-circle'></i>
                                             Accept
                                         </a>
-                                        <a href="" class="btn btn-danger" id="" data-toggle="modal" data-target="#demoModal" data-jobid="{{ $job->id }}"">
-                                            <i class='fas fa-times'></i>
-                                            Reject
-                                        </a>
                                 @elseif($job->status == 2)
-                                    <button class="btn btn-danger" title="This Job Is Rejeted">
+                                    <button class="btn btn-danger" title="This Job Is Rejeted" disabled>
                                         <i class='fas fa-times'></i>
                                         Rejected
                                     </button>
                                 @endif
+                                @if ($job->status != 2)
+                                <a href="" class="btn btn-danger" id="" data-toggle="modal" data-target="#demoModal" data-jobid="{{ $job->id }}"">
+                                    <i class='fas fa-times'></i>
+                                    Reject
+                                </a>
+                                @endif
                                 @if($job->status != 0 && $job->is_started == 1 )
-                                        @if ($job->is_submitted != 1)
-                                            <a href="{{ route('technician.job-submission-create', $job->id) }}" class="btn btn-info" title="End Now">
+                                        @if ($job->is_submitted != 1 && $job->status != 6)
+                                            <a href="{{ route('technician.job-submission-create', $job->id) }}" class="btn btn-info" title="Submit Now">
                                                 <i class="far fa-smile"></i>
                                                 Submit
-                                            </a>    
+                                            </a> 
+                                        @elseif($job->status == 6) 
+                                            <button class="btn btn-info" title="Paused" disabled><i class="far fa-smile"></i> Paused </button>   
                                         @else
                                             <button class="btn btn-info" title="Already Submitted" disabled><i class="far fa-smile"></i> Submitted </button> 
                                         @endif

@@ -1277,7 +1277,9 @@ class PurchaseHistoryController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
             $ticket = Ticket::find($request->ticket_id);
+            $ticket->update(['status' => 13]);
 
             \App\Models\Ticket\TicketRecommendation::create(
             [
@@ -1287,8 +1289,10 @@ class PurchaseHistoryController extends Controller
                 'type' => $request->type,
                 'created_by' => Auth::user()->id,
             ]);
+            DB::commit();
             return response()->json(['message' => 'Ticket transferred successfully'], 200);
         } catch (\Exception $e) {
+            DB::rollback();
             return response()->json(['message'=>$e->getMessage()], 422);
         }
 
