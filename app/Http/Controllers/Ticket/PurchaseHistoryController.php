@@ -1290,7 +1290,7 @@ class PurchaseHistoryController extends Controller
                 'created_by' => Auth::user()->id,
             ]);
             DB::commit();
-            return response()->json(['message' => 'Ticket transferred successfully'], 200);
+            return response()->json(['message' => 'The ticket recommendation has been successfully completed.'], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message'=>$e->getMessage()], 422);

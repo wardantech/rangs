@@ -161,10 +161,16 @@ class Ticket extends Model
         return $this->hasMany(TicketRecommendation::class)->where('type', 2);
     }
 
+    public function lastRecommendation()
+    {
+        return $this->hasMany(TicketRecommendation::class, 'ticket_id')->latest()->first();
+    }
+
     public function lastRecommendationByTl()
     {
         return $this->hasOne(TicketRecommendation::class, 'ticket_id')->latest()->where('type', 1)->where('created_by', Auth::user()->id);
     }
+
     public function lastRecommendationByCc()
     {
         return $this->hasOne(TicketRecommendation::class, 'ticket_id')->latest()->where('type', 2);

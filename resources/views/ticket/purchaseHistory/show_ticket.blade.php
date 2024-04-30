@@ -59,17 +59,14 @@
                         <div class="card-header-right">
                             <button id="print" class="btn btn-info">Print</button>
 
-                            {{-- @if (($ticket->status == 0 || $ticket->status == 9) && $ticket->is_assigned == 0) --}}
-                            @if (
-                                ($ticket->status == 0 || $ticket->status == 2 || $ticket->status == 9 || $ticket->status == 6) &&
-                                    $ticket->is_assigned == 0)
+                            @if ($ticket->status == 13 )
                                 @if (
                                     $is_teamleader != null ||
                                         $user_role->name == 'Admin' ||
                                         $user_role->name == 'Super Admin' ||
                                         $user_role->name == 'Call Center Admin')
                                     @if (isset($ticket->lastJob))
-                                        @if ($ticket->lastJob()->first()->created_by != Auth::user()->id)
+                                        @if ($ticket->lastJob()->first()->created_by != Auth::user()->id && $ticket->lastRecommendation()->type == 2)
                                             <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
                                                 <i class='fas fa-tasks'></i>
                                                 Assign To Technician
@@ -77,18 +74,23 @@
                                         @endif
                                     @endif
                                     @if (isset($ticket->lastJob))
-
-                                        @if ($ticket->lastJob()->first()->created_by == Auth::user()->id)
+                                        @if ($ticket->lastJob()->first()->created_by == Auth::user()->id && $ticket->lastRecommendation()->type == 1)
                                             <a href="" class="btn btn-warning" data-toggle="modal"
                                                 data-target="#ticketTransferModal" title="Click to Transfer"
                                                 onclick="setType('1')">
                                                 <i class="fa fa-undo" aria-hidden="true"></i>
                                                 Transfer Recommendation
-                                            </a>
+                                            </a>  
+                                        @else
+                                        <button class="btn btn-danger" title="Already Recommended" disabled>
+                                            <i class='fas fa-check-circle'></i>
+                                            Transfer Recommended
+                                        </button>   
                                         @endif
                                     @endif
                                 @endif
-                            @elseif(($ticket->is_re_assigned == 0 && $ticket->status == 2) || $ticket->status == 13)
+                            {{-- @elseif(($ticket->is_re_assigned == 0 && $ticket->status == 2) || $ticket->status == 13) --}}
+                            @elseif($ticket->status == 0)
                                 @if (
                                     $is_teamleader != null ||
                                         $user_role->name == 'Admin' ||
@@ -99,11 +101,16 @@
                                         Assign To Technician
                                     </a>
                                 @endif
-                            @else
-                                <button class="btn btn-danger" title="Alredy Assigned">
+                            @elseif($ticket->status == 13)
+                                <button class="btn btn-danger" title="Already Recommended" disabled>
                                     <i class='fas fa-check-circle'></i>
-                                    Assigned
+                                    Transfer Recommended
                                 </button>
+                            @elseif($ticket->status == 1)
+                            <button class="btn btn-danger" title="Already Assigned" disabled>
+                                <i class='fas fa-check-circle'></i>
+                                Assigned
+                            </button>
                             @endif
 
                             @if ($ticket->status == 7 && $ticket->is_delivered_by_teamleader == 0)
@@ -221,6 +228,8 @@
                                             <span class="badge bg-blue">Assigned</span>
                                         @elseif ($ticket->status == 2 && $ticket->is_rejected == 1)
                                             <span class="badge bg-red">Rejected</span>
+                                        @elseif ($ticket->status == 13)
+                                            <span class="badge bg-info">Transfer Recommened</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -515,7 +524,7 @@
                                                     <div>
                                                         <span>#</span><strong>{{ $loop->iteration }}</strong>
 
-                                                        @if ($loop->last && $ticket->status == 2)
+                                                        @if ($loop->last && $ticket->status == 13)
                                                             {{-- @dd($ticket->lastRecommendationByCc->created_by != Auth::user()->id) --}}
                                                             {{-- @dd(Auth::user()->roles->first()) --}}
                                                             @if (Auth::user()->roles->first()->name == 'Call Centre' ||
