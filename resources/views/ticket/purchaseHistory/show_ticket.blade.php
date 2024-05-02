@@ -59,12 +59,8 @@
                         <div class="card-header-right">
                             <button id="print" class="btn btn-info">Print</button>
 
-                            @if ($ticket->status == 13 )
-                                @if (
-                                    $is_teamleader != null ||
-                                        $user_role->name == 'Admin' ||
-                                        $user_role->name == 'Super Admin' ||
-                                        $user_role->name == 'Call Center Admin')
+                            @if ($ticket->status == 13)
+                            @if ($is_teamleader != null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin')
                                     @if (isset($ticket->lastJob))
                                         @if ($ticket->lastJob()->first()->created_by != Auth::user()->id && $ticket->lastRecommendation()->type == 2)
                                             <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
@@ -90,12 +86,8 @@
                                     @endif
                                 @endif
                             {{-- @elseif(($ticket->is_re_assigned == 0 && $ticket->status == 2) || $ticket->status == 13) --}}
-                            @elseif($ticket->status == 0)
-                                @if (
-                                    $is_teamleader != null ||
-                                        $user_role->name == 'Admin' ||
-                                        $user_role->name == 'Super Admin' ||
-                                        $user_role->name == 'Call Center Admin')
+                            @elseif($ticket->status == 0 || $ticket->status == 2)
+                                @if ($is_teamleader != null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin')
                                     <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
                                         <i class='fas fa-check-circle'></i>
                                         Assign To Technician
@@ -111,6 +103,65 @@
                                 <i class='fas fa-check-circle'></i>
                                 Assigned
                             </button>
+                            @endif
+                            {{-- Old Code --}}
+                            {{-- @if (($ticket->status == 0 || $ticket->status == 2 || $ticket->status == 9 || $ticket->status == 6) && $ticket->is_assigned == 0)
+                                @if ($is_teamleader != null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin')
+                                <a href="{{route('job.job_create', $ticket->id)}}" class="btn btn-primary">
+                                    <i class='fas fa-check-circle'></i>
+                                    Assign To Technician
+                                </a>
+                                @endif
+                            @elseif($ticket->is_re_assigned == 0 && $ticket->is_rejected == 1 && $ticket->status == 2)
+                                @if ($is_teamleader != null || $user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin')
+                                    <a href="{{route('job.job_create', $ticket->id)}}" class="btn btn-primary">
+                                        <i class='fas fa-check-circle'></i>
+                                        Assign To Technician
+                                    </a>
+                                @endif 
+                            @else
+                                <button class="btn btn-danger" title="Alredy Assigned">
+                                    <i class='fas fa-check-circle'></i>
+                                    Assigned
+                                </button>      
+                            @endif --}}
+                            
+                            @if (in_array($ticket->status, [0, 2, 9, 6]) &&
+                                    $ticket->is_assigned === 0 &&
+                                    ($is_teamleader !== null || in_array($user_role->name, ['Admin', 'Super Admin', 'Call Center Admin'])))
+                                <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
+                                    <i class="fas fa-check-circle"></i>
+                                    Assign To Technician
+                                </a>
+                                @if (isset($ticket->lastJob))
+                                    @if ($ticket->lastJob()->first()->created_by == Auth::user()->id)
+                                        <a href="" class="btn btn-warning" data-toggle="modal"
+                                            data-target="#ticketTransferModal" title="Click to Transfer"
+                                            onclick="setType('1')">
+                                            <i class="fa fa-undo" aria-hidden="true"></i>
+                                            Transfer Recommendation
+                                        </a>  
+                                    @else
+                                    <button class="btn btn-danger" title="Already Recommended" disabled>
+                                        <i class='fas fa-check-circle'></i>
+                                        Transfer Recommended
+                                    </button>   
+                                    @endif
+                                @endif
+                            {{-- @elseif (
+                                $ticket->is_re_assigned === 0 &&
+                                    $ticket->is_rejected === 1 &&
+                                    $ticket->status === 2 &&
+                                    ($is_teamleader !== null || in_array($user_role->name, ['Admin', 'Super Admin', 'Call Center Admin'])))
+                                <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
+                                    <i class="fas fa-check-circle"></i>
+                                    Assign To Technician
+                                </a> --}}
+                            @else
+                                <button class="btn btn-danger" disabled title="Already Assigned">
+                                    <i class="fas fa-check-circle"></i>
+                                    Assigned
+                                </button>
                             @endif
 
                             @if ($ticket->status == 7 && $ticket->is_delivered_by_teamleader == 0)
