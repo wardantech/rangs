@@ -54,11 +54,18 @@ class TicketService
             });
     }    
     
+    // public static function extendForoutlet($query, $outletId)
+    // {
+    //     return $query->where('tickets.outlet_id', $outletId);
+    // }
     public static function extendForoutlet($query, $outletId)
     {
-        return $query->where('tickets.outlet_id', $outletId);
+        return $query->where(function ($query) use ($outletId) {
+            $query->where('tickets.outlet_id', $outletId)
+                ->orWhere('ticket_recommendations.outlet_id', $outletId);
+        });
     }
-
+    
     public static function extendForStatus($query, $statusId)
     {
         return $query->whereIn('tickets.status', $statusId);

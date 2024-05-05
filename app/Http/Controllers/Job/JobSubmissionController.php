@@ -284,6 +284,11 @@ class JobSubmissionController extends Controller
                     // }
                 }
             }
+            $ticket = Ticket::where('id',$job->ticket_id)
+            ->update([
+                'status' => 11,
+                'is_ended' => 1,
+            ]);
             DB::commit();
             return redirect()->route('technician.jobs.show',$job->id)->with('success', __('Job Submitted successfully.'));
         } catch (\Exception $e) {

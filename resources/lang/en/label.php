@@ -432,7 +432,7 @@ return [
     'CARRIER_INFO' => 'Carrier Information',
     'CARRIER_NAME' => 'Carrier Name',
     'CARRIER_PHONE' => 'Carrier Phone',
-    'SHOW_THICKET' => 'Show Ticket Details',
+    'SHOW_TICKET' => 'Show Ticket Details',
     'BRANCH' => 'Branch',
     'WARRANTY' => 'Warranty',
     'SEARCH' => 'Search',

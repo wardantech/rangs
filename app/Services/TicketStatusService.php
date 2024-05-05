@@ -30,6 +30,9 @@ class TicketStatusService
     {
         return $this->getStatusQuery()
             ->where('tickets.outlet_id', $outletId)
+            ->orWhere(function ($query) use ($outletId) {
+                $query->where('ticket_recommendations.outlet_id', $outletId);
+            })
             // ->whereNull('tickets.deleted_at')
             ->first();
     }
@@ -38,7 +41,6 @@ class TicketStatusService
     {
         return DB::table('tickets')
         ->leftJoin('ticket_recommendations', function($join) {
-            // $join->on('ticket_recommendations.ticket_id', '=', 'tickets.id')
             $join->on('ticket_recommendations.ticket_id', '=', 'tickets.id')
                 ->where('tickets.status', '=', 13)
                  ->where('ticket_recommendations.type', '=', 2)
