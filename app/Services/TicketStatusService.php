@@ -17,23 +17,51 @@ class TicketStatusService
     public function totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $outletId)
     {
         return $this->getStatusQuery()
-            ->whereIn('district_id', $districtIds)
-            ->whereIn('thana_id', $thanaIds)
-            ->whereIn('product_category_id', $categoryIds)
-            ->orWhere(function ($query) use ($outletId) {
-                $query->where('ticket_recommendations.outlet_id', $outletId);
+            ->where(function ($query) use ($districtIds, $thanaIds, $categoryIds, $outletId) {
+                $query->whereIn('district_id', $districtIds)
+                    ->whereIn('thana_id', $thanaIds)
+                    ->whereIn('product_category_id', $categoryIds)
+                    ->orWhere(function ($query) use ($outletId) {
+                        $query->where('ticket_recommendations.referrer_outlet_id', $outletId)
+                            ->where('ticket_recommendations.type', 1);
+                    })
+                    ->orWhere(function ($query) use ($outletId) {
+                        $query->where('ticket_recommendations.recommended_outlet_id', $outletId)
+                            ->where('ticket_recommendations.type', 2);
+                    });
             })
             ->first();
     }
+    
+
+    // public function totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $outletId)
+    // {
+    //     return $this->getStatusQuery()
+    //         ->whereIn('district_id', $districtIds)
+    //         ->whereIn('thana_id', $thanaIds)
+    //         ->whereIn('product_category_id', $categoryIds)
+
+    //         ->orWhere(function ($query) use ($outletId) {
+    //             $query->where('ticket_recommendations.referrer_outlet_id', $outletId)
+    //                 ->where('ticket_recommendations.type', 1);
+    //         })
+    //         ->orWhere(function ($query) use ($outletId) {
+    //             $query->where('ticket_recommendations.recommended_outlet_id', $outletId)
+    //                 ->where('ticket_recommendations.type', 2);
+    //         })
+    //         ->first();
+    // }
 
     public function totalStatusByOutlet($outletId)
     {
         return $this->getStatusQuery()
             ->where('tickets.outlet_id', $outletId)
             ->orWhere(function ($query) use ($outletId) {
-                $query->where('ticket_recommendations.outlet_id', $outletId);
+                $query->where('ticket_recommendations.referrer_outlet_id', $outletId);
             })
-            // ->whereNull('tickets.deleted_at')
+            ->orWhere(function ($query) use ($outletId) {
+                $query->where('ticket_recommendations.recommended_outlet_id', $outletId);
+            })
             ->first();
     }
 
@@ -43,8 +71,17 @@ class TicketStatusService
         ->leftJoin('ticket_recommendations', function($join) {
             $join->on('ticket_recommendations.ticket_id', '=', 'tickets.id')
                 ->where('tickets.status', '=', 13)
-                 ->where('ticket_recommendations.type', '=', 2)
-                 ->whereRaw('ticket_recommendations.created_at = (SELECT MAX(created_at) FROM ticket_recommendations WHERE ticket_id = tickets.id AND type = 2)');
+                ->where('ticket_recommendations.type', '=', 1)
+                ->whereNull('ticket_recommendations.deleted_at')
+                ->whereRaw('ticket_recommendations.created_at = (SELECT MAX(created_at) FROM ticket_recommendations WHERE ticket_id = tickets.id AND type = 1)');
+        })
+
+        ->leftJoin('ticket_recommendations as cc_outgoing_transfer', function($join) {
+            $join->on('cc_outgoing_transfer.ticket_id', '=', 'tickets.id')
+                ->where('tickets.status', '=', 13)
+                ->where('cc_outgoing_transfer.type', '=', 2)
+                ->whereNull('cc_outgoing_transfer.deleted_at')
+                ->whereRaw('cc_outgoing_transfer.created_at = (SELECT MAX(created_at) FROM ticket_recommendations WHERE ticket_id = tickets.id AND type = 2)');
         })
         ->selectRaw("count(case when tickets.deleted_at IS NULL then 1 end) as total")
         ->selectRaw("count(case when tickets.status = 0 and tickets.deleted_at IS NULL then 1 end) as created")
@@ -60,6 +97,7 @@ class TicketStatusService
         ->selectRaw("count(case when tickets.status = 10 and is_delivered_by_call_center = 1 and tickets.deleted_at IS NULL then 1 end) as deliveredby_call_center")
         ->selectRaw("count(case when tickets.status = 8 and is_delivered_by_teamleader = 1 and tickets.deleted_at IS NULL then 1 end) as deliveredby_teamleader")
         ->selectRaw("count(case when tickets.status = 12 and is_delivered_by_call_center = 0 and is_ended = 1 and is_closed = 1 and tickets.deleted_at IS NULL then 1 end) as undelivered_close")
-        ->selectRaw("count(case when tickets.status = 13 and tickets.deleted_at IS NULL then 1 end) as recommended");
+        ->selectRaw("count(case when tickets.status = 13 and tickets.deleted_at IS NULL and ticket_recommendations.type = 1 then 1 end) as tl_recommended")
+        ->selectRaw("count(case when tickets.status = 13 and cc_outgoing_transfer.id IS NOT NULL and tickets.deleted_at IS NULL and cc_outgoing_transfer.type = 2 then 1 end) as cc_outgoing_transfer_count");
     }
 }
