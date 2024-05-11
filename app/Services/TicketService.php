@@ -27,7 +27,13 @@ class TicketService
                  ->where('ticket_recommendations.type', '=', 2)
                  ->whereRaw('ticket_recommendations.created_at = (SELECT MAX(created_at) FROM ticket_recommendations WHERE ticket_id = tickets.id AND type = 2)');
         })
-        ->select('ticket_recommendations.referrer_outlet_id','ticket_recommendations.recommended_outlet_id','users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+        ->leftJoin('ticket_transfers', function($join) {
+            $join->on('ticket_transfers.ticket_id', '=', 'tickets.id')
+                ->where('tickets.status', '=', 14)
+                ->whereNull('ticket_transfers.deleted_at')
+                ->whereRaw('ticket_transfers.created_at = (SELECT MAX(created_at) FROM ticket_transfers WHERE ticket_id = tickets.id)');
+        })
+        ->select('ticket_recommendations.referrer_outlet_id','ticket_recommendations.recommended_outlet_id','ticket_transfers.referrer_outlet_id','ticket_transfers.recommended_outlet_id','users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
         'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
         'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
         'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
@@ -48,13 +54,15 @@ class TicketService
             $query->whereIn('tickets.district_id', $districtIds)
                     ->whereIn('tickets.thana_id', $thanaIds)
                     ->whereIn('tickets.product_category_id', $categoryIds)
+
                     ->orWhere(function ($query) use ($outletId) {
-                        $query->where('ticket_recommendations.referrer_outlet_id', $outletId)
-                            ->where('ticket_recommendations.type', 1);
+                        $query->where('ticket_recommendations.referrer_outlet_id', $outletId);
                     })
                     ->orWhere(function ($query) use ($outletId) {
-                        $query->where('ticket_recommendations.recommended_outlet_id', $outletId)
-                            ->where('ticket_recommendations.type', 2);
+                        $query->where('ticket_transfers.referrer_outlet_id', $outletId);
+                    })
+                    ->orWhere(function ($query) use ($outletId) {
+                        $query->where('ticket_transfers.recommended_outlet_id', $outletId);
                     });
             });
     }    
@@ -69,6 +77,12 @@ class TicketService
             $query->where('tickets.outlet_id', $outletId)
                     ->orWhere(function ($query) use ($outletId) {
                         $query->where('ticket_recommendations.referrer_outlet_id', $outletId);
+                })
+                ->orWhere(function ($query) use ($outletId) {
+                    $query->where('ticket_transfers.referrer_outlet_id', $outletId);
+                })
+                ->orWhere(function ($query) use ($outletId) {
+                    $query->where('ticket_transfers.recommended_outlet_id', $outletId);
                 });
         });
     }

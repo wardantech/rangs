@@ -72,9 +72,10 @@
                                             Assign To Technician
                                         </a>
                                     @endif
-                                    @if (isset($ticket->lastJob) && $ticket->lastJob->first())
+                                    @if (isset($ticket->jobs) && $ticket->jobs->first())
                                         @if (
-                                            $ticket->lastJob()->first()->created_by != Auth::user()->id &&
+                                            $ticket->jobs()->first()->created_by != Auth::user()->id &&
+                                                $ticket->lastRecommendation() &&
                                                 $ticket->lastRecommendation()->type == 2 &&
                                                 $ticket->transfers->last()->created_by != Auth::user()->id)
                                             <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
@@ -83,14 +84,14 @@
                                             </a>
                                         @endif
 
-                                        @if ($ticket->lastJob()->first()->created_by == Auth::user()->id && $ticket->lastRecommendation()->type == 1)
+                                        @if ($ticket->jobs()->first()->created_by == Auth::user()->id)
                                             <a href="" class="btn btn-warning" data-toggle="modal"
                                                 data-target="#ticketTransferModal" title="Click to Transfer"
                                                 onclick="setType('1')">
                                                 <i class="fa fa-undo" aria-hidden="true"></i>
                                                 Transfer Recommendation
                                             </a>
-                                        @else
+                                        @elseif($ticket->status == 13)
                                             <button class="btn btn-danger" title="Already Recommended" disabled>
                                                 <i class='fas fa-check-circle'></i>
                                                 Transfer Recommended
@@ -136,7 +137,7 @@
                                     @endif
                                 @endif
                             @elseif($ticket->status == 7)
-                                <button class="btn btn-danger" title="Closed By Team Leader">
+                                <button class="btn btn-danger" title="Closed By Team Leader" disabled>
                                     <i class='fas fa-check-circle'></i>
                                     Closed By Team Leader
                                 </button>
@@ -255,7 +256,9 @@
                                         @elseif ($ticket->status == 2 && $ticket->is_rejected == 1)
                                             <span class="badge bg-red">Rejected</span>
                                         @elseif ($ticket->status == 13)
-                                            <span class="badge bg-info">Transfer Recommened</span>
+                                            <span class="badge bg-yellow">Recommended By TL</span>
+                                        @elseif ($ticket->status == 14)
+                                            <span class="badge bg-blue">Transferred</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -530,12 +533,12 @@
                             </tbody>
                         </table>
 
-                        @if (!empty($ticket->lastJob()->first()))
+                        @if (!empty($ticket->jobs()->first()))
                             <hr class="mt-2 mb-3" />
                             <fieldset class="form-group border p-3" style="background: #ffffff">
-                                @if (!empty($ticket->lastJob()->first()->rejectNote))
+                                @if (!empty($ticket->jobs()->first()->rejectNote))
                                     <legend class="w-auto text-center">Last Job Reject Note By Technician</legend>
-                                    <p class="text-bold"># {{ $ticket->lastJob()->first()->rejectNote->decline_note }}</p>
+                                    <p class="text-bold"># {{ $ticket->jobs()->first()->rejectNote->decline_note }}</p>
                                     <hr>
                                 @endif
                                 <div class="mb-5">
@@ -551,15 +554,16 @@
                                                         <span>#</span><strong>{{ $loop->iteration }}</strong>
 
                                                         @if ($loop->last && $ticket->status == 13)
-                                                            @if (Auth::user()->roles->first()->name == 'Call Center' ||
+                                                            @if (Auth::user()->roles->first()->name == 'Call Centre' ||
                                                                     Auth::user()->roles->first()->name == 'Call Center Admin' ||
-                                                                    Auth::user()->roles->first()->name == 'Call Center Executive' )
-                                                                    @if (Auth::user()->employee->outlet_id != $ticket->recommendations->first()->outlet_id)
+                                                                    Auth::user()->roles->first()->name == 'Call Center Executive')
+                                                                @if (Auth::user()->employee->outlet_id != $ticket->recommendations->first()->outlet_id)
                                                                     <a href="" class="btn btn-success"
-                                                                    data-toggle="modal" data-target="#ticketTransferModal"
-                                                                    title="Click to Transfer"
-                                                                    onclick="setType('2')">Transfer The Ticket</a> 
-                                                                    @endif
+                                                                        data-toggle="modal"
+                                                                        data-target="#ticketTransferModal"
+                                                                        title="Click to Transfer"
+                                                                        onclick="setType('2')">Transfer The Ticket</a>
+                                                                @endif
                                                             @endif
                                                         @endif
                                                     </div>
@@ -583,7 +587,7 @@
                             </fieldset>
                         @endif
 
-                        @if (!empty($ticket->lastJob()->first()))
+                        @if (!empty($ticket->jobs()->first()))
                             <hr class="mt-2 mb-3" />
                             <fieldset class="form-group border p-3" style="background: #ffffff">
                                 <legend class="w-auto text-center">Transfered By Call Centers</legend>

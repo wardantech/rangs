@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Ticket\Ticket;
 use App\Models\Outlet\Outlet;
+use App\Models\User;
 
 class TicketTransfer extends Model
 {
@@ -21,6 +22,10 @@ class TicketTransfer extends Model
 
     public function outlet()
     {
-        return $this->belongsTo(Outlet::class, 'outlet_id')->withTrashed();
+        return $this->belongsTo(Outlet::class, 'recommended_outlet_id')->withTrashed();
+    }
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

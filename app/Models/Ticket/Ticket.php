@@ -158,7 +158,7 @@ class Ticket extends Model
 
     public function transfers()
     {
-        return $this->hasMany(TicketRecommendation::class)->where('type', 2);
+        return $this->hasMany(TicketTransfer::class);
     }
 
     public function lastRecommendation()

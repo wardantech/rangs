@@ -40,6 +40,8 @@ use App\Models\Job\JobAttachment;
 use App\Services\ImageUploadService;
 use App\Services\TicketStatusService;
 use App\Services\TicketService;
+use App\Models\Job\TicketRecommendation;
+use App\Models\Job\TicketTransfer;
 
 class PurchaseHistoryController extends Controller
 {
@@ -80,14 +82,20 @@ class PurchaseHistoryController extends Controller
                 $categoryIds = json_decode($teamLeader->group->category_id, true);
     
                 $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
+                $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCount($employee->outlet_id);
+                $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCount($employee->outlet_id);
 
             } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
 
                 $totalTicketStatus = $this->ticketStatusService->totalStatus();
+                $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCountForSuperAdmin();
+                $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCountForSuperAdmin();
 
             } else {
 
                 $totalTicketStatus = $this->ticketStatusService->totalStatusByOutlet($employee->outlet_id);
+                $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCount($employee->outlet_id);
+                $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCount($employee->outlet_id);
 
             }
             
@@ -269,6 +277,14 @@ class PurchaseHistoryController extends Controller
                         elseif ($ticket->status == 2 && $ticket->is_rejected == 1)
                         {
                             return '<span class="badge bg-red">Rejected</span>';
+                        }
+                        elseif ($tickets->status == 13 )
+                        {
+                            return '<span class="badge bg-yellow">Recommended By TL</span>';
+                        }
+                        elseif ($tickets->status == 14 )
+                        {
+                            return '<span class="badge bg-blue">Transferred</span>';
                         }
                         
                     })
@@ -821,17 +837,22 @@ class PurchaseHistoryController extends Controller
                 $categoryIds = json_decode($teamLeader->group->category_id, true);
     
                 $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
+                $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCount($employee->outlet_id);
+                $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCount($employee->outlet_id);
 
             } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
 
                 $totalTicketStatus = $this->ticketStatusService->totalStatus();
+                $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCountForSuperAdmin();
+                $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCountForSuperAdmin();
 
             } else {
 
                 $totalTicketStatus = $this->ticketStatusService->totalStatusByOutlet($employee->outlet_id);
+                $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCount($employee->outlet_id);
+                $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCount($employee->outlet_id);
 
             }
-           
 
             if (request()->ajax()) {
                 $serviceTypes = ServiceType::where('status', 1)->get(); 
@@ -921,6 +942,9 @@ class PurchaseHistoryController extends Controller
                                 break;
                         case 14:
                             $data->where('tickets.status', 13);
+                                break;
+                        case 15:
+                            $data->where('tickets.status', 14);
                                 break;
                     default:
                         return false;
@@ -1072,6 +1096,14 @@ class PurchaseHistoryController extends Controller
                         elseif ($tickets->status == 2 && $tickets->is_rejected == 1)
                         {
                             return '<span class="badge bg-red">Rejected</span>';
+                        }
+                        elseif ($tickets->status == 13 )
+                        {
+                            return '<span class="badge bg-yellow">Recommended By TL</span>';
+                        }
+                        elseif ($tickets->status == 14 )
+                        {
+                            return '<span class="badge bg-blue">Transferred</span>';
                         }
                         
                     })
@@ -1274,27 +1306,42 @@ class PurchaseHistoryController extends Controller
             'ticket_id' => 'required|exists:tickets,id',
             'outlet_id' => 'required|exists:outlets,id',
             'note' => 'required|string',
+            'type' => 'required|in:1,2',
         ]);
-
+    
         try {
             DB::beginTransaction();
             $ticket = Ticket::find($request->ticket_id);
-            $ticket->update(['status' => 13]);
 
-            \App\Models\Ticket\TicketRecommendation::create(
-            [
-                'ticket_id' => $request->ticket_id,
-                'outlet_id' => $request->outlet_id,
-                'recommend_note' => $request->note,
-                'type' => $request->type,
-                'created_by' => Auth::user()->id,
-            ]);
+            if ($request->type == 1) {
+                $ticket->update(['status' => 13]);
+                TicketRecommendation::create([
+                    'ticket_id' => $request->ticket_id,
+                    'referrer_outlet_id' => $ticket->outlet_id,
+                    'recommended_outlet_id' => $request->outlet_id,
+                    'recommend_note' => $request->note,
+                    'type' => $request->type,
+                    'created_by' => Auth::user()->id,
+                ]);
+                $msg = 'The ticket recommendation has been successfully completed.';
+            } else {
+                $ticket->update(['status' => 14]);
+                TicketTransfer::create([
+                    'ticket_id' => $request->ticket_id,
+                    'referrer_outlet_id' => $ticket->outlet_id,
+                    'recommended_outlet_id' => $request->outlet_id,
+                    'recommend_note' => $request->note,
+                    'created_by' => Auth::user()->id,
+                ]);
+                $msg = 'The ticket transfer has been successfully completed.';
+            }
+    
             DB::commit();
-            return response()->json(['message' => 'The ticket recommendation has been successfully completed.'], 200);
+            return response()->json(['message' => $msg], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['message'=>$e->getMessage()], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         }
-
     }
+    
 }

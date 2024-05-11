@@ -22,7 +22,7 @@ class TicketRecommendation extends Model
 
     public function outlet()
     {
-        return $this->belongsTo(Outlet::class, 'outlet_id')->withTrashed();
+        return $this->belongsTo(Outlet::class, 'recommended_outlet_id')->withTrashed();
     }
 
     public function createdBy()
