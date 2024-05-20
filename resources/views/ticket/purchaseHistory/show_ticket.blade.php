@@ -58,25 +58,24 @@
 
                         <div class="card-header-right">
                             <button id="print" class="btn btn-info">Print</button>
-
-                            @if ($ticket->status == 0 || $ticket->status == 2 || $ticket->status == 9 || $ticket->status == 13)
+                            {{-- See status code in status column of tickets table --}}
+                            @if ($ticket->status == 0 || $ticket->status == 2 || $ticket->status == 9 || $ticket->status == 14)
                                 @if (
                                     $is_teamleader != null ||
                                         $user_role->name == 'Admin' ||
                                         $user_role->name == 'Super Admin' ||
                                         // $user_role->name == 'Call Center' ||
                                         $user_role->name == 'Call Center Admin')
-                                    @if ($ticket->status != 13)
+                                    @if ($ticket->status != 13 && optional($ticket->recommendations->last())->created_by != Auth::user()->id)
                                         <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
-                                            <i class='fas fa-tasks'></i>
+                                            <i class='fas fa-ttasks'></i>
                                             Assign To Technician
                                         </a>
                                     @endif
+
                                     @if (isset($ticket->jobs) && $ticket->jobs->first())
                                         @if (
                                             $ticket->jobs()->first()->created_by != Auth::user()->id &&
-                                                $ticket->lastRecommendation() &&
-                                                $ticket->lastRecommendation()->type == 2 &&
                                                 $ticket->transfers->last()->created_by != Auth::user()->id)
                                             <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
                                                 <i class='fas fa-tasks'></i>
@@ -84,21 +83,26 @@
                                             </a>
                                         @endif
 
-                                        @if ($ticket->jobs()->first()->created_by == Auth::user()->id)
+                                        @if ($ticket->status == 2 && $ticket->jobs()->first()->created_by == Auth::user()->id)
                                             <a href="" class="btn btn-warning" data-toggle="modal"
                                                 data-target="#ticketTransferModal" title="Click to Transfer"
                                                 onclick="setType('1')">
                                                 <i class="fa fa-undo" aria-hidden="true"></i>
                                                 Transfer Recommendation
                                             </a>
-                                        @elseif($ticket->status == 13)
-                                            <button class="btn btn-danger" title="Already Recommended" disabled>
-                                                <i class='fas fa-check-circle'></i>
-                                                Transfer Recommended
-                                            </button>
                                         @endif
                                     @endif
                                 @endif
+                            @elseif($ticket->status == 4)
+                                <button class="btn btn-danger" title="Already Recommended" disabled>
+                                    <i class='fas fa-check-circle'></i>
+                                    Ticket Assigned
+                                </button>
+                            @elseif($ticket->status == 13)
+                                <button class="btn btn-danger" title="Already Recommended" disabled>
+                                    <i class='fas fa-check-circle'></i>
+                                    Transfer Recommended
+                                </button>
                             @endif
 
                             @if ($ticket->status == 7 && $ticket->is_delivered_by_teamleader == 0)

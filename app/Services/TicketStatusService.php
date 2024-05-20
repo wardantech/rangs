@@ -72,6 +72,7 @@ class TicketStatusService
     {
         return DB::table('ticket_transfers')
             ->join('tickets', 'ticket_transfers.ticket_id', '=', 'tickets.id')
+            ->where('tickets.status', '=', 14)
             ->where('ticket_transfers.referrer_outlet_id', $outletId)
             ->whereNull('ticket_transfers.deleted_at')
             ->whereNull('tickets.deleted_at')
@@ -83,6 +84,7 @@ class TicketStatusService
     {
         return DB::table('ticket_transfers')
             ->join('tickets', 'ticket_transfers.ticket_id', '=', 'tickets.id')
+            ->where('tickets.status', '=', 14)
             ->where('ticket_transfers.recommended_outlet_id', $outletId)
             ->whereNull('ticket_transfers.deleted_at')
             ->whereNull('tickets.deleted_at')
@@ -94,6 +96,7 @@ class TicketStatusService
     {
         return DB::table('ticket_transfers')
             ->join('tickets', 'ticket_transfers.ticket_id', '=', 'tickets.id')
+            ->where('tickets.status', '=', 14)
             ->whereNotNull('ticket_transfers.referrer_outlet_id')
             ->whereNull('ticket_transfers.deleted_at')
             ->whereNull('tickets.deleted_at')
@@ -105,6 +108,7 @@ class TicketStatusService
     {
         return DB::table('ticket_transfers')
             ->join('tickets', 'ticket_transfers.ticket_id', '=', 'tickets.id')
+            ->where('tickets.status', '=', 14)
             ->whereNotNull('ticket_transfers.recommended_outlet_id')
             ->whereNull('ticket_transfers.deleted_at')
             ->whereNull('tickets.deleted_at')

@@ -40,8 +40,8 @@ use App\Models\Job\JobAttachment;
 use App\Services\ImageUploadService;
 use App\Services\TicketStatusService;
 use App\Services\TicketService;
-use App\Models\Job\TicketRecommendation;
-use App\Models\Job\TicketTransfer;
+use App\Models\Ticket\TicketRecommendation;
+use App\Models\Ticket\TicketTransfer;
 
 class PurchaseHistoryController extends Controller
 {
