@@ -16,9 +16,10 @@ class CreateTicketRecommendationsTable extends Migration
         Schema::create('ticket_recommendations', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('ticket_id')->index();
-            $table->unsignedInteger('outlet_id')->index()->nullable();
+            $table->unsignedInteger('referrer_outlet_id')->index();
+            $table->unsignedInteger('recommended_outlet_id')->index();
             $table->string('recommend_note')->nullable();
-            $table->tinyInteger('type')->commet("1=Recommend, 2=Transfer");
+            $table->tinyInteger('type')->default(1)->commet("1=TeamLeader 2=Call Center	");
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
             $table->timestamps();

@@ -163,8 +163,8 @@
                                         <label for="technician_type">Technician Type<span class="text-red">*</span></label>
                                         <select name="technician_type" id="technician_type" class="form-control">
                                             <option value="">Select</option>
-                                            <option value="1">Own Technician</option>
-                                            <option value="2">Vendor Technician</option>
+                                            <option value="1" {{ old('technician_type') == '1' ? 'selected' : '' }}>Own Technician</option>
+                                            <option value="2" {{ old('technician_type') == '2' ? 'selected' : '' }}>Vendor Technician</option>
                                         </select>
                                         @if ($errors->has('technician_type'))
                                             <span class="text-danger">
@@ -178,9 +178,6 @@
                                         <label for="employee">{{ __('label.ASSIGN_TO_TECHNICIAN')}}<span class="text-red">*</span></label>
                                         <select name="user_id" id="employee" class="form-control select2">
                                             <option value="">Select</option>
-                                            {{-- @foreach ($employees as $employee)
-                                            <option value="{{$employee->id}}">{{$employee->name}}</option>
-                                            @endforeach --}}
                                         </select>
                                         @if ($errors->has('user_id'))
                                             <span class="text-danger">
@@ -194,7 +191,6 @@
                                 <div class="col-md-12">
                                     <div class="position-relative form-group">
                                         <label for="note">{{ __('label.NOTE')}}<span class="text-red">*</span></label>
-                                        {{-- <input name="note"  placeholder="" type="text" class="form-control" value="{{ old('note') }}"> --}}
                                         <textarea name="note" id="" cols="30" rows="" style="width:100%">{{ old('note') }}</textarea>
                                         @if ($errors->has('note'))
                                             <span class="text-danger">
@@ -229,16 +225,6 @@
                     </div>
                 </div>
             </div>
-            {{-- <div class="col-md-12">
-                <div class="card ">
-                    <div class="card-header">
-                        <h3>Summerty</h3>
-                    </div>
-                    <div class="card-body">
-
-                    </div>
-                </div>
-            </div> --}}
         </div>
     </div>
     <!-- push external js -->

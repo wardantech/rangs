@@ -16,7 +16,8 @@ class CreateTicketTransfersTable extends Migration
         Schema::create('ticket_transfers', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('ticket_id')->index();
-            $table->unsignedInteger('outlet_id')->index();
+            $table->unsignedInteger('referrer_outlet_id')->index();
+            $table->unsignedInteger('recommended_outlet_id')->index();
             $table->string('recommend_note')->nullable();
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
