@@ -24,6 +24,7 @@ use App\Models\Job\CustomerAdvancedPayment;
 use Illuminate\Support\Str;
 use Image;
 use App\Services\ImageUploadService;
+use App\Models\Ticket\Ticket;
 
 class JobSubmissionController extends Controller
 {
@@ -250,7 +251,8 @@ class JobSubmissionController extends Controller
             $job=Job::where('id',$request->job_id)->first();
             $job->update([
                 'status' => 4,
-                'is_submitted'=>1
+                'is_submitted'=>1,
+                'is_paused'=>0
             ]);
             $jobSubmission = JobSubmission::create([
                 'outlet_id' =>  $employee ? $employee->outlet_id : null,
@@ -284,11 +286,11 @@ class JobSubmissionController extends Controller
                     // }
                 }
             }
-            $ticket = Ticket::where('id',$job->ticket_id)
-            ->update([
-                'status' => 11,
-                'is_ended' => 1,
-            ]);
+            // $ticket = Ticket::where('id',$job->ticket_id)
+            // ->update([
+            //     'status' => 11,
+            //     'is_ended' => 1,
+            // ]);
             DB::commit();
             return redirect()->route('technician.jobs.show',$job->id)->with('success', __('Job Submitted successfully.'));
         } catch (\Exception $e) {

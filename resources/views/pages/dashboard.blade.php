@@ -394,6 +394,60 @@
                     </a>
                 </div>
             </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="widget bg-yellow">
+                    <a href="{{ route('tickets.status', 14) }}">
+                        <div class="widget-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="state">
+                                    <h6>{{ __('Recommended') }}</h6>
+                                    <h2>{{ $totalTicketStatus->tl_recommended }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="widget bg-blue">
+                    <a id="incoming_transfer_link" href="{{ route('tickets.status', 15) }}">
+                        <div class="widget-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="state">
+                                    <h6>{{ __('Incoming Transfers') }}</h6>
+                                    @if (isset($totalTicketStatus->cc_incoming_transfer_count))
+                                        <h2>{{ $totalTicketStatus->cc_incoming_transfer_count }}</h2>
+                                    @else
+                                        <h2>0</h2>
+                                    @endif
+
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="widget bg-navy">
+                    <a id="outgoing_transfer_link" href="{{ route('tickets.status', 15) }}">
+                        <div class="widget-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="state">
+                                    <h6>{{ __('Outgoing Transfers') }}</h6>
+                                    {{-- <h2>{{ $totalTicketStatus->cc_outgoing_transfer_count }}</h2> --}}
+                                    @if (isset($totalTicketStatus->cc_outgoing_transfer_count))
+                                        <h2>{{ $totalTicketStatus->cc_outgoing_transfer_count }}</h2>
+                                    @else
+                                        <h2>0</h2>
+                                    @endif
+
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
         </div>
         @endcanany
     </div>

@@ -129,11 +129,6 @@ class Ticket extends Model
         return $this->hasMany(Job::class, 'ticket_id');
     }
 
-    public function lastJob()
-    {
-        return $this->hasOne(Job::class)->latest();
-    }
-
     public function warrantytype()
     {
         return $this->belongsTo(WarrantyType::class, 'warranty_type_id');
@@ -143,13 +138,6 @@ class Ticket extends Model
     {
         return $this->hasMany(JobAttachment::class, 'ticket_id');
     }
-
-    // public function recommend()
-    // {
-    //     return $this->hasOne(TicketRecommendation::class)
-    //         ->where('outlet_id', $this->outlet_id)
-    //         ->where('teamleader_id', $this->teamleader_id);
-    // }
 
     public function recommendations()
     {

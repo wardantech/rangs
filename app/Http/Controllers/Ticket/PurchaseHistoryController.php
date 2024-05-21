@@ -427,7 +427,7 @@ class PurchaseHistoryController extends Controller
             }
 
             $ticket_sl = $this->generateUniqueTicketSl();
-
+ 
             $tickt=Ticket::create([
                 'date' =>  $request->date,
                 'outlet_id' =>  $request->outlet_id,

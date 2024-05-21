@@ -68,22 +68,22 @@
                                         $user_role->name == 'Call Center Admin')
                                     @if ($ticket->status != 13 && optional($ticket->recommendations->last())->created_by != Auth::user()->id)
                                         <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
-                                            <i class='fas fa-ttasks'></i>
+                                            <i class='fas fa-tasks'></i>
                                             Assign To Technician
                                         </a>
                                     @endif
 
-                                    @if (isset($ticket->jobs) && $ticket->jobs->first())
-                                        @if (
+                                    @if (isset($ticket->jobs) && optional($ticket->jobs->last()))
+                                        {{-- @if (
                                             $ticket->jobs()->first()->created_by != Auth::user()->id &&
                                                 $ticket->transfers->last()->created_by != Auth::user()->id)
                                             <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
                                                 <i class='fas fa-tasks'></i>
                                                 Assign To Technician
                                             </a>
-                                        @endif
+                                        @endif --}}
 
-                                        @if ($ticket->status == 2 && $ticket->jobs()->first()->created_by == Auth::user()->id)
+                                        @if ($ticket->status == 2 && $ticket->jobs->last()->created_by == Auth::user()->id)
                                             <a href="" class="btn btn-warning" data-toggle="modal"
                                                 data-target="#ticketTransferModal" title="Click to Transfer"
                                                 onclick="setType('1')">
@@ -591,7 +591,7 @@
                             </fieldset>
                         @endif
 
-                        @if (!empty($ticket->jobs()->first()))
+                        @if (!empty($ticket->jobs()->first()) && $ticket->transfers)
                             <hr class="mt-2 mb-3" />
                             <fieldset class="form-group border p-3" style="background: #ffffff">
                                 <legend class="w-auto text-center">Transfered By Call Centers</legend>

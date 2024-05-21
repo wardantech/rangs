@@ -50,10 +50,20 @@ class DashBoardController extends Controller
             $categoryIds = json_decode($teamLeader->group->category_id, true);
 
             $totalTicketStatus = $this->ticketStatusService->totalStatusByTeam($districtIds, $thanaIds, $categoryIds, $employee->outlet_id);
+            $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCount($employee->outlet_id);
+            $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCount($employee->outlet_id);
+
         } elseif ($user_role->name == 'Admin' || $user_role->name == 'Super Admin' || $user_role->name == 'Call Center Admin') {
+            
             $totalTicketStatus = $this->ticketStatusService->totalStatus();
+            $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCountForSuperAdmin();
+            $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCountForSuperAdmin();
+
         } else {
+
             $totalTicketStatus = $this->ticketStatusService->totalStatusByOutlet($employee->outlet_id);
+            $totalTicketStatus->cc_outgoing_transfer_count = $this->ticketStatusService->getOutgoingTransferCount($employee->outlet_id);
+            $totalTicketStatus->cc_incoming_transfer_count = $this->ticketStatusService->getIncomingTransferCount($employee->outlet_id);
         }
 
        return view('pages.dashboard', compact('totalJobStatus','totalTicketStatus'));
