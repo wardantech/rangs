@@ -655,9 +655,25 @@ class JobController extends Controller
                 $job->update([
                     'is_paused' => 0,
                     'status' => 3,
+                    'is_pending' => 0,
                 ]);
                 $ticket->update([
                     'is_paused' => 0,
+                    'status' => 4,
+                ]);
+                
+                $message='Job is re-started successfully';
+            }
+            elseif ($job->is_started == 1 && $job->status == 5) {
+                $job->update([
+                    'is_paused' => 0,
+                    'status' => 3,
+                    'is_started' => 0,
+                    'is_pending' => 0,
+                ]);
+                $ticket->update([
+                    'is_paused' => 0,
+                    'is_pending' => 0,
                     'status' => 4,
                 ]);
                 
@@ -678,6 +694,7 @@ class JobController extends Controller
                 $job->update([
                     'status' => 3,
                     'is_started' => 1,
+                    'is_pending' => 0,
                     'job_start_time' => $current,
                 ]);                
                 $ticket->update([
@@ -708,6 +725,8 @@ class JobController extends Controller
             $job->update([
                 'status' => 4,
                 'is_ended' => 1,
+                'is_pending'=>0,
+                'is_paused'=>0,
                 'job_end_time' => $current,
                 'job_ending_remark' => $request->remark,
                 'job_close_remark' => $request->job_close_remark,

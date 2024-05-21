@@ -57,7 +57,8 @@
                             @php
                                 $role=Auth::user()->roles->first();
                             @endphp
-                            @if ($job->is_ended != 1 && $role->name == "Technician")
+                            {{-- See job status code in status column of jobs table --}}
+                            @if ($job->is_submitted == 0 && $role->name == "Technician")
                                 @if ($job->status != 2)
                                     @can('create')
                                         <a href="{{url('technician/requisition-by-job', $job->id)}}" class="btn btn-primary">
@@ -103,8 +104,10 @@
                                     Reject
                                 </a>
                                 @endif
-                                @if($job->status != 0 && $job->is_started == 1 )
-                                        @if ($job->is_submitted != 1 && $job->status != 6)
+
+                                @if($job->status != 0 && $job->is_started == 1 && $job->is_ended == 1)
+
+                                        @if ($job->is_submitted == 0 && $job->status != 6)
                                             <a href="{{ route('technician.job-submission-create', $job->id) }}" class="btn btn-info" title="Submit Now">
                                                 <i class="far fa-smile"></i>
                                                 Submit
@@ -115,24 +118,24 @@
                                             <button class="btn btn-info" title="Already Submitted" disabled><i class="far fa-smile"></i> Submitted </button> 
                                         @endif
                                 @endif
-                                @if($job->is_ended == 0 && $job->is_submitted == 1)
+                                @if($job->status == 3 && $job->is_ended == 0 && $job->is_submitted == 0 && $job->is_pending == 0)
                                         <a href="" class="btn bg-red text-white" data-toggle="modal" data-target="#endJobModal" title="End Now">
                                             <i class='fas fa-cut'></i>
                                             End Job
                                         </a>
                                 @endif
-                                @if($job->status !=0 )
-                                    @if ($job->is_started == 1 && $job->is_paused == 0)
+                                @if($job->status !=4 )
+                                    @if ($job->status != 4 && $job->is_started == 1 && $job->is_paused == 0)
                                     <a href="{{route('job.start-job', $job->id)}}" class="btn btn-success" title="Job is started, pause now">
                                         <i class='far fa-pause-circle'></i>
                                         Pause Job
                                     </a>
-                                    @elseif($job->is_started == 1 && $job->is_paused == 1)
+                                    @elseif(($job->is_started == 1 && $job->is_paused == 1) || $job->status == 5 || $job->status == 6 )
                                     <a href="{{route('job.start-job', $job->id)}}" class="btn btn-success" title="Job is paused, restart now">
                                         <i class='far fa-play-circle'></i>
                                         Re-Start Job
                                     </a> 
-                                    @else
+                                    @elseif($job->status == 1)
                                     <a href="{{route('job.start-job', $job->id)}}" class="btn btn-success" title="Start Job">
                                         <i class='fas fa-check'></i>
                                         Start Job
@@ -140,7 +143,7 @@
                                     @endif
                                 @endif 
                             @endif
-                            @if (($role->name == "Technician" || $role->name == "Team Leader") && $job->is_ended == 1 && $job->withdraw_request==0)
+                            @if (($role->name == "Technician" || $role->name == "Team Leader") && $job->is_submitted == 1 && $job->withdraw_request==0)
                                 <a href="{{route('technician.withdraw', $job->id)}}" class="btn btn-danger" title="CLick To Send A Request">
                                     <i class="fas fa-dolly"></i>
                                     Withdraw
