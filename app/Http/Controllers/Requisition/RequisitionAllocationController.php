@@ -61,8 +61,8 @@ class RequisitionAllocationController extends Controller
                     ->where('allocations.is_reallocated',0)
                     ->where('allocations.belong_to',1)
                     ->where('allocations.deleted_at',null)
-                    ->orderBy('allocations.id', 'desc');
-                    // ->get();
+                    ->orderBy('allocations.id', 'desc')
+                    ->get();
                 }else{
                     return redirect()->back()->with('error', __('Sorry you dont have the permission.'));
                 }
