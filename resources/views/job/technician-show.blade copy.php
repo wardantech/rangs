@@ -112,23 +112,25 @@
                                                 <i class="far fa-smile"></i>
                                                 Submit
                                             </a> 
+                                        @elseif($job->status == 6) 
+                                            <button class="btn btn-info" title="Paused" disabled><i class="far fa-smile"></i> Paused </button>   
                                         @else
                                             <button class="btn btn-info" title="Already Submitted" disabled><i class="far fa-smile"></i> Submitted </button> 
                                         @endif
                                 @endif
-                                @if($job->status == 3 )
+                                @if($job->status == 3 && $job->is_ended == 0 && $job->is_submitted == 0 && $job->is_pending == 0)
                                         <a href="" class="btn bg-red text-white" data-toggle="modal" data-target="#endJobModal" title="End Now">
                                             <i class='fas fa-cut'></i>
                                             End Job
                                         </a>
                                 @endif
                                 @if($job->status !=4 )
-                                    @if ($job->status != 4 && $job->status != 5 && $job->status != 6)
+                                    @if ($job->status != 4 && $job->is_started == 1 && $job->is_paused == 0)
                                     <a href="{{route('job.start-job', $job->id)}}" class="btn btn-success" title="Job is started, pause now">
                                         <i class='far fa-pause-circle'></i>
                                         Pause Job
                                     </a>
-                                    @elseif( $job->status == 5 || $job->status == 6 )
+                                    @elseif(($job->is_started == 1 && $job->is_paused == 1) || $job->status == 5 || $job->status == 6 )
                                     <a href="{{route('job.start-job', $job->id)}}" class="btn btn-success" title="Job is paused, restart now">
                                         <i class='far fa-play-circle'></i>
                                         Re-Start Job
@@ -140,9 +142,6 @@
                                     </a> 
                                     @endif
                                 @endif 
-                            @endif
-                            @if($job->status == 6) 
-                                <button class="btn btn-info" title="Paused" disabled><i class="far fa-smile"></i> Paused </button>   
                             @endif
                             @if (($role->name == "Technician" || $role->name == "Team Leader") && $job->is_submitted == 1 && $job->withdraw_request==0)
                                 <a href="{{route('technician.withdraw', $job->id)}}" class="btn btn-danger" title="CLick To Send A Request">

@@ -651,7 +651,7 @@ class JobController extends Controller
             $job=Job::find($id);
             $ticket = Ticket::where('id',$job->ticket_id)->first();
             $message='';
-            if ($job->is_started == 1 && $job->is_paused == 1) {
+            if ($job->status == 6 && $job->is_paused == 1) {
                 $job->update([
                     'is_paused' => 0,
                     'status' => 3,
@@ -668,7 +668,7 @@ class JobController extends Controller
                 $job->update([
                     'is_paused' => 0,
                     'status' => 3,
-                    'is_started' => 0,
+                    'is_started' => 1,
                     'is_pending' => 0,
                 ]);
                 $ticket->update([
@@ -679,7 +679,7 @@ class JobController extends Controller
                 
                 $message='Job is re-started successfully';
             }
-            elseif($job->is_started == 1 && $job->is_paused == 0)
+            elseif($job->status != 6 && $job->is_paused == 0)
             {
                 $job->update([
                     'is_paused' => 1,
