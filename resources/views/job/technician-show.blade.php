@@ -105,7 +105,7 @@
                                 </a>
                                 @endif
 
-                                @if($job->status != 0 && $job->is_started == 1 && $job->is_ended == 1)
+                                @if($job->status != 0 && $job->is_ended == 1)
 
                                         @if ($job->is_submitted == 0 && $job->status != 6)
                                             <a href="{{ route('technician.job-submission-create', $job->id) }}" class="btn btn-info" title="Submit Now">
