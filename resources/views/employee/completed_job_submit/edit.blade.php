@@ -86,7 +86,7 @@
                                         <div class="col-sm-3">
                                             <div class="form-group">
                                                 <label for="job_start_time">{{ __('label.START_DATE')}}</label>
-                                                <input type="text" class="form-control" id="job_start_time" name="job_start_time" value="{{ $job->job_start_time->format('m/d/Y') }}" readonly>
+                                                <input type="text" class="form-control" id="job_start_time" name="job_start_time" value="{{ $job->job_start_time }}" readonly>
                                                 <div class="help-block with-errors"></div>
 
                                                 @error('job_start_time')
