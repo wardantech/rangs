@@ -431,7 +431,7 @@
                                     <th>{{ __('Invoice Number') }}</th>
                                     <th>{{ __('Customer Name') }}</th>
                                     <th>{{ __('Contact') }}</th>
-                                    <th>{{ __('Place(District, Thana)') }}</th>
+                                    <th>{{ __('Address') }}</th>
                                     <th>{{ __('Product Category') }}</th>
                                     <th>{{ __('Product Name') }}</th>
                                     <th>{{ __('Product SL') }}</th>
@@ -441,6 +441,7 @@
                                     <th>{{ __('Created By') }}</th>
                                     <th>{{ __('label.CREATED_AT') }}</th>
                                     <th>{{ __('Status') }}</th>
+                                    <th>{{ __('Delivered By TL Date') }}</th>
                                     <th>{{ __('Delivered By CC Date') }}</th>
                                     <th>{{ __('label.ACTION') }}</th>
                                 </tr>
@@ -561,8 +562,8 @@
                         searchable: true
                     },
                     {
-                        data: 'district_thana',
-                        name: 'district_thana',
+                        data: 'customer_address',
+                        name: 'customer_address',
                         orderable: false,
                         searchable: true
                     },
@@ -617,6 +618,12 @@
                     {
                         data: 'status',
                         name: 'status',
+                        orderable: false,
+                        searchable: true
+                    },
+                    {
+                        data: 'delivery_date_by_team_leader',
+                        name: 'delivery_date_by_team_leader',
                         orderable: false,
                         searchable: true
                     },

@@ -64,7 +64,7 @@
                                     $is_teamleader != null ||
                                         $user_role->name == 'Admin' ||
                                         $user_role->name == 'Super Admin' ||
-                                        // $user_role->name == 'Call Center' ||
+                                        $user_role->name == 'Call Center' ||
                                         $user_role->name == 'Call Center Admin')
                                     @if ($ticket->status != 13 && optional($ticket->recommendations->last())->created_by != Auth::user()->id)
                                         <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
@@ -74,15 +74,6 @@
                                     @endif
 
                                     @if (isset($ticket->jobs) && optional($ticket->jobs->last()))
-                                        {{-- @if (
-                                            $ticket->jobs()->first()->created_by != Auth::user()->id &&
-                                                $ticket->transfers->last()->created_by != Auth::user()->id)
-                                            <a href="{{ route('job.job_create', $ticket->id) }}" class="btn btn-primary">
-                                                <i class='fas fa-tasks'></i>
-                                                Assign To Technician
-                                            </a>
-                                        @endif --}}
-
                                         @if ($ticket->status == 2 && $ticket->jobs->last()->created_by == Auth::user()->id)
                                             <a href="" class="btn btn-warning" data-toggle="modal"
                                                 data-target="#ticketTransferModal" title="Click to Transfer"
@@ -157,7 +148,8 @@
                                                 <i class='fas fa-check-circle'></i>
                                                 Delivery By (CC)
                                             </a>
-                                        @elseif($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 && $is_teamleader == null)
+                                        @endif
+                                        {{-- @elseif($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 && $is_teamleader == null)
                                             <button class="btn btn-danger" title="Delivered By TL">
                                                 <i class='fas fa-check-circle'></i>
                                                 Delivered By CC
@@ -173,7 +165,7 @@
                                             title="Click To Re-Open">
                                             <i class='fas fa-check-circle'></i>
                                             Ticket Re-Open (CC & TL)
-                                        </a>
+                                        </a> --}}
                                     @endif
                                 @else
                                     @if ($ticket->is_delivered_by_call_center == 0 && $is_teamleader == null)
@@ -182,23 +174,24 @@
                                             <i class='fas fa-check-circle'></i>
                                             Delivery By (CC)
                                         </a>
-                                    @elseif($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 && $is_teamleader == null)
-                                        <button class="btn btn-danger" title="Delivered By TL">
-                                            <i class='fas fa-check-circle'></i>
-                                            Delivered By CC
-                                        </button>
-                                        <a href="" class="btn btn-success" data-toggle="modal"
-                                            data-target="#demoModal" title="Click To Close">
-                                            <i class='fas fa-check-circle'></i>
-                                            Close By (CC)
-                                        </a>
                                     @endif
-                                    <a href="{{ route('edit-ticket-details', $ticket->id) }}" class="btn btn-warning"
-                                        data-toggle="modal" data-target="#ticketReopenModal" title="Click To Re-Open">
+                                @endif
+                                @if($ticket->status == 10 && $ticket->is_delivered_by_call_center == 1 && $is_teamleader == null)
+                                    <button class="btn btn-danger" title="Delivered By TL">
                                         <i class='fas fa-check-circle'></i>
-                                        Ticket Re-Open (CC & TL)
+                                        Delivered By CC
+                                    </button>
+                                    <a href="" class="btn btn-success" data-toggle="modal"
+                                        data-target="#demoModal" title="Click To Close">
+                                        <i class='fas fa-check-circle'></i>
+                                        Close By (CC)
                                     </a>
                                 @endif
+                                <a href="{{ route('edit-ticket-details', $ticket->id) }}" class="btn btn-warning"
+                                    data-toggle="modal" data-target="#ticketReopenModal" title="Click To Re-Open">
+                                    <i class='fas fa-check-circle'></i>
+                                    Ticket Re-Open (CC & TL)
+                                </a>
                             @endif
                             @if ($ticket->status == 12)
                                 <button class="btn btn-danger" title="This Ticket Is Closed">

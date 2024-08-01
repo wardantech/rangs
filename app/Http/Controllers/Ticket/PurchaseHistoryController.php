@@ -161,11 +161,11 @@ class PurchaseHistoryController extends Controller
                         return $customer_phone;
                     })
 
-                    ->addColumn('district_thana', function ($ticket) {
-                        $district=$ticket->district ?? Null;
-                        $thana=$ticket->thana ?? Null;
-                        $data=$district.','.$thana;
-                        return $data;
+                    ->addColumn('customer_address', function ($ticket) {
+                        // $district=$ticket->district ?? Null;
+                        // $thana=$ticket->thana ?? Null;
+                        // $data=$district.','.$thana;
+                        return $ticket->customer_address ?? null;
                     })
                     
                     ->addColumn('product_category', function ($ticket) {
@@ -217,7 +217,7 @@ class PurchaseHistoryController extends Controller
                     })
                     ->addColumn('status', function ($ticket) {
 
-                        if ($ticket->status == 9 && $ticket->is_reopened == 1){
+                        if ($ticket->status == 9 ){
                             return '<span class="badge bg-red">Ticket Re-Opened</span>';
                         }
                         
@@ -226,12 +226,12 @@ class PurchaseHistoryController extends Controller
                         }
 
                         
-                        elseif($ticket->status == 6 && $ticket->is_pending==1 )
+                        elseif($ticket->status == 6 )
                         {
                             return '<span class="badge bg-orange">Pending</span>';
                         }
 
-                        elseif($ticket->status == 5 && $ticket->is_paused == 1 )
+                        elseif($ticket->status == 5 )
                         {
                             return '<span class="badge bg-red">Paused</span>';
                         }
@@ -257,24 +257,24 @@ class PurchaseHistoryController extends Controller
                         {
                             return '<span class="badge badge-danger">Ticket is Undelivered Closed</span>';
                         }
-                        elseif($ticket->status == 11 && $ticket->is_ended == 1)
+                        elseif($ticket->status == 11 )
                         {
                             return '<span class="badge badge-success">Job Completed</span>';
                         }
 
-                        elseif($ticket->status == 4 && $ticket->is_started == 1)
+                        elseif($ticket->status == 4 )
                         {
                             return '<span class="badge badge-info">Job Started</span>';
                         }
-                        elseif($ticket->status == 3 && $ticket->is_accepted == 1)
+                        elseif($ticket->status == 3 )
                         {
                             return '<span class="badge badge-primary">Job Accepted</span>';
                         }
-                        elseif($ticket->status == 1 && $ticket->is_assigned == 1)
+                        elseif($ticket->status == 1 )
                         {
                             return '<span class="badge bg-blue">Assigned</span>';
                         }
-                        elseif ($ticket->status == 2 && $ticket->is_rejected == 1)
+                        elseif ($ticket->status == 2 )
                         {
                             return '<span class="badge bg-red">Rejected</span>';
                         }
@@ -289,6 +289,14 @@ class PurchaseHistoryController extends Controller
                         
                     })
                     
+                    ->addColumn('delivery_date_by_team_leader', function($ticket){
+                        $delivery_date_by_team_leader=null;
+                        if ($ticket->delivery_date_by_team_leader != null) {
+                            $delivery_date_by_team_leader=Carbon::parse($ticket->delivery_date_by_team_leader)->format('m/d/Y');
+                        }
+                        return $delivery_date_by_team_leader;
+                    })
+
                     ->addColumn('delivery_date_by_call_center', function($ticket){
                         $delivery_date_by_call_center=null;
                         if ($ticket->delivery_date_by_call_center != null) {
@@ -979,11 +987,11 @@ class PurchaseHistoryController extends Controller
                         return $customer_phone;
                     })
 
-                    ->addColumn('district_thana', function ($tickets) {
-                        $district=$tickets->district ?? Null;
-                        $thana=$tickets->thana ?? Null;
-                        $data=$district.','.$thana;
-                        return $data;
+                    ->addColumn('customer_address', function ($tickets) {
+                        // $district=$tickets->district ?? Null;
+                        // $thana=$tickets->thana ?? Null;
+                        // $data=$district.','.$thana;
+                        return $tickets->customer_address ?? null;
                     })
                     
                     ->addColumn('product_category', function ($tickets) {
@@ -1036,7 +1044,7 @@ class PurchaseHistoryController extends Controller
                     })
                     ->addColumn('status', function ($tickets) {
 
-                        if ($tickets->status == 9 && $tickets->is_reopened == 1){
+                        if ($tickets->status == 9 ){
                             return '<span class="badge bg-red">Ticket Re-Opened</span>';
                         }
                         
@@ -1045,12 +1053,12 @@ class PurchaseHistoryController extends Controller
                         }
 
                         
-                        elseif($tickets->status == 6 && $tickets->is_pending==1 )
+                        elseif($tickets->status == 6 )
                         {
                             return '<span class="badge bg-orange">Pending</span>';
                         }
 
-                        elseif($tickets->status == 5 && $tickets->is_paused == 1 )
+                        elseif($tickets->status == 5)
                         {
                             return '<span class="badge bg-red">Paused</span>';
                         }
@@ -1076,24 +1084,24 @@ class PurchaseHistoryController extends Controller
                         {
                             return '<span class="badge badge-danger">Ticket is Undelivered Closed</span>';
                         }
-                        elseif($tickets->status == 11 && $tickets->is_ended == 1)
+                        elseif($tickets->status == 11 )
                         {
                             return '<span class="badge badge-success">Job Completed</span>';
                         }
 
-                        elseif($tickets->status == 4 && $tickets->is_started == 1)
+                        elseif($tickets->status == 4)
                         {
                             return '<span class="badge badge-info">Job Started</span>';
                         }
-                        elseif($tickets->status == 3 && $tickets->is_accepted == 1)
+                        elseif($tickets->status == 3 )
                         {
                             return '<span class="badge badge-primary">Job Accepted</span>';
                         }
-                        elseif($tickets->status == 1 && $tickets->is_assigned == 1)
+                        elseif($tickets->status == 1 )
                         {
                             return '<span class="badge bg-blue">Assigned</span>';
                         }
-                        elseif ($tickets->status == 2 && $tickets->is_rejected == 1)
+                        elseif ($tickets->status == 2 )
                         {
                             return '<span class="badge bg-red">Rejected</span>';
                         }
@@ -1107,6 +1115,14 @@ class PurchaseHistoryController extends Controller
                         }
                         
                     })
+                    ->addColumn('delivery_date_by_team_leader', function($ticket){
+                        $delivery_date_by_team_leader=null;
+                        if ($ticket->delivery_date_by_team_leader != null) {
+                            $delivery_date_by_team_leader=Carbon::parse($ticket->delivery_date_by_team_leader)->format('m/d/Y');
+                        }
+                        return $delivery_date_by_team_leader;
+                    })
+
                     ->addColumn('delivery_date_by_call_center', function($tickets){
                         $delivery_date_by_call_center=null;
                         if ($tickets->delivery_date_by_call_center != null) {

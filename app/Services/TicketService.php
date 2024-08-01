@@ -34,12 +34,12 @@ class TicketService
                 ->whereRaw('ticket_transfers.created_at = (SELECT MAX(created_at) FROM ticket_transfers WHERE ticket_id = tickets.id)');
         })
         ->select('ticket_recommendations.referrer_outlet_id','ticket_recommendations.recommended_outlet_id','ticket_transfers.referrer_outlet_id','ticket_transfers.recommended_outlet_id','users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
-        'customers.name as customer_name', 'customers.mobile as customer_mobile', 'districts.name as district','thanas.name as thana',
+        'customers.name as customer_name', 'customers.mobile as customer_mobile', 'customers.address as customer_address',
         'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
-        'tickets.service_type_id as service_type_id','tickets.status as status','tickets.is_reopened as is_reopened','tickets.is_accepted as is_accepted','tickets.is_pending as is_pending',
-        'tickets.is_paused as is_paused','tickets.is_ended as is_ended','tickets.is_started as is_started','tickets.is_closed_by_teamleader as is_closed_by_teamleader',
-        'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center','tickets.is_closed as is_closed',
-        'tickets.is_assigned as is_assigned','tickets.is_rejected as is_rejected','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid','warranty_types.warranty_type')
+        'tickets.service_type_id as service_type_id','tickets.status as status',
+        'tickets.is_closed_by_teamleader as is_closed_by_teamleader',
+        'tickets.is_delivered_by_teamleader as is_delivered_by_teamleader','tickets.is_delivered_by_call_center as is_delivered_by_call_center',
+        'tickets.delivery_date_by_team_leader as delivery_date_by_team_leader','tickets.delivery_date_by_call_center as delivery_date_by_call_center','purchases.outlet_id as outletid','warranty_types.warranty_type')
         ->whereNull('tickets.deleted_at');
     }
 

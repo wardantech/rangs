@@ -37,6 +37,7 @@ class PartConsumptionReportController extends Controller
                 ->whereYear('tickets.delivery_date_by_team_leader','=', $formattedCurrentYear)
                 ->whereMonth('tickets.delivery_date_by_team_leader','=', $formattedCurrentMonth)
                 ->where('tickets.deleted_at', null)
+                ->whereNull('inventory_stocks.deleted_at')
                 ->groupBy('inventory_stocks.id')
                 ->get();
                 if(request()->ajax()){
@@ -90,7 +91,7 @@ class PartConsumptionReportController extends Controller
                 }
                 return view ('reports.consumption.consumption-report', compact('outlets'));
         }catch(\Exception $e){
-            $bug = $e->getMessage();
+            $bug = $e->getMessage();  
             return redirect()->back()->with('error', $bug);
         }
     }
@@ -117,7 +118,8 @@ class PartConsumptionReportController extends Controller
             'tickets.id as ticket_id','tickets.created_at as ticket_date','tickets.delivery_date_by_team_leader as deliveryDate')
             ->where('inventory_stocks.stock_out', '>', 0)
             ->where('inventory_stocks.is_consumed', 1)
-            ->where('inventory_stocks.job_id', '!=', null);
+            ->where('inventory_stocks.job_id', '!=', null)
+            ->whereNull('inventory_stocks.deleted_at');
 
             if ($request->outlet) 
             {
