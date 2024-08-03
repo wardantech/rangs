@@ -33,7 +33,7 @@ class TicketService
                 ->whereNull('ticket_transfers.deleted_at')
                 ->whereRaw('ticket_transfers.created_at = (SELECT MAX(created_at) FROM ticket_transfers WHERE ticket_id = tickets.id)');
         })
-        ->select('ticket_recommendations.referrer_outlet_id','ticket_recommendations.recommended_outlet_id','ticket_transfers.referrer_outlet_id','ticket_transfers.recommended_outlet_id','users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
+        ->select('users.name as created_by','brand_models.model_name as product_name','categories.name as product_category',
         'customers.name as customer_name', 'customers.mobile as customer_mobile', 'customers.address as customer_address',
         'purchases.product_serial as product_serial','purchases.invoice_number as invoice_number','tickets.id as ticket_id','tickets.created_at as created_at','outlets.name as outlet_name',
         'tickets.service_type_id as service_type_id','tickets.status as status',
