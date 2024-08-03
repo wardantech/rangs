@@ -139,10 +139,36 @@ class PurchaseHistoryController extends Controller
                     TicketService::extendForDateRange($data, $startDate, $endDate);
                 } 
 
-                $tickets = $data->latest()->get();
+                $tickets = $data->orderBy('created_at', 'desc');
 
                 return DataTables::of($tickets)
-
+                    ->filter(function ($query) {
+                        if (request()->has('search') && !empty(request('search')['value'])) {
+                            $keyword = request('search')['value'];
+                            $query->where(function ($q) use ($keyword) {
+                                $q->where('users.name', 'like', "%{$keyword}%")
+                                    ->orWhere('brand_models.model_name', 'like', "%{$keyword}%")
+                                    ->orWhere('categories.name', 'like', "%{$keyword}%")
+                                    ->orWhere('customers.name', 'like', "%{$keyword}%")
+                                    ->orWhere('customers.mobile', 'like', "%{$keyword}%")
+                                    ->orWhere('customers.address', 'like', "%{$keyword}%")
+                                    ->orWhere('purchases.product_serial', 'like', "%{$keyword}%")
+                                    ->orWhere('purchases.invoice_number', 'like', "%{$keyword}%")
+                                    ->orWhere('outlets.name', 'like', "%{$keyword}%")
+                                    ->orWhere('warranty_types.warranty_type', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.id', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.created_at', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.service_type_id', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.status', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.is_closed_by_teamleader', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.is_delivered_by_teamleader', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.is_delivered_by_call_center', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.delivery_date_by_team_leader', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.delivery_date_by_call_center', 'like', "%{$keyword}%")
+                                    ->orWhere('purchases.outlet_id', 'like', "%{$keyword}%");
+                            });
+                        }
+                    })
                     ->addColumn('ticket_sl', function ($ticket) {
                         $tsl='TSL-'.$ticket->ticket_id;
                         return $tsl;
@@ -249,11 +275,11 @@ class PurchaseHistoryController extends Controller
                             return '<span class="badge bg-green">Delivered by TL</span>';
                         }
 
-                        elseif($ticket->status == 12  && $ticket->is_delivered_by_call_center == 1 && $ticket->is_closed == 1)
+                        elseif($ticket->status == 12  && $ticket->is_delivered_by_call_center == 1 )
                         {
                             return '<span class="badge badge-danger">Tticket is Closed</span>';
                         }
-                        elseif($ticket->status == 12 && $ticket->is_delivered_by_call_center == 0 && $ticket->is_closed == 1)
+                        elseif($ticket->status == 12 && $ticket->is_delivered_by_call_center == 0 )
                         {
                             return '<span class="badge badge-danger">Ticket is Undelivered Closed</span>';
                         }
@@ -306,7 +332,7 @@ class PurchaseHistoryController extends Controller
                     })
 
                     ->addColumn('action', function ($ticket) {
-                        if ($ticket->status == 1 && $ticket->is_ended == 1 && $ticket->is_closed == 1 ) {
+                        if ($ticket->status == 1 && $ticket->is_ended == 1) {
                             if (Auth::user()->can('show')) {
                                 return '<div class="table-actions text-center" style="display: flex;>
                                     <i class="ik ik-edit f-16 mr-15 text-yellow" title="You can not edit"></i>
@@ -965,10 +991,36 @@ class PurchaseHistoryController extends Controller
                     TicketService::extendForDateRange($data, $startDate, $endDate);
                 } 
                 
-                $tickets=$data->latest()->get();
+                $tickets=$data;
 
                 return DataTables::of($tickets)
-
+                    ->filter(function ($query) {
+                        if (request()->has('search') && !empty(request('search')['value'])) {
+                            $keyword = request('search')['value'];
+                            $query->where(function ($q) use ($keyword) {
+                                $q->where('users.name', 'like', "%{$keyword}%")
+                                    ->orWhere('brand_models.model_name', 'like', "%{$keyword}%")
+                                    ->orWhere('categories.name', 'like', "%{$keyword}%")
+                                    ->orWhere('customers.name', 'like', "%{$keyword}%")
+                                    ->orWhere('customers.mobile', 'like', "%{$keyword}%")
+                                    ->orWhere('customers.address', 'like', "%{$keyword}%")
+                                    ->orWhere('purchases.product_serial', 'like', "%{$keyword}%")
+                                    ->orWhere('purchases.invoice_number', 'like', "%{$keyword}%")
+                                    ->orWhere('outlets.name', 'like', "%{$keyword}%")
+                                    ->orWhere('warranty_types.warranty_type', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.id', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.created_at', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.service_type_id', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.status', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.is_closed_by_teamleader', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.is_delivered_by_teamleader', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.is_delivered_by_call_center', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.delivery_date_by_team_leader', 'like', "%{$keyword}%")
+                                    ->orWhere('tickets.delivery_date_by_call_center', 'like', "%{$keyword}%")
+                                    ->orWhere('purchases.outlet_id', 'like', "%{$keyword}%");
+                            });
+                        }
+                    })
                     ->addColumn('ticket_sl', function ($tickets) {
                         $tsl='TSL-'.$tickets->ticket_id;
                         return $tsl;
@@ -1076,11 +1128,11 @@ class PurchaseHistoryController extends Controller
                             return '<span class="badge bg-green">Delivered by TL</span>';
                         }
 
-                        elseif($tickets->status == 12  && $tickets->is_delivered_by_call_center == 1 && $tickets->is_closed == 1)
+                        elseif($tickets->status == 12  && $tickets->is_delivered_by_call_center == 1 )
                         {
                             return '<span class="badge badge-danger">Tticket is Closed</span>';
                         }
-                        elseif($tickets->status == 12 && $tickets->is_delivered_by_call_center == 0 && $tickets->is_closed == 1)
+                        elseif($tickets->status == 12 && $tickets->is_delivered_by_call_center == 0 )
                         {
                             return '<span class="badge badge-danger">Ticket is Undelivered Closed</span>';
                         }
@@ -1132,7 +1184,7 @@ class PurchaseHistoryController extends Controller
                     })
 
                     ->addColumn('action', function ($tickets) {
-                        if ($tickets->status == 1 && $tickets->is_ended == 1 && $tickets->is_closed == 1 ) {
+                        if ($tickets->status == 12 ) {
                             if (Auth::user()->can('show')) {
                                 return '<div class="table-actions text-center" style="display: flex;>
                                     <i class="ik ik-edit f-16 mr-15 text-yellow" title="You can not edit"></i>
